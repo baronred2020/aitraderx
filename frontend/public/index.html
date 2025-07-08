@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta
+      name="description"
+      content="AI Trading System - Sistema de trading con inteligencia artificial avanzada"
+    />
+    <meta name="keywords" content="trading, IA, machine learning, reinforcement learning, finanzas, inversión" />
+    <meta name="author" content="AI Trading Pro Team" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ai-trading-pro.com/" />
+    <meta property="og:title" content="AI Trading Pro - Sistema de Trading con IA" />
+    <meta property="og:description" content="Sistema avanzado de trading con inteligencia artificial, machine learning y reinforcement learning" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://ai-trading-pro.com/" />
+    <meta property="twitter:title" content="AI Trading Pro - Sistema de Trading con IA" />
+    <meta property="twitter:description" content="Sistema avanzado de trading con inteligencia artificial, machine learning y reinforcement learning" />
+    <meta property="twitter:image" content="%PUBLIC_URL%/og-image.jpg" />
+
+    <!-- Manifest -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Title -->
+    <title>AI Trading Pro - Sistema de Trading con IA</title>
+    
+    <!-- Custom styles for loading state -->
+    <style>
+      #root {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .loading {
+        text-align: center;
+        color: white;
+      }
+      
+      .loading h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+      
+      .loading p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+      
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 2rem auto;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div style="text-align: center; padding: 2rem; font-family: Arial, sans-serif;">
+        <h1>JavaScript Requerido</h1>
+        <p>Esta aplicación requiere JavaScript para funcionar correctamente.</p>
+        <p>Por favor, habilita JavaScript en tu navegador y recarga la página.</p>
+      </div>
+    </noscript>
+    
+    <div id="root">
+      <div class="loading">
+        <h1>AI Trading Pro</h1>
+        <p>Cargando sistema de trading con IA...</p>
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </body>
+</html> 
