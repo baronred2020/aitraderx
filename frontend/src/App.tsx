@@ -1,50 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, Clock, Settings, BarChart3, Target, PieChart as PieChartIcon, Bell, Zap } from 'lucide-react';
+import { RLDashboard } from './components/RL/RLDashboard';
+import { MobileNav } from './components/Common/MobileNav';
 import './index.css';
 
 // Componentes básicos (se implementarán después)
 const Dashboard = () => (
-  <div className="p-6">
-    <h2 className="text-2xl font-bold mb-4">Dashboard Principal</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold">Valor Total</h3>
-        <p className="text-3xl font-bold text-blue-600">$125,430</p>
-        <p className="text-green-600">+2.3%</p>
+  <div className="p-3 sm:p-6">
+    <h2 className="text-xl sm:text-2xl font-bold mb-4">AITRADERX Dashboard</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 className="text-sm sm:text-lg font-semibold">Valor Total</h3>
+        <p className="text-2xl sm:text-3xl font-bold text-blue-600">$125,430</p>
+        <p className="text-green-600 text-sm sm:text-base">+2.3%</p>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold">P&L Diario</h3>
-        <p className="text-3xl font-bold text-green-600">+$1,234</p>
-        <p className="text-green-600">+0.98%</p>
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 className="text-sm sm:text-lg font-semibold">P&L Diario</h3>
+        <p className="text-2xl sm:text-3xl font-bold text-green-600">+$1,234</p>
+        <p className="text-green-600 text-sm sm:text-base">+0.98%</p>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold">Precisión IA</h3>
-        <p className="text-3xl font-bold text-purple-600">78.3%</p>
-        <p className="text-green-600">+1.2%</p>
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 className="text-sm sm:text-lg font-semibold">Precisión IA</h3>
+        <p className="text-2xl sm:text-3xl font-bold text-purple-600">78.3%</p>
+        <p className="text-green-600 text-sm sm:text-base">+1.2%</p>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold">Sharpe Ratio</h3>
-        <p className="text-3xl font-bold text-indigo-600">1.45</p>
-        <p className="text-green-600">+0.12</p>
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 className="text-sm sm:text-lg font-semibold">Sharpe Ratio</h3>
+        <p className="text-2xl sm:text-3xl font-bold text-indigo-600">1.45</p>
+        <p className="text-green-600 text-sm sm:text-base">+0.12</p>
       </div>
     </div>
-    <div className="mt-6 bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Sistema de IA</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-green-50 p-4 rounded">
-          <h4 className="font-medium">IA Tradicional</h4>
-          <p className="text-green-600">✅ Funcionando</p>
-          <p className="text-sm text-gray-600">Random Forest + LSTM</p>
+    <div className="mt-4 sm:mt-6 bg-white rounded-lg shadow p-4 sm:p-6">
+      <h3 className="text-lg font-semibold mb-4">AITRADERX - Sistema de IA</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-green-50 p-3 sm:p-4 rounded">
+          <h4 className="font-medium text-sm sm:text-base">IA Tradicional</h4>
+          <p className="text-green-600 text-sm sm:text-base">✅ Funcionando</p>
+          <p className="text-xs sm:text-sm text-gray-600">AITRADERX - Random Forest + LSTM</p>
         </div>
-        <div className="bg-blue-50 p-4 rounded">
-          <h4 className="font-medium">Reinforcement Learning</h4>
-          <p className="text-blue-600">🤖 Entrenando</p>
-          <p className="text-sm text-gray-600">DQN Agent</p>
+        <div className="bg-blue-50 p-3 sm:p-4 rounded">
+          <h4 className="font-medium text-sm sm:text-base">Reinforcement Learning</h4>
+          <p className="text-blue-600 text-sm sm:text-base">🤖 Entrenando</p>
+          <p className="text-xs sm:text-sm text-gray-600">AITRADERX - DQN Agent</p>
         </div>
-        <div className="bg-purple-50 p-4 rounded">
-          <h4 className="font-medium">Auto-entrenamiento</h4>
-          <p className="text-purple-600">🔄 Monitoreando</p>
-          <p className="text-sm text-gray-600">Detección de drift</p>
+        <div className="bg-purple-50 p-3 sm:p-4 rounded">
+          <h4 className="font-medium text-sm sm:text-base">Auto-entrenamiento</h4>
+          <p className="text-purple-600 text-sm sm:text-base">🔄 Monitoreando</p>
+          <p className="text-xs sm:text-sm text-gray-600">AITRADERX - Detección de drift</p>
         </div>
       </div>
     </div>
@@ -53,35 +55,35 @@ const Dashboard = () => (
 
 const Analysis = () => (
   <div className="p-6">
-    <h2 className="text-2xl font-bold mb-4">Análisis de IA</h2>
+    <h2 className="text-2xl font-bold mb-4">AITRADERX - Análisis de IA</h2>
     <p>Componente de análisis - En desarrollo</p>
   </div>
 );
 
 const Portfolio = () => (
   <div className="p-6">
-    <h2 className="text-2xl font-bold mb-4">Portafolio</h2>
+    <h2 className="text-2xl font-bold mb-4">AITRADERX - Portafolio</h2>
     <p>Componente de portafolio - En desarrollo</p>
   </div>
 );
 
 const AIMonitor = () => (
   <div className="p-6">
-    <h2 className="text-2xl font-bold mb-4">Monitor de IA</h2>
+    <h2 className="text-2xl font-bold mb-4">AITRADERX - Monitor de IA</h2>
     <p>Componente de monitoreo - En desarrollo</p>
   </div>
 );
 
-const RLDashboard = () => (
+const RLDashboardComponent = () => (
   <div className="p-6">
-    <h2 className="text-2xl font-bold mb-4">Reinforcement Learning</h2>
+    <h2 className="text-2xl font-bold mb-4">AITRADERX - Reinforcement Learning</h2>
     <p>Dashboard de RL - En desarrollo</p>
   </div>
 );
 
 const Alerts = () => (
   <div className="p-6">
-    <h2 className="text-2xl font-bold mb-4">Alertas</h2>
+    <h2 className="text-2xl font-bold mb-4">AITRADERX - Alertas</h2>
     <p>Sistema de alertas - En desarrollo</p>
   </div>
 );
@@ -116,25 +118,33 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Brain className="w-8 h-8 text-blue-600 mr-3" />
-              <h1 className="text-xl font-bold text-gray-900">AI Trading Pro</h1>
-              <span className="ml-3 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+              <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3" />
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">AITRADERX</h1>
+              <span className="ml-2 sm:ml-3 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-green-100 text-green-800 text-xs rounded-full">
                 v1.0.0
               </span>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Desktop Status */}
+              <div className="hidden sm:flex items-center text-sm text-gray-600">
                 <Clock className="w-4 h-4 mr-1" />
                 <span>Última actualización: {lastUpdate.toLocaleTimeString()}</span>
               </div>
+              
+              {/* Mobile Status */}
+              <div className="sm:hidden flex items-center text-xs text-gray-600">
+                <Clock className="w-3 h-3 mr-1" />
+                <span>{lastUpdate.toLocaleTimeString()}</span>
+              </div>
+              
               <div className="flex items-center">
-                <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-                <span className={`text-sm ml-2 font-medium ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
+                <span className={`text-xs sm:text-sm ml-1 sm:ml-2 font-medium ${isConnected ? 'text-green-600' : 'text-red-600'} hidden sm:inline`}>
                   {isConnected ? 'En vivo' : 'Desconectado'}
                 </span>
               </div>
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <Settings className="w-5 h-5 text-gray-600" />
+              <button className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100">
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
               </button>
             </div>
           </div>
@@ -144,7 +154,8 @@ function App() {
       {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex space-x-8">
             {tabs.map(tab => (
               <button
                 key={tab.id}
@@ -160,20 +171,43 @@ function App() {
               </button>
             ))}
           </div>
+          
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <div className="flex overflow-x-auto space-x-4 pb-2">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-1 ${
+                    activeTab === tab.id
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <tab.icon className="w-3 h-3" />
+                  <span className="hidden sm:inline">{tab.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 pb-20 md:pb-6">
         <div className="px-4 py-6 sm:px-0">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'analysis' && <Analysis />}
           {activeTab === 'portfolio' && <Portfolio />}
           {activeTab === 'ai-monitor' && <AIMonitor />}
-          {activeTab === 'rl' && <RLDashboard />}
+          {activeTab === 'rl' && <RLDashboardComponent />}
           {activeTab === 'alerts' && <Alerts />}
         </div>
       </main>
+
+      {/* Mobile Navigation */}
+      <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

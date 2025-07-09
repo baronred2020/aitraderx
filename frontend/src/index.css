@@ -10,6 +10,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
 }
 
 code {
@@ -36,4 +38,42 @@ code {
 .recharts-tooltip-wrapper {
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better scrolling on mobile */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 } 

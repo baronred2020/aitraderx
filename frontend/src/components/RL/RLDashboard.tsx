@@ -97,13 +97,13 @@ export const RLDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3">Cargando sistema RL...</span>
+        <span className="ml-3">Cargando AITRADERX RL...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
       {/* Estado del Sistema RL */}
       <RLStatusPanel 
         status={rlStatus} 
@@ -147,58 +147,58 @@ const RLStatusPanel: React.FC<{
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
         <div className="flex items-center">
           <Brain className="w-5 h-5 text-red-600 mr-2" />
-          <span className="text-red-800">Sistema RL no inicializado</span>
+          <span className="text-red-800">AITRADERX - Sistema RL no inicializado</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
-        <Zap className="w-5 h-5 mr-2" />
-        Estado del Reinforcement Learning
+    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+      <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center">
+        <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+        AITRADERX - Estado del Reinforcement Learning
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className={`p-4 rounded ${status.status === 'initialized' ? 'bg-green-50' : 'bg-red-50'}`}>
-          <div className="text-sm text-gray-600">Estado</div>
-          <div className={`text-lg font-bold ${status.status === 'initialized' ? 'text-green-600' : 'text-red-600'}`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className={`p-3 sm:p-4 rounded ${status.status === 'initialized' ? 'bg-green-50' : 'bg-red-50'}`}>
+          <div className="text-xs sm:text-sm text-gray-600">Estado</div>
+          <div className={`text-sm sm:text-lg font-bold ${status.status === 'initialized' ? 'text-green-600' : 'text-red-600'}`}>
             {status.status === 'initialized' ? 'Inicializado' : 'No Inicializado'}
           </div>
         </div>
 
-        <div className={`p-4 rounded ${status.trained ? 'bg-blue-50' : 'bg-yellow-50'}`}>
-          <div className="text-sm text-gray-600">Entrenamiento</div>
-          <div className={`text-lg font-bold ${status.trained ? 'text-blue-600' : 'text-yellow-600'}`}>
+        <div className={`p-3 sm:p-4 rounded ${status.trained ? 'bg-blue-50' : 'bg-yellow-50'}`}>
+          <div className="text-xs sm:text-sm text-gray-600">Entrenamiento</div>
+          <div className={`text-sm sm:text-lg font-bold ${status.trained ? 'text-blue-600' : 'text-yellow-600'}`}>
             {status.trained ? 'Entrenado' : 'Sin Entrenar'}
           </div>
         </div>
 
-        <div className="bg-purple-50 p-4 rounded">
-          <div className="text-sm text-gray-600">Tipo de Agente</div>
-          <div className="text-lg font-bold text-purple-600">
+        <div className="bg-purple-50 p-3 sm:p-4 rounded">
+          <div className="text-xs sm:text-sm text-gray-600">Tipo de Agente</div>
+          <div className="text-sm sm:text-lg font-bold text-purple-600">
             {status.agent_type || 'DQN'}
           </div>
         </div>
 
-        <div className={`p-4 rounded ${isTraining ? 'bg-orange-50' : 'bg-gray-50'}`}>
-          <div className="text-sm text-gray-600">Estado Actual</div>
-          <div className={`text-lg font-bold ${isTraining ? 'text-orange-600' : 'text-gray-600'}`}>
+        <div className={`p-3 sm:p-4 rounded ${isTraining ? 'bg-orange-50' : 'bg-gray-50'}`}>
+          <div className="text-xs sm:text-sm text-gray-600">Estado Actual</div>
+          <div className={`text-sm sm:text-lg font-bold ${isTraining ? 'text-orange-600' : 'text-gray-600'}`}>
             {isTraining ? 'Entrenando...' : 'Listo'}
           </div>
         </div>
       </div>
 
       {/* Controles de Entrenamiento */}
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-3">Controles de Entrenamiento</h4>
-        <div className="flex items-center space-x-4">
+      <div className="border-t pt-3 sm:pt-4">
+        <h4 className="font-medium mb-3 text-sm sm:text-base">Controles de Entrenamiento</h4>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
           <input
             type="number"
             value={episodes}
             onChange={(e) => setEpisodes(parseInt(e.target.value))}
-            className="border rounded px-3 py-2 w-32"
+            className="border rounded px-2 sm:px-3 py-1.5 sm:py-2 w-24 sm:w-32 text-sm"
             placeholder="Episodios"
             min="100"
             max="10000"
@@ -207,7 +207,7 @@ const RLStatusPanel: React.FC<{
           <button
             onClick={() => onTrain(episodes)}
             disabled={isTraining}
-            className={`flex items-center px-4 py-2 rounded font-medium ${
+            className={`flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded font-medium text-sm ${
               isTraining 
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -215,19 +215,19 @@ const RLStatusPanel: React.FC<{
           >
             {isTraining ? (
               <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
                 Entrenando...
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 mr-2" />
+                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Entrenar Agente
               </>
             )}
           </button>
         </div>
-        <p className="text-sm text-gray-500 mt-2">
-          El entrenamiento se ejecuta en background. Puede tomar varios minutos.
+        <p className="text-xs sm:text-sm text-gray-500 mt-2">
+          El entrenamiento de AITRADERX se ejecuta en background. Puede tomar varios minutos.
         </p>
       </div>
     </div>
@@ -239,61 +239,61 @@ const RLPerformancePanel: React.FC<{
   onEvaluate: () => void;
 }> = ({ performance, onEvaluate }) => {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold flex items-center">
-          <Award className="w-5 h-5 mr-2" />
-          Métricas de Rendimiento RL
+    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+        <h3 className="text-base sm:text-lg font-semibold flex items-center mb-2 sm:mb-0">
+          <Award className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+          AITRADERX - Métricas de Rendimiento RL
         </h3>
         <button
           onClick={onEvaluate}
-          className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+          className="bg-purple-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-purple-700"
         >
           Evaluar Agente
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-green-50 p-4 rounded text-center">
-          <div className="text-2xl font-bold text-green-600">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
+        <div className="bg-green-50 p-3 sm:p-4 rounded text-center">
+          <div className="text-lg sm:text-2xl font-bold text-green-600">
             {(performance.avg_profit * 100).toFixed(1)}%
           </div>
-          <div className="text-sm text-gray-600">Profit Promedio</div>
+          <div className="text-xs sm:text-sm text-gray-600">Profit Promedio</div>
         </div>
 
-        <div className="bg-blue-50 p-4 rounded text-center">
-          <div className="text-2xl font-bold text-blue-600">
+        <div className="bg-blue-50 p-3 sm:p-4 rounded text-center">
+          <div className="text-lg sm:text-2xl font-bold text-blue-600">
             {(performance.max_profit * 100).toFixed(1)}%
           </div>
-          <div className="text-sm text-gray-600">Profit Máximo</div>
+          <div className="text-xs sm:text-sm text-gray-600">Profit Máximo</div>
         </div>
 
-        <div className="bg-purple-50 p-4 rounded text-center">
-          <div className="text-2xl font-bold text-purple-600">
+        <div className="bg-purple-50 p-3 sm:p-4 rounded text-center">
+          <div className="text-lg sm:text-2xl font-bold text-purple-600">
             {(performance.win_rate * 100).toFixed(1)}%
           </div>
-          <div className="text-sm text-gray-600">Win Rate</div>
+          <div className="text-xs sm:text-sm text-gray-600">Win Rate</div>
         </div>
 
-        <div className="bg-yellow-50 p-4 rounded text-center">
-          <div className="text-2xl font-bold text-yellow-600">
+        <div className="bg-yellow-50 p-3 sm:p-4 rounded text-center">
+          <div className="text-lg sm:text-2xl font-bold text-yellow-600">
             {performance.sharpe_ratio.toFixed(2)}
           </div>
-          <div className="text-sm text-gray-600">Sharpe Ratio</div>
+          <div className="text-xs sm:text-sm text-gray-600">Sharpe Ratio</div>
         </div>
 
-        <div className="bg-red-50 p-4 rounded text-center">
-          <div className="text-2xl font-bold text-red-600">
+        <div className="bg-red-50 p-3 sm:p-4 rounded text-center">
+          <div className="text-lg sm:text-2xl font-bold text-red-600">
             {(performance.max_drawdown * 100).toFixed(1)}%
           </div>
-          <div className="text-sm text-gray-600">Max Drawdown</div>
+          <div className="text-xs sm:text-sm text-gray-600">Max Drawdown</div>
         </div>
 
-        <div className="bg-indigo-50 p-4 rounded text-center">
-          <div className="text-2xl font-bold text-indigo-600">
+        <div className="bg-indigo-50 p-3 sm:p-4 rounded text-center">
+          <div className="text-lg sm:text-2xl font-bold text-indigo-600">
             {performance.profit_factor.toFixed(2)}
           </div>
-          <div className="text-sm text-gray-600">Profit Factor</div>
+          <div className="text-xs sm:text-sm text-gray-600">Profit Factor</div>
         </div>
       </div>
 
@@ -337,11 +337,11 @@ const RLTrainingCharts: React.FC<{ history: any }> = ({ history }) => {
   }));
 
   // Calcular media móvil
-  const movingAvgData = chartData.slice(50).map((_, index) => {
+  const movingAvgData = chartData.slice(50).map((_: any, index: number) => {
     const start = index;
     const end = index + 50;
-    const avgReward = chartData.slice(start, end).reduce((sum, item) => sum + item.reward, 0) / 50;
-    const avgProfit = chartData.slice(start, end).reduce((sum, item) => sum + item.profit, 0) / 50;
+    const avgReward = chartData.slice(start, end).reduce((sum: number, item: any) => sum + item.reward, 0) / 50;
+    const avgProfit = chartData.slice(start, end).reduce((sum: number, item: any) => sum + item.profit, 0) / 50;
     
     return {
       episode: index + 50,
@@ -354,13 +354,13 @@ const RLTrainingCharts: React.FC<{ history: any }> = ({ history }) => {
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold mb-4 flex items-center">
         <BarChart3 className="w-5 h-5 mr-2" />
-        Progreso del Entrenamiento RL
+        AITRADERX - Progreso del Entrenamiento RL
       </h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Recompensas */}
         <div>
-          <h4 className="font-medium mb-3">Recompensas por Episodio</h4>
+          <h4 className="font-medium mb-3">AITRADERX - Recompensas por Episodio</h4>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={chartData.slice(-200)}> {/* Últimos 200 episodios */}
               <defs>
@@ -386,7 +386,7 @@ const RLTrainingCharts: React.FC<{ history: any }> = ({ history }) => {
 
         {/* Gráfico de Profits */}
         <div>
-          <h4 className="font-medium mb-3">Profit por Episodio (%)</h4>
+                      <h4 className="font-medium mb-3">AITRADERX - Profit por Episodio (%)</h4>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={chartData.slice(-200)}>
               <defs>
@@ -457,7 +457,7 @@ const RLTrainingCharts: React.FC<{ history: any }> = ({ history }) => {
 const RLEvaluationResults: React.FC<{ results: any }> = ({ results }) => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Resultados de Evaluación</h3>
+      <h3 className="text-lg font-semibold mb-4">AITRADERX - Resultados de Evaluación</h3>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div className="bg-blue-50 p-3 rounded text-center">
@@ -491,7 +491,7 @@ const RLEvaluationResults: React.FC<{ results: any }> = ({ results }) => {
 
       {/* Gráfico de resultados individuales */}
       <div className="mt-4">
-        <h4 className="font-medium mb-3">Resultados por Episodio de Evaluación</h4>
+        <h4 className="font-medium mb-3">AITRADERX - Resultados por Episodio de Evaluación</h4>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={results.results}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -513,7 +513,7 @@ const RLEvaluationResults: React.FC<{ results: any }> = ({ results }) => {
 const AIComparisonPanel: React.FC = () => {
   const comparisonData = [
     {
-      method: 'IA Tradicional',
+      method: 'AITRADERX - IA Tradicional',
       accuracy: 76.8,
       profit: 12.5,
       sharpe: 1.32,
@@ -521,7 +521,7 @@ const AIComparisonPanel: React.FC = () => {
       description: 'Random Forest + LSTM'
     },
     {
-      method: 'Reinforcement Learning',
+      method: 'AITRADERX - Reinforcement Learning',
       accuracy: 78.3,
       profit: 15.2,
       sharpe: 1.45,
@@ -529,7 +529,7 @@ const AIComparisonPanel: React.FC = () => {
       description: 'DQN Agent'
     },
     {
-      method: 'Ensemble (Híbrido)',
+      method: 'AITRADERX - Ensemble (Híbrido)',
       accuracy: 82.1,
       profit: 18.7,
       sharpe: 1.68,
@@ -542,7 +542,7 @@ const AIComparisonPanel: React.FC = () => {
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold mb-4 flex items-center">
         <TrendingUp className="w-5 h-5 mr-2" />
-        Comparación de Métodos de IA
+        AITRADERX - Comparación de Métodos de IA
       </h3>
 
       <div className="overflow-x-auto">
@@ -594,11 +594,11 @@ const AIComparisonPanel: React.FC = () => {
       </div>
 
       <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-800 mb-2">📊 Resumen de Rendimiento</h4>
+        <h4 className="font-medium text-blue-800 mb-2">📊 AITRADERX - Resumen de Rendimiento</h4>
         <p className="text-blue-700 text-sm">
-          El método <strong>Ensemble (Híbrido)</strong> que combina RL + IA Tradicional muestra 
+          El método <strong>AITRADERX - Ensemble (Híbrido)</strong> que combina RL + IA Tradicional muestra 
           el mejor rendimiento general con <strong>82.1% de precisión</strong> y <strong>18.7% de profit anual</strong>.
-          El agente de Reinforcement Learning aporta decisiones más conservadoras pero consistentes.
+          El agente de Reinforcement Learning de AITRADERX aporta decisiones más conservadoras pero consistentes.
         </p>
       </div>
     </div>
@@ -646,9 +646,3 @@ export const rlService = {
   }
 };
 
-// src/App.tsx - Actualizar navegación para incluir RL
-// Añadir al array de tabs:
-{ id: 'rl', name: 'Reinforcement Learning', icon: Zap }
-
-// Y en el contenido:
-{activeTab === 'rl' && <RLDashboard />}

@@ -1,7 +1,7 @@
 {
-  "name": "ai-trading-frontend",
+  "name": "aitraderx-frontend",
   "version": "1.0.0",
-  "description": "Frontend for AI Trading System",
+  "description": "Frontend for AITRADERX - Advanced AI Trading System",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
