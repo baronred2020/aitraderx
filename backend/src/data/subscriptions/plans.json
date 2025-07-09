@@ -1,0 +1,212 @@
+{
+  "0e169801-aea5-41b9-97a9-a8d824e90f85": {
+    "plan_id": "0e169801-aea5-41b9-97a9-a8d824e90f85",
+    "name": "Freemium",
+    "plan_type": "freemium",
+    "price": 0.0,
+    "currency": "USD",
+    "billing_cycle": "monthly",
+    "ai_capabilities": {
+      "traditional_ai": true,
+      "reinforcement_learning": false,
+      "ensemble_ai": false,
+      "lstm_predictions": false,
+      "custom_models": false,
+      "auto_training": false
+    },
+    "api_limits": {
+      "daily_requests": 100,
+      "prediction_days": 3,
+      "backtest_days": 30,
+      "trading_pairs": 1,
+      "alerts_limit": 3,
+      "portfolio_size": 1
+    },
+    "ui_features": {
+      "advanced_charts": false,
+      "multiple_timeframes": false,
+      "rl_dashboard": false,
+      "ai_monitor": false,
+      "mt4_integration": false,
+      "api_access": false,
+      "custom_reports": false,
+      "priority_support": false
+    },
+    "description": "Plan gratuito para empezar con trading b\u00e1sico",
+    "benefits": [
+      "Se\u00f1ales b\u00e1sicas de trading",
+      "1 indicador t\u00e9cnico (RSI)",
+      "Predicciones limitadas (3 d\u00edas)",
+      "Backtesting b\u00e1sico (30 d\u00edas)",
+      "1 par de trading (EUR/USD)",
+      "3 alertas b\u00e1sicas"
+    ],
+    "max_indicators": 1,
+    "max_predictions_per_day": 10,
+    "max_backtests_per_month": 5,
+    "max_portfolios": 1,
+    "support_level": "community",
+    "response_time_hours": 72
+  },
+  "2b83cc4a-62f8-438f-9026-a5b1c174d6fa": {
+    "plan_id": "2b83cc4a-62f8-438f-9026-a5b1c174d6fa",
+    "name": "B\u00e1sico",
+    "plan_type": "basic",
+    "price": 29.0,
+    "currency": "USD",
+    "billing_cycle": "monthly",
+    "ai_capabilities": {
+      "traditional_ai": true,
+      "reinforcement_learning": false,
+      "ensemble_ai": false,
+      "lstm_predictions": false,
+      "custom_models": false,
+      "auto_training": false
+    },
+    "api_limits": {
+      "daily_requests": 500,
+      "prediction_days": 7,
+      "backtest_days": 90,
+      "trading_pairs": 5,
+      "alerts_limit": 10,
+      "portfolio_size": 3
+    },
+    "ui_features": {
+      "advanced_charts": true,
+      "multiple_timeframes": false,
+      "rl_dashboard": false,
+      "ai_monitor": false,
+      "mt4_integration": false,
+      "api_access": false,
+      "custom_reports": false,
+      "priority_support": false
+    },
+    "description": "Plan para traders serios que quieren m\u00e1s herramientas",
+    "benefits": [
+      "AI Tradicional completa",
+      "3 indicadores t\u00e9cnicos (RSI, MACD, Bollinger)",
+      "Predicciones mejoradas (7 d\u00edas)",
+      "Backtesting avanzado (90 d\u00edas)",
+      "5 pares de trading",
+      "10 alertas avanzadas",
+      "An\u00e1lisis b\u00e1sico de tendencias",
+      "Reportes mensuales"
+    ],
+    "max_indicators": 3,
+    "max_predictions_per_day": 50,
+    "max_backtests_per_month": 20,
+    "max_portfolios": 3,
+    "support_level": "email",
+    "response_time_hours": 48
+  },
+  "297428ea-6f78-48ef-849e-3f6292d39ba1": {
+    "plan_id": "297428ea-6f78-48ef-849e-3f6292d39ba1",
+    "name": "Pro",
+    "plan_type": "pro",
+    "price": 99.0,
+    "currency": "USD",
+    "billing_cycle": "monthly",
+    "ai_capabilities": {
+      "traditional_ai": true,
+      "reinforcement_learning": true,
+      "ensemble_ai": true,
+      "lstm_predictions": true,
+      "custom_models": false,
+      "auto_training": true
+    },
+    "api_limits": {
+      "daily_requests": 2000,
+      "prediction_days": 14,
+      "backtest_days": 365,
+      "trading_pairs": 50,
+      "alerts_limit": 50,
+      "portfolio_size": 10
+    },
+    "ui_features": {
+      "advanced_charts": true,
+      "multiple_timeframes": true,
+      "rl_dashboard": true,
+      "ai_monitor": true,
+      "mt4_integration": true,
+      "api_access": false,
+      "custom_reports": true,
+      "priority_support": false
+    },
+    "description": "Plan para traders profesionales y semi-profesionales",
+    "benefits": [
+      "AI Tradicional Premium + LSTM",
+      "Reinforcement Learning (DQN)",
+      "Todos los indicadores t\u00e9cnicos",
+      "Predicciones avanzadas (14 d\u00edas)",
+      "Backtesting profesional",
+      "Todos los pares de trading",
+      "Ensemble AI (Tradicional + RL)",
+      "Risk Management b\u00e1sico",
+      "Portfolio Optimization b\u00e1sico",
+      "Integraci\u00f3n MT4 b\u00e1sica",
+      "Reportes semanales"
+    ],
+    "max_indicators": 10,
+    "max_predictions_per_day": 200,
+    "max_backtests_per_month": 100,
+    "max_portfolios": 10,
+    "support_level": "email",
+    "response_time_hours": 24
+  },
+  "2d5e05dd-a4e7-4273-b804-7daa4302b7b3": {
+    "plan_id": "2d5e05dd-a4e7-4273-b804-7daa4302b7b3",
+    "name": "Elite",
+    "plan_type": "elite",
+    "price": 299.0,
+    "currency": "USD",
+    "billing_cycle": "monthly",
+    "ai_capabilities": {
+      "traditional_ai": true,
+      "reinforcement_learning": true,
+      "ensemble_ai": true,
+      "lstm_predictions": true,
+      "custom_models": true,
+      "auto_training": true
+    },
+    "api_limits": {
+      "daily_requests": 10000,
+      "prediction_days": 30,
+      "backtest_days": 1825,
+      "trading_pairs": 1000,
+      "alerts_limit": 200,
+      "portfolio_size": 100
+    },
+    "ui_features": {
+      "advanced_charts": true,
+      "multiple_timeframes": true,
+      "rl_dashboard": true,
+      "ai_monitor": true,
+      "mt4_integration": true,
+      "api_access": true,
+      "custom_reports": true,
+      "priority_support": true
+    },
+    "description": "Plan para traders institucionales y fondos",
+    "benefits": [
+      "AI Tradicional Elite + m\u00e1xima precisi\u00f3n",
+      "Reinforcement Learning completo (DQN + PPO)",
+      "Ensemble AI avanzado optimizado",
+      "Predicciones elite (30 d\u00edas)",
+      "Backtesting institucional",
+      "Todos los instrumentos (Forex, Stocks, Crypto)",
+      "Risk Management avanzado",
+      "Portfolio Optimization avanzado",
+      "Auto-Trading con AI",
+      "Custom Models personalizados",
+      "Integraci\u00f3n MT4 completa",
+      "API personalizada",
+      "Soporte prioritario 24/7"
+    ],
+    "max_indicators": 50,
+    "max_predictions_per_day": 1000,
+    "max_backtests_per_month": 500,
+    "max_portfolios": 100,
+    "support_level": "phone",
+    "response_time_hours": 4
+  }
+}

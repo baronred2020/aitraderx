@@ -43,6 +43,10 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+# Importar sistema de suscripciones
+from api.subscription_routes import subscription_router
+from services.subscription_service import SubscriptionService
+
 # Variables globales
 app_state = {}
 
@@ -96,6 +100,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Incluir router de suscripciones
+app.include_router(subscription_router)
 
 # Models de datos
 class Asset(BaseModel):

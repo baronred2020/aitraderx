@@ -1,0 +1,35 @@
+# Core Framework
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+
+# Data Processing
+pandas
+numpy
+scipy
+
+# Machine Learning
+scikit-learn
+
+# Financial Data
+yfinance
+ta
+
+# Database
+sqlalchemy
+alembic
+
+# Networking
+websockets
+requests
+aiohttp
+
+# Utilities
+python-dotenv
+python-jose[cryptography]
+passlib[bcrypt]
+
+# Development
+pytest
+pytest-asyncio 

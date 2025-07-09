@@ -15,8 +15,13 @@ import {
   Shield,
   Users,
   FileText,
-  HelpCircle
+  HelpCircle,
+  User,
+  LogOut,
+  Crown,
+  Zap as ZapIcon
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,9 +30,24 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
+  const { user, subscription, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [isConnected, setIsConnected] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Cerrar menú de usuario al hacer click fuera
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Simular actualizaciones en tiempo real
   React.useEffect(() => {
@@ -124,10 +144,86 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               </span>
             </button>
 
-            {/* Configuración */}
-            <button className="p-2 rounded-lg hover:bg-gray-700/50 transition-colors">
-              <Settings className="w-5 h-5" />
-            </button>
+            {/* Información del usuario */}
+            <div className="relative user-menu-container">
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
+              >
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-medium text-white">{user?.username}</p>
+                  <div className="flex items-center space-x-1">
+                    {subscription?.planType === 'elite' && <Crown className="w-3 h-3 text-yellow-400" />}
+                    {subscription?.planType === 'pro' && <Brain className="w-3 h-3 text-purple-400" />}
+                    {subscription?.planType === 'basic' && <ZapIcon className="w-3 h-3 text-blue-400" />}
+                    <span className="text-xs text-gray-400 capitalize">
+                      {subscription?.planType || 'freemium'}
+                    </span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Menú desplegable del usuario */}
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-64 glass-effect rounded-lg border border-gray-700/50 p-4 z-50">
+                  <div className="space-y-4">
+                    {/* Información del usuario */}
+                    <div className="border-b border-gray-700/50 pb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{user?.username}</p>
+                          <p className="text-sm text-gray-400">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Información de suscripción */}
+                    <div className="border-b border-gray-700/50 pb-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">Plan Actual:</span>
+                        <div className="flex items-center space-x-1">
+                          {subscription?.planType === 'elite' && <Crown className="w-3 h-3 text-yellow-400" />}
+                          {subscription?.planType === 'pro' && <Brain className="w-3 h-3 text-purple-400" />}
+                          {subscription?.planType === 'basic' && <ZapIcon className="w-3 h-3 text-blue-400" />}
+                          <span className="text-sm font-medium text-white capitalize">
+                            {subscription?.planType || 'freemium'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-sm text-gray-400">Estado:</span>
+                        <span className={`text-sm font-medium ${
+                          subscription?.status === 'active' ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {subscription?.status === 'active' ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="space-y-2">
+                      <button className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-700/50 transition-colors text-left">
+                        <Settings className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-300">Configuración</span>
+                      </button>
+                      <button 
+                        onClick={logout}
+                        className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-red-500/20 transition-colors text-left"
+                      >
+                        <LogOut className="w-4 h-4 text-red-400" />
+                        <span className="text-sm text-red-400">Cerrar Sesión</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
