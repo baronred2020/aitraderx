@@ -13,7 +13,12 @@ import {
   RefreshCw,
   Play,
   Pause,
-  Settings
+  Settings,
+  Cpu,
+  Zap,
+  CheckCircle,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -31,6 +36,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { MonitorIA } from '../AIMonitor/MonitorIA';
 
 // Datos de ejemplo para los gráficos
 const performanceData = [
@@ -71,6 +77,25 @@ export const Dashboard: React.FC = () => {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [isTradingActive, setIsTradingActive] = useState(true);
   const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
+
+  // Estado para RL
+  const [rlStatus, setRlStatus] = useState<{ DQN?: any; PPO?: any }>({});
+  const [loadingRL, setLoadingRL] = useState(true);
+  const [errorRL, setErrorRL] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoadingRL(true);
+    fetch('/api/rl/status')
+      .then(res => res.json())
+      .then(data => {
+        setRlStatus(data);
+        setLoadingRL(false);
+      })
+      .catch(err => {
+        setErrorRL('No se pudo obtener el estado de los agentes RL');
+        setLoadingRL(false);
+      });
+  }, []);
 
   const timeframes = ['1H', '4H', '1D', '1W', '1M'];
 
@@ -356,47 +381,8 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Estado del sistema */}
-      <div className="trading-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-6">Estado del Sistema</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="status-indicator status-online"></div>
-              <h4 className="font-semibold text-white">IA Tradicional</h4>
-            </div>
-            <p className="text-sm text-gray-400 mb-2">Random Forest + LSTM</p>
-            <div className="flex items-center justify-between">
-              <span className="text-green-400 text-sm">✅ Activo</span>
-              <span className="text-xs text-gray-400">78.3% precisión</span>
-            </div>
-          </div>
-          
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="status-indicator status-warning"></div>
-              <h4 className="font-semibold text-white">Reinforcement Learning</h4>
-            </div>
-            <p className="text-sm text-gray-400 mb-2">DQN Agent</p>
-            <div className="flex items-center justify-between">
-              <span className="text-blue-400 text-sm">🔄 Entrenando</span>
-              <span className="text-xs text-gray-400">Epoch 1,234</span>
-            </div>
-          </div>
-          
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="status-indicator status-online"></div>
-              <h4 className="font-semibold text-white">Auto-entrenamiento</h4>
-            </div>
-            <p className="text-sm text-gray-400 mb-2">Detección de drift</p>
-            <div className="flex items-center justify-between">
-              <span className="text-purple-400 text-sm">📊 Monitoreando</span>
-              <span className="text-xs text-gray-400">Sin drift detectado</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Estado del sistema IA */}
+      <MonitorIA resumen />
     </div>
   );
 }; 

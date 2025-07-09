@@ -1020,70 +1020,60 @@ from main import app, training_manager, data_collector
 from fastapi import BackgroundTasks
 
 # Variables globales para RL
-rl_system = None
-rl_trained = False
+rl_systems = {"DQN": None, "PPO": None}
+rl_trained = {"DQN": False, "PPO": False}
 
-async def initialize_rl_system():
-    """Inicializa el sistema de RL"""
-    global rl_system
-    
+async def initialize_rl_systems():
+    """Inicializa ambos sistemas de RL (DQN y PPO)"""
+    global rl_systems, rl_trained
     try:
-        print("🤖 Inicializando sistema de Reinforcement Learning...")
-        
-        # Crear sistema RL
-        rl_system = RLTradingSystem(
-            data_source=data_collector,
-            agent_type='DQN',  # Cambiar a 'PPO' si prefieres
-            model_save_path='models/rl_trading_agent.pth'
-        )
-        
-        # Intentar cargar modelo pre-entrenado
-        if rl_system.load_agent():
-            global rl_trained
-            rl_trained = True
-            print("✅ Modelo RL pre-entrenado cargado exitosamente")
-        else:
-            print("⚠️ No se encontró modelo pre-entrenado. Será necesario entrenar.")
-        
+        print("🤖 Inicializando sistemas de Reinforcement Learning (DQN y PPO)...")
+        for agent_type in ["DQN", "PPO"]:
+            rl_systems[agent_type] = RLTradingSystem(
+                data_source=data_collector,
+                agent_type=agent_type,
+                model_save_path=f"models/rl_trading_agent_{agent_type.lower()}.pth"
+            )
+            if rl_systems[agent_type].load_agent():
+                rl_trained[agent_type] = True
+                print(f"✅ Modelo RL {agent_type} pre-entrenado cargado exitosamente")
+            else:
+                print(f"⚠️ No se encontró modelo pre-entrenado para {agent_type}. Será necesario entrenar.")
         return True
-        
     except Exception as e:
-        print(f"❌ Error inicializando sistema RL: {e}")
+        print(f"❌ Error inicializando sistemas RL: {e}")
         return False
 
 @app.on_event("startup")
 async def startup_with_rl():
-    """Startup incluyendo RL"""
-    # Tu inicialización existente
     global training_manager
     training_manager, _ = await setup_auto_training()
-    
-    # Añadir inicialización de RL
-    await initialize_rl_system()
-    
+    await initialize_rl_systems()
     print("🚀 Sistema completo iniciado (Tradicional + RL)")
 
-# Nuevos endpoints para RL
 @app.get("/api/rl/status")
 async def get_rl_status():
-    """Obtiene estado del sistema RL"""
-    global rl_system, rl_trained
-    
-    if not rl_system:
-        return {"status": "not_initialized"}
-    
-    return {
-        "status": "initialized",
-        "trained": rl_trained,
-        "agent_type": rl_system.agent_type,
-        "performance_metrics": rl_system.performance_metrics
-    }
+    """Obtiene estado de ambos sistemas RL"""
+    global rl_systems, rl_trained
+    status = {}
+    for agent_type in ["DQN", "PPO"]:
+        system = rl_systems[agent_type]
+        if not system:
+            status[agent_type] = {"status": "not_initialized"}
+        else:
+            status[agent_type] = {
+                "status": "initialized",
+                "trained": rl_trained[agent_type],
+                "performance_metrics": system.performance_metrics,
+                "agent_type": agent_type
+            }
+    return status
 
 @app.post("/api/rl/train")
 async def train_rl_agent(background_tasks: BackgroundTasks, episodes: int = 1000):
     """Inicia entrenamiento del agente RL"""
-    if not rl_system:
-        return {"error": "Sistema RL no inicializado"}
+    if not rl_systems:
+        return {"error": "Sistemas RL no inicializados"}
     
     background_tasks.add_task(train_rl_agent_background, episodes)
     
@@ -1113,15 +1103,19 @@ async def train_rl_agent_background(episodes: int):
             combined_data = pd.concat(training_data, ignore_index=True).sort_values('Date')
             
             # Inicializar ambiente con datos
-            rl_system.initialize_environment(combined_data)
+            rl_systems["DQN"].initialize_environment(combined_data)
+            rl_systems["PPO"].initialize_environment(combined_data)
             
             # Entrenar agente
-            rl_system.train_agent(episodes=episodes)
+            rl_systems["DQN"].train_agent(episodes=episodes)
+            rl_systems["PPO"].train_agent(episodes=episodes)
             
             # Guardar modelo entrenado
-            rl_system.save_agent()
+            rl_systems["DQN"].save_agent()
+            rl_systems["PPO"].save_agent()
             
-            rl_trained = True
+            rl_trained["DQN"] = True
+            rl_trained["PPO"] = True
             print("✅ Entrenamiento RL completado exitosamente")
             
         else:
@@ -1133,12 +1127,12 @@ async def train_rl_agent_background(episodes: int):
 @app.post("/api/rl/predict")
 async def get_rl_prediction(market_data: dict):
     """Obtiene predicción del agente RL"""
-    if not rl_system or not rl_trained:
-        return {"error": "Agente RL no entrenado"}
+    if not rl_systems:
+        return {"error": "Sistemas RL no inicializados"}
     
     try:
         # Combinar RL con IA tradicional
-        combined_decision = rl_system.combine_with_traditional_ai(market_data)
+        combined_decision = rl_systems["DQN"].combine_with_traditional_ai(market_data)
         
         return {
             "action": combined_decision.action.name,
@@ -1154,19 +1148,24 @@ async def get_rl_prediction(market_data: dict):
 @app.get("/api/rl/performance")
 async def get_rl_performance():
     """Obtiene métricas de rendimiento del RL"""
-    if not rl_system:
-        return {"error": "Sistema RL no inicializado"}
+    if not rl_systems:
+        return {"error": "Sistemas RL no inicializados"}
     
-    return {
-        "performance_metrics": rl_system.performance_metrics,
-        "training_history": rl_system.training_history
-    }
+    performance_data = {}
+    for agent_type in ["DQN", "PPO"]:
+        system = rl_systems[agent_type]
+        if system:
+            performance_data[agent_type] = {
+                "performance_metrics": system.performance_metrics,
+                "training_history": system.training_history
+            }
+    return performance_data
 
 @app.post("/api/rl/evaluate")
 async def evaluate_rl_agent(symbol: str = "AAPL", episodes: int = 10):
     """Evalúa el agente RL en datos de prueba"""
-    if not rl_system or not rl_trained:
-        return {"error": "Agente RL no entrenado"}
+    if not rl_systems:
+        return {"error": "Sistemas RL no inicializados"}
     
     try:
         # Obtener datos de prueba
@@ -1176,7 +1175,7 @@ async def evaluate_rl_agent(symbol: str = "AAPL", episodes: int = 10):
             return {"error": "No se pudieron obtener datos de prueba"}
         
         # Evaluar agente
-        evaluation_results = rl_system.evaluate_agent(test_data, episodes)
+        evaluation_results = rl_systems["DQN"].evaluate_agent(test_data, episodes)
         
         return {
             "evaluation_results": evaluation_results,
@@ -1207,7 +1206,7 @@ async def get_recommended_assets_with_rl():
                 traditional_signals = technical_analyzer.generate_signals(df)
                 
                 # Si RL está disponible, combinar predicciones
-                if rl_system and rl_trained:
+                if rl_systems:
                     market_data = {
                         'symbol': symbol,
                         'price': df['Close'].iloc[-1],
@@ -1218,7 +1217,7 @@ async def get_recommended_assets_with_rl():
                     }
                     
                     # Obtener decisión combinada
-                    rl_decision = rl_system.combine_with_traditional_ai(market_data)
+                    rl_decision = rl_systems["DQN"].combine_with_traditional_ai(market_data)
                     
                     # Usar decisión de RL como principal
                     final_signal = rl_decision.action.name
@@ -1260,7 +1259,7 @@ async def get_recommended_assets_with_rl():
                     'marketCap': 'N/A',
                     'pe': 0,
                     'volatility': round(df['Close'].pct_change().std() * 100, 1),
-                    'ai_type': 'RL + Traditional' if (rl_system and rl_trained) else 'Traditional'
+                    'ai_type': 'RL + Traditional' if (rl_systems and rl_trained["DQN"]) else 'Traditional'
                 }
                 
                 assets.append(asset)

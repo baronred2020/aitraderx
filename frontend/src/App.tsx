@@ -9,6 +9,7 @@ import { useFeatureAccess } from './hooks/useFeatureAccess';
 import { UpgradeModal } from './components/Common/UpgradeModal';
 import { Brain } from 'lucide-react';
 import './index.css';
+import AIMonitorPage from './components/AIMonitor';
 
 // Componentes temporales para las nuevas secciones
 const Portfolio = () => (
@@ -304,7 +305,7 @@ function AppContent() {
         return null;
       case 'ai-monitor':
         if (requireAccess('ai-monitor')) {
-          return <AIMonitor />;
+          return <AIMonitorPage />;
         }
         return null;
       case 'rl':
