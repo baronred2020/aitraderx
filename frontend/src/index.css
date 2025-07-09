@@ -2,78 +2,314 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos personalizados */
+/* Variables CSS para el tema de trading */
+:root {
+  --primary-bg: #0a0e1a;
+  --secondary-bg: #1a1f2e;
+  --tertiary-bg: #252b3d;
+  --accent-bg: #2d3748;
+  --primary-text: #ffffff;
+  --secondary-text: #a0aec0;
+  --accent-text: #38b2ac;
+  --success-color: #48bb78;
+  --danger-color: #f56565;
+  --warning-color: #ed8936;
+  --border-color: #2d3748;
+  --chart-grid: #2d3748;
+  --chart-line: #38b2ac;
+  --chart-area: rgba(56, 178, 172, 0.1);
+}
+
+/* Estilos base */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent horizontal scroll on mobile */
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
   overflow-x: hidden;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-/* Animaciones personalizadas */
+::-webkit-scrollbar-track {
+  background: var(--secondary-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-bg);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tertiary-bg);
+}
+
+/* Animaciones */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: translateX(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Componentes de trading */
+.trading-card {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.trading-card:hover {
+  border-color: var(--accent-text);
+  box-shadow: 0 8px 25px rgba(56, 178, 172, 0.15);
+  transform: translateY(-2px);
+}
+
+.trading-button {
+  background: linear-gradient(135deg, var(--accent-text) 0%, #319795 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.trading-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(56, 178, 172, 0.3);
+}
+
+.trading-button:active {
+  transform: translateY(0);
 }
 
 /* Estilos para gráficos */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: #e5e7eb;
+  stroke: var(--chart-grid);
+  stroke-width: 1;
 }
 
 .recharts-tooltip-wrapper {
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background: var(--tertiary-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Mobile-specific styles */
+.recharts-tooltip-content {
+  background: var(--tertiary-bg) !important;
+  border: none !important;
+  border-radius: 8px !important;
+}
+
+/* Estilos para tablas de trading */
+.trading-table {
+  background: var(--secondary-bg);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.trading-table th {
+  background: var(--tertiary-bg);
+  color: var(--secondary-text);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.trading-table td {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem;
+}
+
+.trading-table tr:hover {
+  background: var(--accent-bg);
+}
+
+/* Indicadores de estado */
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.status-online {
+  background: var(--success-color);
+  box-shadow: 0 0 8px rgba(72, 187, 120, 0.5);
+}
+
+.status-offline {
+  background: var(--danger-color);
+}
+
+.status-warning {
+  background: var(--warning-color);
+}
+
+/* Gradientes y efectos */
+.gradient-bg {
+  background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+}
+
+.glass-effect {
+  background: rgba(26, 31, 46, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
-  /* Improve touch targets */
   button, [role="button"] {
     min-height: 44px;
     min-width: 44px;
   }
   
-  /* Better scrolling on mobile */
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Prevent zoom on input focus */
   input, select, textarea {
     font-size: 16px;
   }
 }
 
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Estilos para modales */
+.modal-overlay {
+  background: rgba(10, 14, 26, 0.8);
+  backdrop-filter: blur(4px);
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+.modal-content {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+/* Estilos para notificaciones */
+.notification {
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+.notification-success {
+  border-left: 4px solid var(--success-color);
+}
+
+.notification-error {
+  border-left: 4px solid var(--danger-color);
+}
+
+.notification-warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+/* Estilos para inputs */
+.trading-input {
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--primary-text);
+  transition: all 0.3s ease;
+}
+
+.trading-input:focus {
+  border-color: var(--accent-text);
+  box-shadow: 0 0 0 3px rgba(56, 178, 172, 0.1);
+  outline: none;
+}
+
+.trading-input::placeholder {
+  color: var(--secondary-text);
+}
+
+/* Estilos para badges */
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-success {
+  background: rgba(72, 187, 120, 0.2);
+  color: var(--success-color);
+}
+
+.badge-danger {
+  background: rgba(245, 101, 101, 0.2);
+  color: var(--danger-color);
+}
+
+.badge-warning {
+  background: rgba(237, 137, 54, 0.2);
+  color: var(--warning-color);
+}
+
+.badge-info {
+  background: rgba(56, 178, 172, 0.2);
+  color: var(--accent-text);
 } 
