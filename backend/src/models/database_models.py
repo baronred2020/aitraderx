@@ -4,13 +4,47 @@ Modelos de Base de Datos - Sistema de Suscripciones
 Modelos SQLAlchemy para integrar con MySQL
 """
 
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, JSON
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
 Base = declarative_base()
+
+class User(Base):
+    """Modelo para usuarios en MySQL"""
+    __tablename__ = "users"
+    
+    # Identificación
+    user_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    username = Column(String(50), nullable=False, unique=True, index=True)
+    email = Column(String(254), nullable=False, unique=True, index=True)
+    
+    # Información personal
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    phone = Column(String(20), nullable=True)
+    
+    # Autenticación
+    password_hash = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    
+    # Roles y permisos
+    role = Column(String(20), default="user")  # user, admin, moderator
+    
+    # Configuración
+    timezone = Column(String(50), default="UTC")
+    language = Column(String(10), default="es")
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
+    
+    # Relaciones
+    subscriptions = relationship("UserSubscription", back_populates="user")
 
 class SubscriptionPlan(Base):
     """Modelo para planes de suscripción en MySQL"""
@@ -77,8 +111,8 @@ class UserSubscription(Base):
     
     # Identificación
     subscription_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(100), nullable=False, index=True)
-    plan_id = Column(String(36), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
+    plan_id = Column(String(36), ForeignKey("subscription_plans.plan_id"), nullable=False, index=True)
     plan_type = Column(String(20), nullable=False)  # freemium, basic, pro, elite
     
     # Fechas
@@ -103,6 +137,7 @@ class UserSubscription(Base):
     
     # Relaciones
     plan = relationship("SubscriptionPlan", back_populates="subscriptions")
+    user = relationship("User", back_populates="subscriptions")
     usage_records = relationship("UsageMetrics", back_populates="subscription")
 
 class UsageMetrics(Base):
@@ -111,8 +146,8 @@ class UsageMetrics(Base):
     
     # Identificación
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(100), nullable=False, index=True)
-    subscription_id = Column(String(36), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
+    subscription_id = Column(String(36), ForeignKey("user_subscriptions.subscription_id"), nullable=False, index=True)
     date = Column(DateTime, nullable=False, default=datetime.utcnow)
     
     # Métricas de API
@@ -144,7 +179,7 @@ class SubscriptionUpgrade(Base):
     
     # Identificación
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(100), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
     current_plan = Column(String(20), nullable=False)
     target_plan = Column(String(20), nullable=False)
     reason = Column(Text, nullable=True)
@@ -162,8 +197,8 @@ class SubscriptionPayment(Base):
     
     # Identificación
     payment_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    subscription_id = Column(String(36), nullable=False, index=True)
-    user_id = Column(String(100), nullable=False, index=True)
+    subscription_id = Column(String(36), ForeignKey("user_subscriptions.subscription_id"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
     
     # Información del pago
     amount = Column(Float, nullable=False)
@@ -187,8 +222,8 @@ class SubscriptionAudit(Base):
     
     # Identificación
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(100), nullable=False, index=True)
-    subscription_id = Column(String(36), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
+    subscription_id = Column(String(36), ForeignKey("user_subscriptions.subscription_id"), nullable=False, index=True)
     
     # Información de la acción
     action = Column(String(50), nullable=False)  # created, upgraded, cancelled, renewed, etc.

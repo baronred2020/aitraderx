@@ -5,6 +5,4 @@ const AIMonitorPage: React.FC = () => {
   return <MonitorIA />;
 };
 
-export {};
-
 export default AIMonitorPage; 

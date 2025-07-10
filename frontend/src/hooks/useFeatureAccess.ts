@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UpgradeModal } from '../components/Common/UpgradeModal';
 
@@ -50,23 +50,26 @@ export const useFeatureAccess = () => {
     feature: string;
   } | null>(null);
 
-  const checkAccess = (section: string): boolean => {
-    if (!subscription || subscription.status !== 'active') {
-      return section === 'dashboard';
-    }
+  // Memoizar las funciones de verificación para evitar re-renders
+  const checkAccess = useMemo(() => {
+    return (section: string): boolean => {
+      if (!subscription || subscription.status !== 'active') {
+        return section === 'dashboard';
+      }
+      return canAccess(section);
+    };
+  }, [subscription, canAccess]);
 
-    return canAccess(section);
-  };
+  const checkFeature = useMemo(() => {
+    return (feature: string): boolean => {
+      if (!subscription || subscription.status !== 'active') {
+        return false;
+      }
+      return hasFeature(feature);
+    };
+  }, [subscription, hasFeature]);
 
-  const checkFeature = (feature: string): boolean => {
-    if (!subscription || subscription.status !== 'active') {
-      return false;
-    }
-
-    return hasFeature(feature);
-  };
-
-  const requireAccess = (section: string): boolean => {
+  const requireAccess = useCallback((section: string): boolean => {
     const hasAccess = checkAccess(section);
     
     if (!hasAccess) {
@@ -82,12 +85,12 @@ export const useFeatureAccess = () => {
     }
     
     return hasAccess;
-  };
+  }, [checkAccess, subscription]);
 
-  const requireFeature = (feature: string): boolean => {
-    const hasFeature = checkFeature(feature);
+  const requireFeature = useCallback((feature: string): boolean => {
+    const hasFeatureAccess = checkFeature(feature);
     
-    if (!hasFeature) {
+    if (!hasFeatureAccess) {
       // Encontrar la sección que requiere esta característica
       const section = Object.keys(featureConfig).find(
         key => featureConfig[key].feature === feature
@@ -104,13 +107,13 @@ export const useFeatureAccess = () => {
       }
     }
     
-    return hasFeature;
-  };
+    return hasFeatureAccess;
+  }, [checkFeature, subscription]);
 
-  const closeUpgradeModal = () => {
+  const closeUpgradeModal = useCallback(() => {
     setShowUpgradeModal(false);
     setUpgradeInfo(null);
-  };
+  }, []);
 
   return {
     checkAccess,

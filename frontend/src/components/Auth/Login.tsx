@@ -129,7 +129,10 @@ export const Login: React.FC = () => {
         <div className="text-center mt-8">
           <p className="text-gray-400 text-sm">
             ¿No tienes cuenta?{' '}
-            <button className="text-blue-400 hover:text-blue-300 transition-colors">
+            <button 
+              onClick={() => window.location.href = '/register'}
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
               Regístrate aquí
             </button>
           </p>

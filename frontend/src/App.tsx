@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Layout } from './components/Common/Layout';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { TradingView } from './components/Trading/TradingView';
-import { RLDashboard } from './components/RL/RLDashboard';
 import { Login } from './components/Auth/Login';
+import { Register } from './components/Auth/Register';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useFeatureAccess } from './hooks/useFeatureAccess';
 import { UpgradeModal } from './components/Common/UpgradeModal';
+import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import { Brain } from 'lucide-react';
 import './index.css';
 import AIMonitorPage from './components/AIMonitor';
@@ -252,38 +253,25 @@ function AppContent() {
   const { user, isLoading } = useAuth();
   const { requireAccess, showUpgradeModal, upgradeInfo, closeUpgradeModal } = useFeatureAccess();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [currentRoute, setCurrentRoute] = useState('login');
 
-  // Mostrar loading mientras se verifica la autenticación
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center p-4">
-        <div className="text-center max-w-md w-full">
-          <div className="flex items-center justify-center mb-8">
-            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-teal-500 rounded-3xl flex items-center justify-center animate-pulse shadow-2xl">
-              <Brain className="w-12 h-12 text-white" />
-            </div>
-          </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent mb-4 animate-pulse">
-            AITRADERX
-          </h1>
-          <p className="text-gray-400 text-xl mb-8">AI Trading Platform</p>
-          <div className="space-y-4">
-            <div className="w-48 h-3 bg-gray-700 rounded-full mx-auto overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-teal-500 rounded-full animate-pulse transition-all duration-1000" style={{width: '70%'}}></div>
-            </div>
-            <p className="text-gray-500 text-base">Inicializando sistema...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Detectar la ruta actual
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/register') {
+      setCurrentRoute('register');
+    } else if (path === '/login') {
+      setCurrentRoute('login');
+    }
+  }, []);
 
-  // Si no hay usuario autenticado, mostrar login
-  if (!user) {
-    return <Login />;
-  }
+  // Memoizar el handler de cambio de tab
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+  }, []);
 
-  const renderContent = () => {
+  // Memoizar el contenido para evitar re-renders infinitos
+  const content = useMemo(() => {
     // Verificar acceso antes de renderizar cada sección
     switch (activeTab) {
       case 'dashboard':
@@ -333,12 +321,45 @@ function AppContent() {
       default:
         return <Dashboard />;
     }
-  };
+  }, [activeTab, requireAccess]);
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-md w-full">
+          <div className="flex items-center justify-center mb-8">
+            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-teal-500 rounded-3xl flex items-center justify-center animate-pulse shadow-2xl">
+              <Brain className="w-12 h-12 text-white" />
+            </div>
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent mb-4 animate-pulse">
+            AITRADERX
+          </h1>
+          <p className="text-gray-400 text-xl mb-8">AI Trading Platform</p>
+          <div className="space-y-4">
+            <div className="w-48 h-3 bg-gray-700 rounded-full mx-auto overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-teal-500 rounded-full animate-pulse transition-all duration-1000" style={{width: '70%'}}></div>
+            </div>
+            <p className="text-gray-500 text-base">Inicializando sistema...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay usuario autenticado, mostrar login o registro según la ruta
+  if (!user) {
+    if (currentRoute === 'register') {
+      return <Register />;
+    }
+    return <Login />;
+  }
 
   return (
     <>
-      <Layout activeTab={activeTab} onTabChange={setActiveTab}>
-        {renderContent()}
+      <Layout activeTab={activeTab} onTabChange={handleTabChange}>
+        {content}
       </Layout>
       {upgradeInfo && (
         <UpgradeModal
@@ -355,9 +376,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

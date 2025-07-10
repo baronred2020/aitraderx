@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 
 export interface User {
   id: string;
@@ -47,8 +47,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mapeo de características por plan
-  const planFeatures = {
+  // Mapeo de características por plan - mover fuera del componente o memoizar
+  const planFeatures = useMemo(() => ({
     freemium: {
       features: ['basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis'],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis']
@@ -77,9 +77,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community']
     }
-  };
+  }), []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
@@ -131,15 +131,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     setSubscription(null);
     localStorage.removeItem('auth_token');
-  };
+  }, []);
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
@@ -162,25 +162,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const hasFeature = (feature: string): boolean => {
+  const hasFeature = useCallback((feature: string): boolean => {
     if (!subscription || subscription.status !== 'active') {
       return false;
     }
 
     const plan = planFeatures[subscription.planType];
     return plan?.features.includes(feature) || false;
-  };
+  }, [subscription, planFeatures]);
 
-  const canAccess = (section: string): boolean => {
+  const canAccess = useCallback((section: string): boolean => {
     if (!subscription || subscription.status !== 'active') {
       return section === 'dashboard'; // Solo dashboard para usuarios sin suscripción
     }
 
     const plan = planFeatures[subscription.planType];
     return plan?.sections.includes(section) || false;
-  };
+  }, [subscription, planFeatures]);
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -189,9 +189,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } else {
       setIsLoading(false);
     }
-  }, []);
+  }, [checkSubscription]);
 
-  const value: AuthContextType = {
+  // Memoizar el valor del contexto para evitar re-renders innecesarios
+  const value = useMemo<AuthContextType>(() => ({
     user,
     subscription,
     isLoading,
@@ -200,7 +201,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkSubscription,
     hasFeature,
     canAccess,
-  };
+  }), [user, subscription, isLoading, login, logout, checkSubscription, hasFeature, canAccess]);
 
   return (
     <AuthContext.Provider value={value}>
