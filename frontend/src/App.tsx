@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Layout } from './components/Common/Layout';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { TradingView } from './components/Trading/TradingView';
+import { Analysis } from './components/Analysis/Analysis';
 import { Login } from './components/Auth/Login';
 import { Register } from './components/Auth/Register';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -42,30 +43,7 @@ const Portfolio = () => (
   </div>
 );
 
-const Analysis = () => (
-  <div className="p-6">
-    <div className="trading-card p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Análisis Avanzado</h2>
-      <div className="bg-gray-800/50 rounded-lg p-8 text-center">
-        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl">📊</span>
-        </div>
-        <h3 className="text-lg font-semibold text-white mb-2">Análisis Técnico y Fundamental</h3>
-        <p className="text-gray-400 mb-4">Herramientas avanzadas de análisis de mercado</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-gray-700/50 rounded-lg p-4">
-            <div className="text-lg font-semibold text-white mb-2">Análisis Técnico</div>
-            <div className="text-sm text-gray-400">Indicadores, patrones y señales</div>
-          </div>
-          <div className="bg-gray-700/50 rounded-lg p-4">
-            <div className="text-lg font-semibold text-white mb-2">Análisis Fundamental</div>
-            <div className="text-sm text-gray-400">Noticias, eventos y datos económicos</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+
 
 const AIMonitor = () => (
   <div className="p-6">
