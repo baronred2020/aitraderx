@@ -17,7 +17,7 @@ import {
 import { TradingChart } from './TradingChart';
 
 export const TradingView: React.FC = () => {
-  const [selectedSymbol, setSelectedSymbol] = useState('EUR/USD');
+  const [selectedSymbol, setSelectedSymbol] = useState('EURUSD');
   const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
   const [orderType, setOrderType] = useState<'market' | 'limit' | 'stop'>('market');
   const [orderSide, setOrderSide] = useState<'buy' | 'sell'>('buy');
@@ -25,26 +25,26 @@ export const TradingView: React.FC = () => {
   const [orderPrice, setOrderPrice] = useState('1.0925');
 
   const symbols = [
-    { pair: 'EUR/USD', price: '1.0854', change: '+0.12%', volume: '2.4M', trend: 'up' },
-    { pair: 'GBP/USD', price: '1.2654', change: '-0.08%', volume: '1.8M', trend: 'down' },
-    { pair: 'USD/JPY', price: '148.23', change: '+0.25%', volume: '3.1M', trend: 'up' },
-    { pair: 'AUD/USD', price: '0.6543', change: '+0.18%', volume: '1.2M', trend: 'up' },
-    { pair: 'USD/CAD', price: '1.3542', change: '-0.05%', volume: '0.9M', trend: 'down' },
+    { pair: 'EURUSD', label: 'EUR/USD', price: '1.0854', change: '+0.12%', volume: '2.4M', trend: 'up' },
+    { pair: 'GBPUSD', label: 'GBP/USD', price: '1.2654', change: '-0.08%', volume: '1.8M', trend: 'down' },
+    { pair: 'USDJPY', label: 'USD/JPY', price: '148.23', change: '+0.25%', volume: '3.1M', trend: 'up' },
+    { pair: 'AUDUSD', label: 'AUD/USD', price: '0.6543', change: '+0.18%', volume: '1.2M', trend: 'up' },
+    { pair: 'USDCAD', label: 'USD/CAD', price: '1.3542', change: '-0.05%', volume: '0.9M', trend: 'down' },
   ];
 
   const timeframes = ['1M', '5M', '15M', '1H', '4H', '1D', '1W'];
 
   const recentOrders = [
-    { id: 1, pair: 'EUR/USD', type: 'BUY', amount: '10,000', price: '1.0854', time: '14:32:15', status: 'filled' },
-    { id: 2, pair: 'GBP/USD', type: 'SELL', amount: '5,000', price: '1.2654', time: '14:28:42', status: 'pending' },
-    { id: 3, pair: 'USD/JPY', type: 'BUY', amount: '15,000', price: '148.23', time: '14:25:18', status: 'filled' },
-    { id: 4, pair: 'AUD/USD', type: 'SELL', amount: '8,000', price: '0.6543', time: '14:22:05', status: 'cancelled' },
+    { id: 1, pair: 'EURUSD', type: 'BUY', amount: '10,000', price: '1.0854', time: '14:32:15', status: 'filled' },
+    { id: 2, pair: 'GBPUSD', type: 'SELL', amount: '5,000', price: '1.2654', time: '14:28:42', status: 'pending' },
+    { id: 3, pair: 'USDJPY', type: 'BUY', amount: '15,000', price: '148.23', time: '14:25:18', status: 'filled' },
+    { id: 4, pair: 'AUDUSD', type: 'SELL', amount: '8,000', price: '0.6543', time: '14:22:05', status: 'cancelled' },
   ];
 
   const openPositions = [
-    { id: 1, pair: 'EUR/USD', type: 'BUY', amount: '10,000', openPrice: '1.0854', currentPrice: '1.0925', pnl: '+$71', pnlPercent: '+0.65%' },
-    { id: 2, pair: 'GBP/USD', type: 'SELL', amount: '5,000', openPrice: '1.2654', currentPrice: '1.2630', pnl: '+$12', pnlPercent: '+0.19%' },
-    { id: 3, pair: 'USD/JPY', type: 'BUY', amount: '15,000', openPrice: '148.23', currentPrice: '148.45', pnl: '+$22', pnlPercent: '+0.15%' },
+    { id: 1, pair: 'EURUSD', type: 'BUY', amount: '10,000', openPrice: '1.0854', currentPrice: '1.0925', pnl: '+$71', pnlPercent: '+0.65%' },
+    { id: 2, pair: 'GBPUSD', type: 'SELL', amount: '5,000', openPrice: '1.2654', currentPrice: '1.2630', pnl: '+$12', pnlPercent: '+0.19%' },
+    { id: 3, pair: 'USDJPY', type: 'BUY', amount: '15,000', openPrice: '148.23', currentPrice: '148.45', pnl: '+$22', pnlPercent: '+0.15%' },
   ];
 
   const handlePlaceOrder = () => {
@@ -107,7 +107,7 @@ export const TradingView: React.FC = () => {
                       <span className="text-xs font-bold text-white">{symbol.pair.split('/')[0]}</span>
                     </div>
                     <div>
-                      <p className="text-sm sm:text-base font-semibold text-white">{symbol.pair}</p>
+                      <p className="text-sm sm:text-base font-semibold text-white">{symbol.label}</p>
                       <p className="text-xs text-gray-400">Vol: {symbol.volume}</p>
                     </div>
                   </div>

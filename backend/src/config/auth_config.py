@@ -10,11 +10,17 @@ from typing import Optional
 from jose import JWTError, jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Cargar variables de entorno desde el directorio padre
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(env_path)
 
 # Configuración de JWT
-SECRET_KEY = os.getenv("SECRET_KEY", "tu_clave_secreta_muy_segura_aqui_cambiala_en_produccion")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 # Configuración de contraseñas
 PASSWORD_MIN_LENGTH = 8

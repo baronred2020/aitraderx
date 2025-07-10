@@ -10,8 +10,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from dotenv import load_dotenv
 
-# Cargar variables de entorno
-load_dotenv()
+# Cargar variables de entorno desde el directorio padre
+from pathlib import Path
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(env_path)
 
 # Configuración de la base de datos MySQL
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -20,8 +22,8 @@ DB_NAME = os.getenv("DB_NAME", "trading_db")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 
-# URL de conexión MySQL
-DATABASE_URL = f"mysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# URL de conexión MySQL (usar la del .env si existe, sino construir)
+DATABASE_URL = os.getenv("DATABASE_URL", f"mysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 # Configuración del engine SQLAlchemy
 engine = create_engine(

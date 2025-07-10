@@ -10,11 +10,17 @@ import {
 
 export const Analysis: React.FC = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
-  const [selectedPair, setSelectedPair] = useState('EUR/USD');
+  const [selectedPair, setSelectedPair] = useState('EURUSD');
   const [analysisType, setAnalysisType] = useState<'technical' | 'fundamental'>('technical');
 
   const timeframes = ['1M', '5M', '15M', '1H', '4H', '1D', '1W'];
-  const tradingPairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD'];
+  const tradingPairs = [
+    { pair: 'EURUSD', label: 'EUR/USD' },
+    { pair: 'GBPUSD', label: 'GBP/USD' },
+    { pair: 'USDJPY', label: 'USD/JPY' },
+    { pair: 'AUDUSD', label: 'AUD/USD' },
+    { pair: 'USDCAD', label: 'USD/CAD' },
+  ];
 
   // Datos de ejemplo para análisis técnico
   const technicalIndicators = [
@@ -36,7 +42,7 @@ export const Analysis: React.FC = () => {
   const tradingSignals = [
     { 
       type: 'BUY', 
-      pair: 'EUR/USD', 
+      pair: 'EURUSD', 
       price: '1.0854', 
       strength: 'strong',
       reason: 'RSI oversold + Support level',
@@ -44,7 +50,7 @@ export const Analysis: React.FC = () => {
     },
     { 
       type: 'SELL', 
-      pair: 'GBP/USD', 
+      pair: 'GBPUSD', 
       price: '1.2654', 
       strength: 'medium',
       reason: 'Resistance level reached',
@@ -52,7 +58,7 @@ export const Analysis: React.FC = () => {
     },
     { 
       type: 'HOLD', 
-      pair: 'USD/JPY', 
+      pair: 'USDJPY', 
       price: '148.23', 
       strength: 'weak',
       reason: 'Mixed signals',
@@ -114,7 +120,7 @@ export const Analysis: React.FC = () => {
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
           >
             {tradingPairs.map(pair => (
-              <option key={pair} value={pair}>{pair}</option>
+              <option key={pair.pair} value={pair.pair}>{pair.label}</option>
             ))}
           </select>
         </div>

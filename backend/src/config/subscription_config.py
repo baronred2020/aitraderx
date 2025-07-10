@@ -4,12 +4,19 @@ Configuración del Sistema de Suscripciones
 Configuraciones y constantes para el sistema de suscripciones
 """
 
+import os
 from typing import Dict, List, Any
 from models.subscription import PlanType
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Cargar variables de entorno desde el directorio padre
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(env_path)
 
 # Configuración de directorios
-SUBSCRIPTION_DATA_DIR = "data/subscriptions"
-SUBSCRIPTION_LOGS_DIR = "logs/subscriptions"
+SUBSCRIPTION_DATA_DIR = os.getenv("SUBSCRIPTION_DATA_DIR", "data/subscriptions")
+SUBSCRIPTION_LOGS_DIR = os.getenv("SUBSCRIPTION_LOGS_DIR", "logs/subscriptions")
 
 # Configuración de archivos
 SUBSCRIPTION_FILES = {

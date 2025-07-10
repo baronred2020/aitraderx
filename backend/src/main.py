@@ -36,17 +36,21 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('../logs/app.log'),
+        logging.FileHandler('../logs/app.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
 
 logger = logging.getLogger(__name__)
 
+# Importar configuración de entorno
+import env_config
+
 # Importar sistema de suscripciones y autenticación
 from api.subscription_routes import subscription_router
 from api.auth_routes import auth_router
 from services.subscription_service import SubscriptionService
+from api import market_data_routes
 
 # Variables globales
 app_state = {}
@@ -55,7 +59,7 @@ app_state = {}
 async def lifespan(app: FastAPI):
     """Gestión del ciclo de vida de la aplicación"""
     # Startup
-    logger.info("🚀 Iniciando AI Trading System...")
+    logger.info("Iniciando AI Trading System...")
     
     try:
         # Aquí se inicializarán todos los servicios
@@ -71,16 +75,16 @@ async def lifespan(app: FastAPI):
         app_state["status"] = "running"
         app_state["start_time"] = datetime.now()
         
-        logger.info("✅ AI Trading System iniciado correctamente")
+        logger.info("AI Trading System iniciado correctamente")
         
     except Exception as e:
-        logger.error(f"❌ Error iniciando sistema: {e}")
+        logger.error(f"Error iniciando sistema: {e}")
         app_state["status"] = "error"
         
     yield
     
     # Shutdown
-    logger.info("🛑 Deteniendo AI Trading System...")
+    logger.info("Deteniendo AI Trading System...")
     app_state["status"] = "shutdown"
 
 # Crear aplicación FastAPI
@@ -105,6 +109,7 @@ app.add_middleware(
 # Incluir routers
 app.include_router(subscription_router)
 app.include_router(auth_router)
+app.include_router(market_data_routes.router)
 
 # Models de datos
 class Asset(BaseModel):

@@ -58,19 +58,19 @@ const aiPerformanceData = [
   { name: 'Falsos Negativos', value: 9.6, color: '#f56565' },
 ];
 
-const tradingPairs = [
-  { pair: 'EUR/USD', price: '1.0854', change: '+0.12%', volume: '2.4M', trend: 'up' },
-  { pair: 'GBP/USD', price: '1.2654', change: '-0.08%', volume: '1.8M', trend: 'down' },
-  { pair: 'USD/JPY', price: '148.23', change: '+0.25%', volume: '3.1M', trend: 'up' },
-  { pair: 'AUD/USD', price: '0.6543', change: '+0.18%', volume: '1.2M', trend: 'up' },
-  { pair: 'USD/CAD', price: '1.3542', change: '-0.05%', volume: '0.9M', trend: 'down' },
+const symbols = [
+  { pair: 'EURUSD', label: 'EUR/USD', price: '1.0854', change: '+0.12%', volume: '2.4M', trend: 'up' },
+  { pair: 'GBPUSD', label: 'GBP/USD', price: '1.2654', change: '-0.08%', volume: '1.8M', trend: 'down' },
+  { pair: 'USDJPY', label: 'USD/JPY', price: '148.23', change: '+0.25%', volume: '3.1M', trend: 'up' },
+  { pair: 'AUDUSD', label: 'AUD/USD', price: '0.6543', change: '+0.18%', volume: '1.2M', trend: 'up' },
+  { pair: 'USDCAD', label: 'USD/CAD', price: '1.3542', change: '-0.05%', volume: '0.9M', trend: 'down' },
 ];
 
-const recentTrades = [
-  { id: 1, pair: 'EUR/USD', type: 'BUY', amount: '10,000', price: '1.0854', time: '14:32:15', status: 'filled' },
-  { id: 2, pair: 'GBP/USD', type: 'SELL', amount: '5,000', price: '1.2654', time: '14:28:42', status: 'pending' },
-  { id: 3, pair: 'USD/JPY', type: 'BUY', amount: '15,000', price: '148.23', time: '14:25:18', status: 'filled' },
-  { id: 4, pair: 'AUD/USD', type: 'SELL', amount: '8,000', price: '0.6543', time: '14:22:05', status: 'cancelled' },
+const recentOrders = [
+  { id: 1, pair: 'EURUSD', type: 'BUY', amount: '10,000', price: '1.0854', time: '14:32:15', status: 'filled' },
+  { id: 2, pair: 'GBPUSD', type: 'SELL', amount: '5,000', price: '1.2654', time: '14:28:42', status: 'pending' },
+  { id: 3, pair: 'USDJPY', type: 'BUY', amount: '15,000', price: '148.23', time: '14:25:18', status: 'filled' },
+  { id: 4, pair: 'AUDUSD', type: 'SELL', amount: '8,000', price: '0.6543', time: '14:22:05', status: 'cancelled' },
 ];
 
 export const Dashboard: React.FC = () => {
@@ -315,27 +315,27 @@ export const Dashboard: React.FC = () => {
             <button className="text-sm text-blue-400 hover:text-blue-300">Ver todos</button>
           </div>
           <div className="space-y-4">
-            {tradingPairs.map((pair, index) => (
+            {symbols.map((symbol, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-teal-500 rounded-lg flex items-center justify-center">
-                    <span className="text-xs font-bold text-white">{pair.pair.split('/')[0]}</span>
+                    <span className="text-xs font-bold text-white">{symbol.pair.split('/')[0]}</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-white">{pair.pair}</p>
-                    <p className="text-xs text-gray-400">Vol: {pair.volume}</p>
+                    <p className="font-semibold text-white">{symbol.label}</p>
+                    <p className="text-xs text-gray-400">Vol: {symbol.volume}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-white">{pair.price}</p>
+                  <p className="font-semibold text-white">{symbol.price}</p>
                   <div className="flex items-center space-x-1">
-                    {pair.trend === 'up' ? (
+                    {symbol.trend === 'up' ? (
                       <ArrowUpRight className="w-3 h-3 text-green-400" />
                     ) : (
                       <ArrowDownRight className="w-3 h-3 text-red-400" />
                     )}
-                    <span className={`text-xs ${pair.trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                      {pair.change}
+                    <span className={`text-xs ${symbol.trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
+                      {symbol.change}
                     </span>
                   </div>
                 </div>
@@ -351,29 +351,29 @@ export const Dashboard: React.FC = () => {
             <button className="text-sm text-blue-400 hover:text-blue-300">Ver todas</button>
           </div>
           <div className="space-y-3">
-            {recentTrades.map((trade) => (
-              <div key={trade.id} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+            {recentOrders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`w-2 h-2 rounded-full ${
-                    trade.status === 'filled' ? 'bg-green-400' :
-                    trade.status === 'pending' ? 'bg-yellow-400' :
+                    order.status === 'filled' ? 'bg-green-400' :
+                    order.status === 'pending' ? 'bg-yellow-400' :
                     'bg-red-400'
                   }`} />
                   <div>
-                    <p className="font-semibold text-white">{trade.pair}</p>
-                    <p className="text-xs text-gray-400">{trade.time}</p>
+                    <p className="font-semibold text-white">{order.pair}</p>
+                    <p className="text-xs text-gray-400">{order.time}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center space-x-2">
                     <span className={`text-sm font-semibold ${
-                      trade.type === 'BUY' ? 'text-green-400' : 'text-red-400'
+                      order.type === 'BUY' ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {trade.type}
+                      {order.type}
                     </span>
-                    <span className="text-sm text-white">{trade.amount}</span>
+                    <span className="text-sm text-white">{order.amount}</span>
                   </div>
-                  <p className="text-xs text-gray-400">{trade.price}</p>
+                  <p className="text-xs text-gray-400">{order.price}</p>
                 </div>
               </div>
             ))}
