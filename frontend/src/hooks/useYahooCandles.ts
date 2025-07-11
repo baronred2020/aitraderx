@@ -33,25 +33,33 @@ export const useYahooCandles = (symbol: string, timeInterval: string = '15', cou
   const [data, setData] = useState<CandlesResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     if (!symbol) return;
 
-    const fetchCandles = async () => {
+    const fetchCandles = async (isBackgroundUpdate = false) => {
       // Verificar cache primero
       const cacheKey = `yahoo_${symbol}-${timeInterval}-${count}`;
       const cached = yahooCandlesCache.get(cacheKey);
       const now = Date.now();
       
-      // Cache válido por 1 minuto para velas de Yahoo Finance (reducido para actualizaciones más frecuentes)
+      // Cache válido por 1 minuto para velas de Yahoo Finance
       if (cached && (now - cached.timestamp) < YAHOO_CANDLES_CACHE_TTL) {
         console.log(`[Yahoo Candles] Using cached data for ${symbol}`);
         setData(cached.data);
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
         return;
       }
 
-      console.log(`[Yahoo Candles] Fetching fresh data for ${symbol}`);
-      setLoading(true);
+      console.log(`[Yahoo Candles] Fetching ${isBackgroundUpdate ? 'background update' : 'fresh data'} for ${symbol}`);
+      
+      // Solo mostrar loading en carga inicial, no en actualizaciones background
+      if (!isBackgroundUpdate && isInitialLoad) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -64,7 +72,7 @@ export const useYahooCandles = (symbol: string, timeInterval: string = '15', cou
         }
 
         const result = await response.json();
-        console.log(`[Yahoo Candles] Received data for ${symbol}:`, result);
+        console.log(`[Yahoo Candles] Received ${isBackgroundUpdate ? 'background update' : 'data'} for ${symbol}:`, result);
         
         // Actualizar cache
         yahooCandlesCache.set(cacheKey, {
@@ -74,6 +82,9 @@ export const useYahooCandles = (symbol: string, timeInterval: string = '15', cou
         });
 
         setData(result);
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
+        }
       } catch (err) {
         console.error('Error fetching Yahoo Finance candles:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -82,9 +93,15 @@ export const useYahooCandles = (symbol: string, timeInterval: string = '15', cou
         if (cached) {
           console.log(`[Yahoo Candles] Using cached data due to error`);
           setData(cached.data);
+          if (isInitialLoad) {
+            setIsInitialLoad(false);
+          }
         }
       } finally {
-        setLoading(false);
+        // Solo ocultar loading si lo habíamos mostrado
+        if (!isBackgroundUpdate && isInitialLoad) {
+          setLoading(false);
+        }
       }
     };
 
@@ -97,18 +114,19 @@ export const useYahooCandles = (symbol: string, timeInterval: string = '15', cou
     if (previousCacheKeys.length > 0) {
       console.log(`[Yahoo Candles] Clearing old cache for symbol change: ${symbol} - ${previousCacheKeys.join(', ')}`);
       previousCacheKeys.forEach(key => yahooCandlesCache.delete(key));
+      setIsInitialLoad(true); // Reset cuando cambia el símbolo
     }
 
     // Fetch inicial inmediato
-    fetchCandles();
+    fetchCandles(false);
 
-    // Configurar intervalo - velas de Yahoo Finance se actualizan cada 1 minuto (reducido para cambios más frecuentes)
+    // Configurar intervalo - velas de Yahoo Finance se actualizan cada 1 minuto en background
     const updateInterval = setInterval(() => {
-      fetchCandles();
-    }, 60 * 1000); // 1 minuto (reducido de 5 minutos)
+      fetchCandles(true); // Marcar como actualización background
+    }, 60 * 1000); // 1 minuto
 
     return () => clearInterval(updateInterval);
-  }, [symbol, timeInterval, count]);
+  }, [symbol, timeInterval, count, isInitialLoad]);
 
   return { data, loading, error };
 }; 

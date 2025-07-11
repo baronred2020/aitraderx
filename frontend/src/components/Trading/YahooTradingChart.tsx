@@ -182,6 +182,9 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   const [showIndicators, setShowIndicators] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastSymbol, setLastSymbol] = useState(symbol);
+  const [initialLoadingCandles, setInitialLoadingCandles] = useState(true);
+  const [initialLoadingMarket, setInitialLoadingMarket] = useState(true);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
 
   // Hook para datos de velas
   const { data: candleData, loading: candleLoading, error: candleError } = useCandles(symbol, '15', 100);
@@ -194,14 +197,42 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
     if (symbol !== lastSymbol) {
       console.log(`[YahooTradingChart] Symbol changed from ${lastSymbol} to ${symbol}`);
       setLastSymbol(symbol);
+      // Reset initial loading flags when symbol changes
+      setInitialLoadingCandles(true);
+      setInitialLoadingMarket(true);
     }
   }, [symbol, lastSymbol]);
 
-  // Determinar si está cargando (incluyendo cambio de símbolo)
-  const isLoading = candleLoading || marketLoading || symbol !== lastSymbol;
+  // Manejar el estado de loading inicial para candles
+  useEffect(() => {
+    if (candleData && initialLoadingCandles) {
+      setInitialLoadingCandles(false);
+      setLastUpdateTime(new Date());
+    }
+  }, [candleData, initialLoadingCandles]);
 
-  // Mostrar loading inmediato al cambiar símbolo
-  const showLoading = isLoading || !candleData || !marketData;
+  // Manejar el estado de loading inicial para market data
+  useEffect(() => {
+    if (marketData && Object.keys(marketData).length > 0 && initialLoadingMarket) {
+      setInitialLoadingMarket(false);
+      setLastUpdateTime(new Date());
+    }
+  }, [marketData, initialLoadingMarket]);
+
+  // Detectar actualizaciones en background
+  useEffect(() => {
+    if (!initialLoadingCandles && !initialLoadingMarket && (candleData || marketData)) {
+      setLastUpdateTime(new Date());
+    }
+  }, [candleData, marketData, initialLoadingCandles, initialLoadingMarket]);
+
+  // Determinar si está cargando - solo mostrar loading en carga inicial o cambio de símbolo
+  const isInitialLoading = (initialLoadingCandles && candleLoading) || 
+                          (initialLoadingMarket && marketLoading) || 
+                          symbol !== lastSymbol;
+
+  // Solo mostrar loading para carga inicial, no para actualizaciones en background
+  const showLoading = isInitialLoading || (!candleData && !candleError) || (!marketData && !marketError);
 
   // Transformar datos de Yahoo Finance al formato del gráfico
   const chartData = candleData && candleData.values
@@ -417,8 +448,11 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-white">{symbol}</h3>
               <p className="text-xs sm:text-sm text-gray-400">
-                {timeframe} • Yahoo Finance • {new Date().toLocaleTimeString()}
-                {isLoading && <span className="text-blue-400 ml-2">🔄 Actualizando...</span>}
+                {timeframe} • Yahoo Finance • {lastUpdateTime.toLocaleTimeString()}
+                {isInitialLoading && <span className="text-blue-400 ml-2">🔄 Actualizando...</span>}
+                {!isInitialLoading && (candleLoading || marketLoading) && (
+                  <span className="text-green-400 ml-2 text-xs animate-pulse">● Live</span>
+                )}
               </p>
             </div>
           </div>
@@ -688,12 +722,17 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
         )}
 
         {/* Indicadores técnicos */}
-        {showIndicators && !isLoading && (
+        {showIndicators && !isInitialLoading && (
           <div className="mt-4 sm:mt-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-sm font-semibold text-white">Indicadores Técnicos</h4>
-              <div className="text-xs text-gray-400">
-                Actualizado • {new Date().toLocaleTimeString()}
+              <div className="flex items-center space-x-2">
+                {(candleLoading || marketLoading) && !isInitialLoading && (
+                  <span className="text-green-400 text-xs animate-pulse">● Actualizando</span>
+                )}
+                <div className="text-xs text-gray-400">
+                  Última actualización: {lastUpdateTime.toLocaleTimeString()}
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
