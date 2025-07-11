@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -15,6 +15,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { YahooTradingChart } from './YahooTradingChart';
+import { useYahooMarketData } from '../../hooks/useYahooMarketData';
 
 export const TradingView: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('EURUSD');
@@ -24,13 +25,41 @@ export const TradingView: React.FC = () => {
   const [orderAmount, setOrderAmount] = useState('10000');
   const [orderPrice, setOrderPrice] = useState('1.0925');
 
-  const symbols = [
-    { pair: 'EURUSD', label: 'EUR/USD', price: '1.0854', change: '+0.12%', volume: '2.4M', trend: 'up' },
-    { pair: 'GBPUSD', label: 'GBP/USD', price: '1.2654', change: '-0.08%', volume: '1.8M', trend: 'down' },
-    { pair: 'USDJPY', label: 'USD/JPY', price: '148.23', change: '+0.25%', volume: '3.1M', trend: 'up' },
-    { pair: 'AUDUSD', label: 'AUD/USD', price: '0.6543', change: '+0.18%', volume: '1.2M', trend: 'up' },
-    { pair: 'USDCAD', label: 'USD/CAD', price: '1.3542', change: '-0.05%', volume: '0.9M', trend: 'down' },
+  // Definir símbolos base sin precios hardcodeados
+  const baseSymbols = [
+    { pair: 'EURUSD', label: 'EUR/USD' },
+    { pair: 'GBPUSD', label: 'GBP/USD' },
+    { pair: 'USDJPY', label: 'USD/JPY' },
+    { pair: 'AUDUSD', label: 'AUD/USD' },
+    { pair: 'USDCAD', label: 'USD/CAD' },
   ];
+
+  // Obtener datos de mercado reales
+  const symbolList = baseSymbols.map(s => s.pair);
+  const { data: marketData, loading: marketLoading, error: marketError } = useYahooMarketData(symbolList);
+
+  // Combinar datos base con datos de mercado reales
+  const symbols = baseSymbols.map(baseSymbol => {
+    const marketInfo = marketData[baseSymbol.pair];
+    const changePercent = marketInfo?.changePercent || '0.00';
+    const isPositive = !changePercent.startsWith('-');
+    
+    return {
+      ...baseSymbol,
+      price: marketInfo?.price || 'Loading...',
+      change: changePercent ? `${isPositive ? '+' : ''}${changePercent}%` : '0.00%',
+      volume: marketInfo?.volume || '-',
+      trend: isPositive ? 'up' : 'down'
+    };
+  });
+
+  // Actualizar precio de orden cuando cambie el símbolo seleccionado
+  useEffect(() => {
+    const selectedMarketData = marketData[selectedSymbol];
+    if (selectedMarketData?.price && selectedMarketData.price !== 'Loading...') {
+      setOrderPrice(selectedMarketData.price);
+    }
+  }, [selectedSymbol, marketData]);
 
   const timeframes = ['1M', '5M', '15M', '1H', '4H', '1D', '1W'];
 
@@ -78,6 +107,18 @@ export const TradingView: React.FC = () => {
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-sm text-green-400 font-medium">Trading Activo</span>
           </div>
+          {marketLoading && (
+            <div className="flex items-center space-x-2 bg-blue-500/20 border border-blue-500/30 rounded-lg px-3 py-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              <span className="text-sm text-blue-400 font-medium">Actualizando Precios</span>
+            </div>
+          )}
+          {marketError && (
+            <div className="flex items-center space-x-2 bg-red-500/20 border border-red-500/30 rounded-lg px-3 py-2">
+              <AlertTriangle className="w-3 h-3 text-red-400" />
+              <span className="text-sm text-red-400 font-medium">Error datos de mercado</span>
+            </div>
+          )}
           <button className="trading-button px-4 py-2">
             <Settings className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Configuración</span>
@@ -86,57 +127,36 @@ export const TradingView: React.FC = () => {
       </div>
 
       {/* Layout principal - Responsive */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
-        {/* Panel de símbolos */}
-        <div className="xl:col-span-1 order-1">
-          <div className="trading-card p-3 sm:p-4">
-            <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Símbolos</h3>
-            <div className="space-y-2">
-              {symbols.map((symbol, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedSymbol(symbol.pair)}
-                  className={`w-full flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all ${
-                    selectedSymbol === symbol.pair
-                      ? 'bg-blue-500/20 border border-blue-500/30'
-                      : 'bg-gray-800/50 hover:bg-gray-700/50'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-teal-500 rounded-lg flex items-center justify-center">
-                      <span className="text-xs font-bold text-white">{symbol.pair.split('/')[0]}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm sm:text-base font-semibold text-white">{symbol.label}</p>
-                      <p className="text-xs text-gray-400">Vol: {symbol.volume}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm sm:text-base font-semibold text-white">{symbol.price}</p>
-                    <div className="flex items-center space-x-1">
-                      {symbol.trend === 'up' ? (
-                        <ArrowUpRight className="w-3 h-3 text-green-400" />
-                      ) : (
-                        <ArrowDownRight className="w-3 h-3 text-red-400" />
-                      )}
-                      <span className={`text-xs ${symbol.trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                        {symbol.change}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Gráfico principal */}
-        <div className="xl:col-span-2 order-3 xl:order-2">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        {/* Gráfico principal - Ocupa 2/3 partes */}
+        <div className="xl:col-span-2 order-1">
           <YahooTradingChart symbol={selectedSymbol} timeframe={selectedTimeframe} />
         </div>
 
-        {/* Panel de órdenes */}
-        <div className="xl:col-span-1 order-2 xl:order-3 space-y-4 sm:space-y-6">
+        {/* Panel lateral - Ocupa 1/3 parte */}
+        <div className="xl:col-span-1 order-2 space-y-4 sm:space-y-6">
+          {/* Selector de símbolos desplegable */}
+          <div className="trading-card p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Símbolo</h3>
+            <div className="relative">
+              <select
+                value={selectedSymbol}
+                onChange={(e) => setSelectedSymbol(e.target.value)}
+                className="w-full trading-input px-3 py-2 text-sm appearance-none bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              >
+                {symbols.map((symbol) => (
+                  <option key={symbol.pair} value={symbol.pair} className="bg-gray-800 text-white">
+                    {symbol.label} - {symbol.price} ({symbol.change})
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
           {/* Nueva orden */}
           <div className="trading-card p-3 sm:p-4">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Nueva Orden</h3>

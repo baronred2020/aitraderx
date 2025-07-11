@@ -253,3 +253,44 @@ WHERE users.username = %s
 2025-07-10 19:45:43,417 - main - INFO - Deteniendo AI Trading System...
 2025-07-10 19:46:07,510 - main - INFO - Iniciando AI Trading System...
 2025-07-10 19:46:07,515 - main - INFO - AI Trading System iniciado correctamente
+2025-07-10 19:46:12,208 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 19:46:13,088 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 19:59:10,433 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 19:59:11,185 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:02:26,032 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:02:26,584 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 20:06:38,429 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:06:39,234 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 20:09:47,062 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:09:47,437 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 20:12:02,794 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:12:05,805 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 20:13:24,803 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:13:25,265 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 20:23:03,065 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:23:03,600 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 20:32:01,239 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 20:32:01,798 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 22:31:26,779 - yfinance - ERROR - $AUDUSD,EURUSD,GBPUSD,USDCAD,USDJPY: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 22:31:27,698 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 22:32:00,064 - yfinance - ERROR - $AUDUSD,EURUSD,GBPUSD,USDCAD,USDJPY: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 22:32:00,708 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 22:32:39,079 - yfinance - ERROR - $AUDUSD,EURUSD,GBPUSD,USDCAD,USDJPY: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 22:32:39,723 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 22:32:54,133 - yfinance - ERROR - $EURUSD,GBPUSD,USDJPY,AUDUSD,USDCAD: possibly delisted; no price data found  (period=2d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-10 22:32:54,847 - yfinance - ERROR - HTTP Error 404: 
+2025-07-10 22:33:02,931 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2006, 'Server has gone away')
+[SQL: SELECT users.user_id AS users_user_id, users.username AS users_username, users.email AS users_email, users.first_name AS users_first_name, users.last_name AS users_last_name, users.phone AS users_phone, users.password_hash AS users_password_hash, users.is_active AS users_is_active, users.is_verified AS users_is_verified, users.role AS users_role, users.timezone AS users_timezone, users.language AS users_language, users.created_at AS users_created_at, users.updated_at AS users_updated_at, users.last_login AS users_last_login 
+FROM users 
+WHERE users.username = %s 
+ LIMIT %s]
+[parameters: ('prueba1', 1)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-10 22:33:14,985 - api.auth_routes - ERROR - Error en login: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-10 22:33:33,953 - api.auth_routes - ERROR - Error en login: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-10 22:35:39,272 - main - INFO - Deteniendo AI Trading System...
+2025-07-10 22:36:04,480 - main - INFO - Iniciando AI Trading System...
+2025-07-10 22:36:04,480 - main - INFO - AI Trading System iniciado correctamente
+2025-07-10 22:36:18,560 - main - INFO - Iniciando AI Trading System...
+2025-07-10 22:36:18,561 - main - INFO - AI Trading System iniciado correctamente
+2025-07-10 22:40:05,251 - main - INFO - Deteniendo AI Trading System...
