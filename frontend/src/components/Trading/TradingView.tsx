@@ -14,7 +14,7 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { TradingChart } from './TradingChart';
+import { YahooTradingChart } from './YahooTradingChart';
 
 export const TradingView: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('EURUSD');
@@ -132,7 +132,7 @@ export const TradingView: React.FC = () => {
 
         {/* Gráfico principal */}
         <div className="xl:col-span-2 order-3 xl:order-2">
-          <TradingChart symbol={selectedSymbol} timeframe={selectedTimeframe} />
+          <YahooTradingChart symbol={selectedSymbol} timeframe={selectedTimeframe} />
         </div>
 
         {/* Panel de órdenes */}
