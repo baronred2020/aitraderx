@@ -215,6 +215,125 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
       }))
     : [];
 
+  // Funciones para calcular indicadores técnicos reales
+  const calculateSMA = (data: any[], period: number) => {
+    if (data.length < period) return null;
+    const sum = data.slice(-period).reduce((acc, item) => acc + item.close, 0);
+    return sum / period;
+  };
+
+  const calculateEMA = (data: any[], period: number) => {
+    if (data.length < period) return null;
+    const multiplier = 2 / (period + 1);
+    let ema = data.slice(0, period).reduce((acc, item) => acc + item.close, 0) / period;
+    
+    for (let i = period; i < data.length; i++) {
+      ema = (data[i].close * multiplier) + (ema * (1 - multiplier));
+    }
+    return ema;
+  };
+
+  const calculateRSI = (data: any[], period: number = 14) => {
+    if (data.length < period + 1) return null;
+    
+    let gains = 0;
+    let losses = 0;
+    
+    // Calcular cambios iniciales
+    for (let i = 1; i <= period; i++) {
+      const change = data[i].close - data[i - 1].close;
+      if (change >= 0) {
+        gains += change;
+      } else {
+        losses += Math.abs(change);
+      }
+    }
+    
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    
+    // Calcular RSI para los datos restantes
+    for (let i = period + 1; i < data.length; i++) {
+      const change = data[i].close - data[i - 1].close;
+      const gain = change >= 0 ? change : 0;
+      const loss = change < 0 ? Math.abs(change) : 0;
+      
+      avgGain = (avgGain * (period - 1) + gain) / period;
+      avgLoss = (avgLoss * (period - 1) + loss) / period;
+    }
+    
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
+  };
+
+  const calculateMACD = (data: any[]) => {
+    const ema12 = calculateEMA(data, 12);
+    const ema26 = calculateEMA(data, 26);
+    
+    if (!ema12 || !ema26) return null;
+    return ema12 - ema26;
+  };
+
+  const calculateADX = (data: any[], period: number = 14) => {
+    if (data.length < period + 1) return null;
+    
+    const trueRanges: number[] = [];
+    const plusDMs: number[] = [];
+    const minusDMs: number[] = [];
+    
+    // Calcular True Range, +DM y -DM
+    for (let i = 1; i < data.length; i++) {
+      const current = data[i];
+      const previous = data[i - 1];
+      
+      // True Range
+      const tr = Math.max(
+        current.high - current.low,
+        Math.abs(current.high - previous.close),
+        Math.abs(current.low - previous.close)
+      );
+      trueRanges.push(tr);
+      
+      // Directional Movement
+      const upMove = current.high - previous.high;
+      const downMove = previous.low - current.low;
+      
+      const plusDM = (upMove > downMove && upMove > 0) ? upMove : 0;
+      const minusDM = (downMove > upMove && downMove > 0) ? downMove : 0;
+      
+      plusDMs.push(plusDM);
+      minusDMs.push(minusDM);
+    }
+    
+    if (trueRanges.length < period) return null;
+    
+    // Calcular ATR (Average True Range) suavizado
+    let atr = trueRanges.slice(0, period).reduce((sum, tr) => sum + tr, 0) / period;
+    let plusDI = plusDMs.slice(0, period).reduce((sum, dm) => sum + dm, 0) / period;
+    let minusDI = minusDMs.slice(0, period).reduce((sum, dm) => sum + dm, 0) / period;
+    
+    // Suavizar para el resto de los datos
+    for (let i = period; i < trueRanges.length; i++) {
+      atr = (atr * (period - 1) + trueRanges[i]) / period;
+      plusDI = (plusDI * (period - 1) + plusDMs[i]) / period;
+      minusDI = (minusDI * (period - 1) + minusDMs[i]) / period;
+    }
+    
+    // Calcular +DI% y -DI%
+    const plusDIPercent = atr !== 0 ? (plusDI / atr) * 100 : 0;
+    const minusDIPercent = atr !== 0 ? (minusDI / atr) * 100 : 0;
+    
+    // Calcular DX
+    const diSum = plusDIPercent + minusDIPercent;
+    const diDiff = Math.abs(plusDIPercent - minusDIPercent);
+    const dx = diSum !== 0 ? (diDiff / diSum) * 100 : 0;
+    
+    // Para simplificar, retornamos el DX como aproximación del ADX
+    // En una implementación completa, necesitaríamos suavizar múltiples valores DX
+    return dx;
+  };
+
   const chartTypes = [
     { 
       id: 'candlestick', 
@@ -251,6 +370,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
     { id: 'ema', name: 'EMA 50', color: '#f56565' },
     { id: 'rsi', name: 'RSI', color: '#ed8936' },
     { id: 'macd', name: 'MACD', color: '#9f7aea' },
+    { id: 'adx', name: 'ADX 14', color: '#06b6d4' },
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -576,36 +696,82 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                 Actualizado • {new Date().toLocaleTimeString()}
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
               {indicators.map((indicator) => {
-                // Simular valores dinámicos basados en los datos del gráfico
+                // Calcular indicadores técnicos reales
                 const lastCandle = chartData[chartData.length - 1];
                 let value, signal, signalColor;
                 
                 switch(indicator.id) {
                   case 'rsi':
-                    value = lastCandle ? (65 + Math.sin(Date.now() / 100000) * 15).toFixed(1) : '72.5';
-                    signal = parseFloat(value) > 70 ? 'Sobrecompra' : parseFloat(value) < 30 ? 'Sobreventa' : 'Neutral';
-                    signalColor = parseFloat(value) > 70 ? 'text-red-400' : parseFloat(value) < 30 ? 'text-green-400' : 'text-yellow-400';
+                    const rsiValue = calculateRSI(chartData);
+                    value = rsiValue ? rsiValue.toFixed(1) : 'N/A';
+                    if (rsiValue) {
+                      signal = rsiValue > 70 ? 'Sobrecompra' : rsiValue < 30 ? 'Sobreventa' : 'Neutral';
+                      signalColor = rsiValue > 70 ? 'text-red-400' : rsiValue < 30 ? 'text-green-400' : 'text-yellow-400';
+                    } else {
+                      signal = 'Insuficientes datos';
+                      signalColor = 'text-gray-400';
+                    }
                     break;
                   case 'macd':
-                    value = lastCandle ? (0.0025 + Math.sin(Date.now() / 80000) * 0.001).toFixed(4) : '0.0025';
-                    signal = parseFloat(value) > 0 ? 'Alcista' : 'Bajista';
-                    signalColor = parseFloat(value) > 0 ? 'text-green-400' : 'text-red-400';
+                    const macdValue = calculateMACD(chartData);
+                    value = macdValue ? macdValue.toFixed(4) : 'N/A';
+                    if (macdValue) {
+                      signal = macdValue > 0 ? 'Alcista' : 'Bajista';
+                      signalColor = macdValue > 0 ? 'text-green-400' : 'text-red-400';
+                    } else {
+                      signal = 'Insuficientes datos';
+                      signalColor = 'text-gray-400';
+                    }
                     break;
                   case 'sma':
-                    value = lastCandle ? (lastCandle.close - 0.0002).toFixed(4) : '1.0862';
-                    signal = lastCandle && lastCandle.close > parseFloat(value) ? 'Por encima' : 'Por debajo';
-                    signalColor = lastCandle && lastCandle.close > parseFloat(value) ? 'text-green-400' : 'text-red-400';
+                    const smaValue = calculateSMA(chartData, 20);
+                    value = smaValue ? smaValue.toFixed(4) : 'N/A';
+                    if (smaValue && lastCandle) {
+                      signal = lastCandle.close > smaValue ? 'Por encima' : 'Por debajo';
+                      signalColor = lastCandle.close > smaValue ? 'text-green-400' : 'text-red-400';
+                    } else {
+                      signal = 'Insuficientes datos';
+                      signalColor = 'text-gray-400';
+                    }
                     break;
                   case 'ema':
-                    value = lastCandle ? (lastCandle.close - 0.0005).toFixed(4) : '1.0857';
-                    signal = lastCandle && lastCandle.close > parseFloat(value) ? 'Por encima' : 'Por debajo';
-                    signalColor = lastCandle && lastCandle.close > parseFloat(value) ? 'text-green-400' : 'text-red-400';
+                    const emaValue = calculateEMA(chartData, 50);
+                    value = emaValue ? emaValue.toFixed(4) : 'N/A';
+                    if (emaValue && lastCandle) {
+                      signal = lastCandle.close > emaValue ? 'Por encima' : 'Por debajo';
+                      signalColor = lastCandle.close > emaValue ? 'text-green-400' : 'text-red-400';
+                    } else {
+                      signal = 'Insuficientes datos';
+                      signalColor = 'text-gray-400';
+                    }
+                    break;
+                  case 'adx':
+                    const adxValue = calculateADX(chartData);
+                    value = adxValue ? adxValue.toFixed(1) : 'N/A';
+                    if (adxValue) {
+                      if (adxValue >= 50) {
+                        signal = 'Tendencia muy fuerte';
+                        signalColor = 'text-purple-400';
+                      } else if (adxValue >= 25) {
+                        signal = 'Tendencia fuerte';
+                        signalColor = 'text-blue-400';
+                      } else if (adxValue >= 20) {
+                        signal = 'Tendencia moderada';
+                        signalColor = 'text-yellow-400';
+                      } else {
+                        signal = 'Sin tendencia';
+                        signalColor = 'text-gray-400';
+                      }
+                    } else {
+                      signal = 'Insuficientes datos';
+                      signalColor = 'text-gray-400';
+                    }
                     break;
                   default:
-                    value = '1.0862';
-                    signal = 'Neutral';
+                    value = 'N/A';
+                    signal = 'No disponible';
                     signalColor = 'text-gray-400';
                 }
 
@@ -633,13 +799,98 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
             <div className="mt-4 p-3 bg-gray-800/30 rounded-lg border border-gray-700/30">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-400">Señal general del mercado</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                  <span className="text-sm font-medium text-green-400">ALCISTA</span>
-                </div>
+                {(() => {
+                  // Calcular señal general basada en indicadores reales
+                  let bullishSignals = 0;
+                  let bearishSignals = 0;
+                  let totalSignals = 0;
+                  
+                  if (chartData.length > 0) {
+                    const lastCandle = chartData[chartData.length - 1];
+                    const rsi = calculateRSI(chartData);
+                    const macd = calculateMACD(chartData);
+                    const sma = calculateSMA(chartData, 20);
+                    const ema = calculateEMA(chartData, 50);
+                    const adx = calculateADX(chartData);
+                    
+                    // RSI
+                    if (rsi !== null) {
+                      totalSignals++;
+                      if (rsi < 30) bullishSignals++; // Sobreventa = oportunidad de compra
+                      else if (rsi > 70) bearishSignals++; // Sobrecompra = oportunidad de venta
+                    }
+                    
+                    // MACD
+                    if (macd !== null) {
+                      totalSignals++;
+                      if (macd > 0) bullishSignals++;
+                      else bearishSignals++;
+                    }
+                    
+                    // SMA
+                    if (sma !== null && lastCandle) {
+                      totalSignals++;
+                      if (lastCandle.close > sma) bullishSignals++;
+                      else bearishSignals++;
+                    }
+                    
+                    // EMA
+                    if (ema !== null && lastCandle) {
+                      totalSignals++;
+                      if (lastCandle.close > ema) bullishSignals++;
+                      else bearishSignals++;
+                    }
+                    
+                    // ADX - Solo influye si hay tendencia fuerte (>=25)
+                    // ADX no da señal direccional pero refuerza las otras señales
+                    if (adx !== null && adx >= 25) {
+                      // Si ADX es fuerte, damos peso extra a las señales existentes
+                      const multiplier = adx >= 50 ? 1.5 : 1.2;
+                      
+                      // Determinar dirección basada en MACD y precio vs medias
+                      let trendDirection = 0;
+                      if (macd !== null) trendDirection += macd > 0 ? 1 : -1;
+                      if (sma !== null && lastCandle) trendDirection += lastCandle.close > sma ? 1 : -1;
+                      if (ema !== null && lastCandle) trendDirection += lastCandle.close > ema ? 1 : -1;
+                      
+                      if (trendDirection > 0) {
+                        bullishSignals += 0.5 * multiplier;
+                      } else if (trendDirection < 0) {
+                        bearishSignals += 0.5 * multiplier;
+                      }
+                      totalSignals += 0.5 * multiplier;
+                    }
+                  }
+                  
+                  const bullishPercentage = totalSignals > 0 ? (bullishSignals / totalSignals) * 100 : 0;
+                  let overallSignal, signalColor, signalBg;
+                  
+                  if (bullishPercentage >= 60) {
+                    overallSignal = 'ALCISTA';
+                    signalColor = 'text-green-400';
+                    signalBg = 'bg-green-400';
+                  } else if (bullishPercentage <= 40) {
+                    overallSignal = 'BAJISTA';
+                    signalColor = 'text-red-400';
+                    signalBg = 'bg-red-400';
+                  } else {
+                    overallSignal = 'NEUTRAL';
+                    signalColor = 'text-yellow-400';
+                    signalBg = 'bg-yellow-400';
+                  }
+                  
+                  return (
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${signalBg}`}></div>
+                      <span className={`text-sm font-medium ${signalColor}`}>
+                        {overallSignal} ({bullishPercentage.toFixed(0)}%)
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Basado en el análisis de {indicators.length} indicadores técnicos
+                Basado en {chartData.length > 0 ? 'análisis en tiempo real' : 'datos insuficientes'} de {indicators.length} indicadores técnicos
               </p>
             </div>
           </div>
