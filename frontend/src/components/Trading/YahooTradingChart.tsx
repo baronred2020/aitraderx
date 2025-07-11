@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useCandles } from '../../hooks/useCandles';
 import { useMarketData } from '../../hooks/useMarketData';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 
 // Tipos simples para lightweight-charts
 declare const createChart: any;
@@ -207,6 +207,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   const [dataRange, setDataRange] = useState({ start: 0, end: 100 });
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
   const [isTouching, setIsTouching] = useState(false);
+  const [showSmartAnalysis, setShowSmartAnalysis] = useState(true);
 
   // Hook para datos de velas
   const { data: candleData, loading: candleLoading, error: candleError } = useCandles(symbol, '15', 100);
@@ -546,6 +547,317 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
     return dx;
   };
 
+  // 🤖 FUNCIONES INTELIGENTES DE TRADING
+  
+  // Detectar patrones de candlestick
+  const detectCandlestickPatterns = (data: any[]) => {
+    if (data.length < 3) return [];
+    
+    const patterns = [];
+    
+    for (let i = 2; i < data.length; i++) {
+      const current = data[i];
+      const previous = data[i - 1];
+      const twoBefore = data[i - 2];
+      
+      const currentBody = Math.abs(current.close - current.open);
+      const currentUpper = current.high - Math.max(current.open, current.close);
+      const currentLower = Math.min(current.open, current.close) - current.low;
+      const previousBody = Math.abs(previous.close - previous.open);
+      
+      // Doji Pattern
+      if (currentBody < (current.high - current.low) * 0.1) {
+        patterns.push({
+          index: i,
+          name: 'Doji',
+          type: 'neutral',
+          strength: 0.7,
+          description: 'Indecisión del mercado',
+          probability: 65
+        });
+      }
+      
+      // Hammer Pattern
+      if (current.close > current.open && // Vela alcista
+          currentLower > currentBody * 2 && // Sombra inferior larga
+          currentUpper < currentBody * 0.5) { // Sombra superior corta
+        patterns.push({
+          index: i,
+          name: 'Hammer',
+          type: 'bullish',
+          strength: 0.8,
+          description: 'Posible reversión alcista',
+          probability: 75
+        });
+      }
+      
+      // Shooting Star Pattern
+      if (current.close < current.open && // Vela bajista
+          currentUpper > currentBody * 2 && // Sombra superior larga
+          currentLower < currentBody * 0.5) { // Sombra inferior corta
+        patterns.push({
+          index: i,
+          name: 'Shooting Star',
+          type: 'bearish',
+          strength: 0.8,
+          description: 'Posible reversión bajista',
+          probability: 75
+        });
+      }
+      
+      // Bullish Engulfing
+      if (previous.close < previous.open && // Vela anterior bajista
+          current.close > current.open && // Vela actual alcista
+          current.open < previous.close && // Apertura por debajo del cierre anterior
+          current.close > previous.open) { // Cierre por encima de la apertura anterior
+        patterns.push({
+          index: i,
+          name: 'Bullish Engulfing',
+          type: 'bullish',
+          strength: 0.9,
+          description: 'Fuerte señal alcista',
+          probability: 85
+        });
+      }
+      
+      // Bearish Engulfing
+      if (previous.close > previous.open && // Vela anterior alcista
+          current.close < current.open && // Vela actual bajista
+          current.open > previous.close && // Apertura por encima del cierre anterior
+          current.close < previous.open) { // Cierre por debajo de la apertura anterior
+        patterns.push({
+          index: i,
+          name: 'Bearish Engulfing',
+          type: 'bearish',
+          strength: 0.9,
+          description: 'Fuerte señal bajista',
+          probability: 85
+        });
+      }
+    }
+    
+    return patterns;
+  };
+
+  // Detectar niveles de soporte y resistencia
+  const detectSupportResistanceLevels = (data: any[]) => {
+    if (data.length < 10) return [];
+    
+    const levels = [];
+    const minTouches = 2; // Mínimo de toques para considerar un nivel válido
+    const tolerance = 0.001; // Tolerancia para considerar que el precio "toca" un nivel
+    
+    // Buscar máximos y mínimos locales
+    for (let i = 5; i < data.length - 5; i++) {
+      const current = data[i];
+      let isLocalHigh = true;
+      let isLocalLow = true;
+      
+      // Verificar si es máximo local
+      for (let j = i - 5; j <= i + 5; j++) {
+        if (j !== i && data[j].high >= current.high) {
+          isLocalHigh = false;
+          break;
+        }
+      }
+      
+      // Verificar si es mínimo local
+      for (let j = i - 5; j <= i + 5; j++) {
+        if (j !== i && data[j].low <= current.low) {
+          isLocalLow = false;
+          break;
+        }
+      }
+      
+      if (isLocalHigh) {
+        // Contar cuántas veces el precio ha tocado este nivel
+        let touches = 1;
+        const level = current.high;
+        
+        for (let k = 0; k < data.length; k++) {
+          if (k !== i && Math.abs(data[k].high - level) <= level * tolerance) {
+            touches++;
+          }
+        }
+        
+        if (touches >= minTouches) {
+          levels.push({
+            price: level,
+            type: 'resistance',
+            touches: touches,
+            strength: Math.min(touches / 5, 1), // Máximo strength de 1
+            lastTouch: i
+          });
+        }
+      }
+      
+      if (isLocalLow) {
+        // Contar cuántas veces el precio ha tocado este nivel
+        let touches = 1;
+        const level = current.low;
+        
+        for (let k = 0; k < data.length; k++) {
+          if (k !== i && Math.abs(data[k].low - level) <= level * tolerance) {
+            touches++;
+          }
+        }
+        
+        if (touches >= minTouches) {
+          levels.push({
+            price: level,
+            type: 'support',
+            touches: touches,
+            strength: Math.min(touches / 5, 1), // Máximo strength de 1
+            lastTouch: i
+          });
+        }
+      }
+    }
+    
+    // Eliminar niveles duplicados y ordenar por strength
+    const uniqueLevels = levels.filter((level, index, self) => 
+      index === self.findIndex(l => 
+        Math.abs(l.price - level.price) <= level.price * tolerance && l.type === level.type
+      )
+    ).sort((a, b) => b.strength - a.strength).slice(0, 10); // Top 10 niveles más fuertes
+    
+    return uniqueLevels;
+  };
+
+  // Generar señales de trading inteligentes
+  const generateTradingSignals = (data: any[]) => {
+    if (data.length < 50) return [];
+    
+    const signals = [];
+    const lastCandle = data[data.length - 1];
+    const rsi = calculateRSI(data);
+    const macd = calculateMACD(data);
+    const sma20 = calculateSMA(data, 20);
+    const sma50 = calculateSMA(data, 50);
+    const adx = calculateADX(data);
+    const patterns = detectCandlestickPatterns(data);
+    const levels = detectSupportResistanceLevels(data);
+    
+    let bullishSignals = 0;
+    let bearishSignals = 0;
+    let signalStrength = 0;
+    
+    // Análisis RSI
+    if (rsi !== null) {
+      if (rsi < 30) {
+        bullishSignals++;
+        signalStrength += 0.8;
+      } else if (rsi > 70) {
+        bearishSignals++;
+        signalStrength += 0.8;
+      }
+    }
+    
+    // Análisis MACD
+    if (macd !== null) {
+      if (macd > 0) {
+        bullishSignals++;
+        signalStrength += 0.7;
+      } else {
+        bearishSignals++;
+        signalStrength += 0.7;
+      }
+    }
+    
+    // Análisis de Medias Móviles
+    if (sma20 !== null && sma50 !== null && lastCandle) {
+      if (lastCandle.close > sma20 && sma20 > sma50) {
+        bullishSignals++;
+        signalStrength += 0.6;
+      } else if (lastCandle.close < sma20 && sma20 < sma50) {
+        bearishSignals++;
+        signalStrength += 0.6;
+      }
+    }
+    
+    // Análisis de patrones recientes
+    const recentPatterns = patterns.filter(p => p.index >= data.length - 3);
+    recentPatterns.forEach(pattern => {
+      if (pattern.type === 'bullish') {
+        bullishSignals++;
+        signalStrength += pattern.strength;
+      } else if (pattern.type === 'bearish') {
+        bearishSignals++;
+        signalStrength += pattern.strength;
+      }
+    });
+    
+    // Análisis de soporte/resistencia
+    const currentPrice = lastCandle.close;
+    const nearLevels = levels.filter(level => 
+      Math.abs(level.price - currentPrice) / currentPrice < 0.005 // Dentro del 0.5%
+    );
+    
+    nearLevels.forEach(level => {
+      if (level.type === 'support' && currentPrice > level.price) {
+        bullishSignals++;
+        signalStrength += level.strength * 0.5;
+      } else if (level.type === 'resistance' && currentPrice < level.price) {
+        bearishSignals++;
+        signalStrength += level.strength * 0.5;
+      }
+    });
+    
+    // Generar señal final
+    if (bullishSignals > bearishSignals && signalStrength > 2) {
+      signals.push({
+        type: 'BUY',
+        strength: Math.min(signalStrength / 5, 1),
+        confidence: Math.min((bullishSignals / (bullishSignals + bearishSignals)) * 100, 95),
+        reasons: [
+          ...(rsi !== null && rsi < 30 ? ['RSI sobreventa'] : []),
+          ...(macd !== null && macd > 0 ? ['MACD alcista'] : []),
+          ...(sma20 !== null && sma50 !== null && lastCandle && lastCandle.close > sma20 && sma20 > sma50 ? ['Tendencia alcista'] : []),
+          ...recentPatterns.filter(p => p.type === 'bullish').map(p => p.name),
+          ...nearLevels.filter(l => l.type === 'support').map(l => `Soporte en ${l.price.toFixed(4)}`)
+        ],
+        adxStrength: adx,
+        suggestedStopLoss: currentPrice * 0.98, // 2% stop loss
+        suggestedTakeProfit: currentPrice * 1.04 // 4% take profit
+      });
+    } else if (bearishSignals > bullishSignals && signalStrength > 2) {
+      signals.push({
+        type: 'SELL',
+        strength: Math.min(signalStrength / 5, 1),
+        confidence: Math.min((bearishSignals / (bullishSignals + bearishSignals)) * 100, 95),
+        reasons: [
+          ...(rsi !== null && rsi > 70 ? ['RSI sobrecompra'] : []),
+          ...(macd !== null && macd < 0 ? ['MACD bajista'] : []),
+          ...(sma20 !== null && sma50 !== null && lastCandle && lastCandle.close < sma20 && sma20 < sma50 ? ['Tendencia bajista'] : []),
+          ...recentPatterns.filter(p => p.type === 'bearish').map(p => p.name),
+          ...nearLevels.filter(l => l.type === 'resistance').map(l => `Resistencia en ${l.price.toFixed(4)}`)
+        ],
+        adxStrength: adx,
+        suggestedStopLoss: currentPrice * 1.02, // 2% stop loss
+        suggestedTakeProfit: currentPrice * 0.96 // 4% take profit
+      });
+    }
+    
+    return signals;
+  };
+
+  // 🤖 Calcular análisis inteligente
+  const smartAnalysis = useMemo(() => {
+    if (chartData.length < 50) return null;
+    
+    return {
+      tradingSignals: generateTradingSignals(chartData),
+      candlestickPatterns: detectCandlestickPatterns(chartData.slice(-20)), // Últimos 20 patrones
+      supportResistanceLevels: detectSupportResistanceLevels(chartData),
+      riskRewardSuggestion: {
+        currentPrice: chartData[chartData.length - 1]?.close || 0,
+        suggestedStopLoss: (chartData[chartData.length - 1]?.close || 0) * 0.98,
+        suggestedTakeProfit: (chartData[chartData.length - 1]?.close || 0) * 1.04,
+        riskRewardRatio: 2, // 1:2 risk/reward
+      }
+    };
+  }, [chartData]);
+
   const chartTypes = [
     { 
       id: 'candlestick', 
@@ -755,6 +1067,19 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                 </button>
               </div>
             </div>
+
+            {/* Análisis Inteligente */}
+            <button
+              onClick={() => setShowSmartAnalysis(!showSmartAnalysis)}
+              title={showSmartAnalysis ? 'Ocultar análisis inteligente' : 'Mostrar análisis inteligente'}
+              className={`p-2 rounded-lg transition-all duration-200 ${
+                showSmartAnalysis 
+                  ? 'bg-purple-500/20 text-purple-400 shadow-lg' 
+                  : 'bg-gray-700/50 text-gray-400 hover:text-white hover:bg-gray-600/50'
+              }`}
+            >
+              <span className="text-sm">🤖</span>
+            </button>
 
             {/* Indicadores */}
             <button
@@ -1219,6 +1544,199 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 Basado en {chartData.length > 0 ? 'análisis en tiempo real' : 'datos insuficientes'} de {indicators.length} indicadores técnicos
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 🤖 ANÁLISIS INTELIGENTE */}
+        {showSmartAnalysis && !isInitialLoading && smartAnalysis && (
+          <div className="mt-4 sm:mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold text-white flex items-center space-x-2">
+                <span>🤖</span>
+                <span>Análisis Inteligente de Trading</span>
+              </h4>
+              <div className="text-xs text-purple-400">
+                AI-Powered • Tiempo real
+              </div>
+            </div>
+
+            {/* Señales de Trading */}
+            {smartAnalysis.tradingSignals.length > 0 && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 rounded-lg border border-purple-500/30">
+                <h5 className="text-sm font-semibold text-purple-300 mb-3 flex items-center space-x-2">
+                  <span>⚡</span>
+                  <span>Señal de Trading Detectada</span>
+                </h5>
+                {smartAnalysis.tradingSignals.map((signal, index) => (
+                  <div key={index} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          signal.type === 'BUY' 
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
+                            : 'bg-red-500/20 text-red-400 border border-red-500/50'
+                        }`}>
+                          {signal.type === 'BUY' ? '📈 COMPRAR' : '📉 VENDER'}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Confianza: <span className="text-white font-semibold">{signal.confidence.toFixed(0)}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Fuerza: <span className="text-white font-semibold">{(signal.strength * 100).toFixed(0)}%</span>
+                        </div>
+                      </div>
+                      {signal.adxStrength && signal.adxStrength > 25 && (
+                        <div className="text-xs text-yellow-400 font-semibold">
+                          🔥 Tendencia Fuerte (ADX: {signal.adxStrength.toFixed(1)})
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                      <div className="bg-gray-800/50 rounded p-2">
+                        <div className="text-gray-400 mb-1">Razones:</div>
+                        <div className="space-y-1">
+                          {signal.reasons.map((reason, i) => (
+                            <div key={i} className="text-white">• {reason}</div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="bg-gray-800/50 rounded p-2">
+                        <div className="text-gray-400 mb-1">Stop Loss Sugerido:</div>
+                        <div className="text-red-400 font-semibold">{signal.suggestedStopLoss.toFixed(4)}</div>
+                        <div className="text-gray-500 text-xs mt-1">
+                          Riesgo: {Math.abs(((signal.suggestedStopLoss / (chartData[chartData.length - 1]?.close || 1)) - 1) * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className="bg-gray-800/50 rounded p-2">
+                        <div className="text-gray-400 mb-1">Take Profit Sugerido:</div>
+                        <div className="text-green-400 font-semibold">{signal.suggestedTakeProfit.toFixed(4)}</div>
+                        <div className="text-gray-500 text-xs mt-1">
+                          Beneficio: {Math.abs(((signal.suggestedTakeProfit / (chartData[chartData.length - 1]?.close || 1)) - 1) * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Patrones de Candlestick */}
+              <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700/30">
+                <h5 className="text-sm font-semibold text-orange-300 mb-3 flex items-center space-x-2">
+                  <span>🕯️</span>
+                  <span>Patrones Detectados</span>
+                </h5>
+                {smartAnalysis.candlestickPatterns.length > 0 ? (
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {smartAnalysis.candlestickPatterns.slice(-5).map((pattern, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-700/50 rounded px-3 py-2">
+                        <div>
+                          <div className={`text-sm font-medium ${
+                            pattern.type === 'bullish' ? 'text-green-400' : 
+                            pattern.type === 'bearish' ? 'text-red-400' : 'text-yellow-400'
+                          }`}>
+                            {pattern.name}
+                          </div>
+                          <div className="text-xs text-gray-400">{pattern.description}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-gray-300">{pattern.probability}%</div>
+                          <div className="text-xs text-gray-500">éxito</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm italic">No hay patrones recientes detectados</div>
+                )}
+              </div>
+
+              {/* Niveles de Soporte y Resistencia */}
+              <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700/30">
+                <h5 className="text-sm font-semibold text-cyan-300 mb-3 flex items-center space-x-2">
+                  <span>🎯</span>
+                  <span>Niveles Clave</span>
+                </h5>
+                {smartAnalysis.supportResistanceLevels.length > 0 ? (
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {smartAnalysis.supportResistanceLevels.slice(0, 5).map((level, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-700/50 rounded px-3 py-2">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            level.type === 'resistance' ? 'bg-red-400' : 'bg-green-400'
+                          }`}></div>
+                          <div>
+                            <div className="text-sm font-medium text-white">{level.price.toFixed(4)}</div>
+                            <div className="text-xs text-gray-400 capitalize">{level.type}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-gray-300">{level.touches} toques</div>
+                          <div className="text-xs text-gray-500">
+                            Fuerza: {(level.strength * 100).toFixed(0)}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm italic">Calculando niveles...</div>
+                )}
+              </div>
+            </div>
+
+            {/* Risk/Reward Calculator */}
+            <div className="mt-4 bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-lg p-4 border border-gray-600/30">
+              <h5 className="text-sm font-semibold text-green-300 mb-3 flex items-center space-x-2">
+                <span>⚖️</span>
+                <span>Calculadora Risk/Reward</span>
+              </h5>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                <div className="text-center">
+                  <div className="text-gray-400 mb-1">Precio Actual</div>
+                  <div className="text-white font-semibold text-lg">
+                    {smartAnalysis.riskRewardSuggestion.currentPrice.toFixed(4)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-gray-400 mb-1">Stop Loss Sugerido</div>
+                  <div className="text-red-400 font-semibold">
+                    {smartAnalysis.riskRewardSuggestion.suggestedStopLoss.toFixed(4)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    -2.0% riesgo
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-gray-400 mb-1">Take Profit Sugerido</div>
+                  <div className="text-green-400 font-semibold">
+                    {smartAnalysis.riskRewardSuggestion.suggestedTakeProfit.toFixed(4)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    +4.0% beneficio
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-gray-400 mb-1">Ratio R/R</div>
+                  <div className="text-yellow-400 font-semibold text-lg">
+                    1:{smartAnalysis.riskRewardSuggestion.riskRewardRatio}
+                  </div>
+                  <div className="text-xs text-green-500 mt-1">
+                    ✅ Ratio saludable
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+              <p className="text-xs text-yellow-200">
+                ⚠️ <strong>Disclaimer:</strong> Este análisis es generado por algoritmos y debe usarse solo como referencia. 
+                Siempre realiza tu propio análisis antes de tomar decisiones de trading. El trading conlleva riesgos significativos.
               </p>
             </div>
           </div>
