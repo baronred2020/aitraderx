@@ -35,7 +35,13 @@ interface TradingChartProps {
   timeframe: string;
 }
 
-const CandlestickChart: React.FC<{ data: any[] }> = ({ data }) => {
+const CandlestickChart: React.FC<{ 
+  data: any[]; 
+  zoomLevel: number;
+  onTouchStart?: (e: React.TouchEvent) => void; 
+  onTouchMove?: (e: React.TouchEvent) => void; 
+  onTouchEnd?: (e: React.TouchEvent) => void; 
+}> = ({ data, zoomLevel, onTouchStart, onTouchMove, onTouchEnd }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
   const isDisposedRef = useRef<boolean>(false);
@@ -77,6 +83,9 @@ const CandlestickChart: React.FC<{ data: any[] }> = ({ data }) => {
             timeVisible: true, 
             secondsVisible: false,
             borderColor: '#2d3748',
+            rightOffset: 12,
+            barSpacing: Math.max(4, 8 * zoomLevel), // Espaciado dinámico para zoom visual
+            minBarSpacing: 2,
           },
           rightPriceScale: { 
             borderColor: '#2d3748',
@@ -165,7 +174,7 @@ const CandlestickChart: React.FC<{ data: any[] }> = ({ data }) => {
         }
       }
     };
-  }, [data]);
+  }, [data, zoomLevel]);
 
   // Additional cleanup on unmount
   useEffect(() => {
@@ -174,7 +183,16 @@ const CandlestickChart: React.FC<{ data: any[] }> = ({ data }) => {
     };
   }, []);
 
-  return <div ref={chartContainerRef} style={{ width: '100%', height: 300 }} />;
+  return (
+    <div 
+      ref={chartContainerRef} 
+      style={{ width: '100%', height: 300 }}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      className="touch-none select-none"
+    />
+  );
 };
 
 export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timeframe }) => {
@@ -185,6 +203,10 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   const [initialLoadingCandles, setInitialLoadingCandles] = useState(true);
   const [initialLoadingMarket, setInitialLoadingMarket] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [dataRange, setDataRange] = useState({ start: 0, end: 100 });
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
+  const [isTouching, setIsTouching] = useState(false);
 
   // Hook para datos de velas
   const { data: candleData, loading: candleLoading, error: candleError } = useCandles(symbol, '15', 100);
@@ -245,6 +267,165 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
         volume: parseFloat(item.volume),
       }))
     : [];
+
+  // Aplicar zoom a los datos - nuevo enfoque para zoom visual real
+  const getZoomedData = () => {
+    if (chartData.length === 0) return { data: [], visibleRange: { start: 0, end: chartData.length } };
+    
+    const totalItems = chartData.length;
+    // Para zoom real: menos items = velas más anchas visualmente
+    const itemsToShow = Math.max(5, Math.floor(totalItems / zoomLevel)); // Mínimo 5 items para zoom máximo
+    
+    // Calcular rango basado en posición de pan
+    const centerPoint = (dataRange.start + dataRange.end) / 2 / 100; // Punto central como fracción
+    const halfRange = itemsToShow / 2;
+    
+    let startIndex = Math.floor(totalItems * centerPoint - halfRange);
+    let endIndex = Math.floor(totalItems * centerPoint + halfRange);
+    
+    // Ajustar límites
+    if (startIndex < 0) {
+      startIndex = 0;
+      endIndex = Math.min(itemsToShow, totalItems);
+    }
+    if (endIndex > totalItems) {
+      endIndex = totalItems;
+      startIndex = Math.max(0, totalItems - itemsToShow);
+    }
+    
+    return {
+      data: chartData.slice(startIndex, endIndex),
+      visibleRange: { start: startIndex, end: endIndex },
+      totalItems
+    };
+  };
+
+  const zoomedResult = getZoomedData();
+  const zoomedChartData = zoomedResult.data;
+
+  // Funciones de zoom
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev * 1.5, 10)); // Máximo zoom 10x
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev / 1.5, 0.5)); // Mínimo zoom 0.5x
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setDataRange({ start: 0, end: 100 });
+  };
+
+  // Resetear zoom cuando cambia el símbolo
+  useEffect(() => {
+    if (symbol !== lastSymbol) {
+      setZoomLevel(1);
+      setDataRange({ start: 0, end: 100 });
+    }
+  }, [symbol, lastSymbol]);
+
+  const handlePanLeft = () => {
+    setDataRange(prev => {
+      const itemsToShow = Math.max(5, Math.floor(chartData.length / zoomLevel));
+      const step = (itemsToShow / chartData.length) * 100 * 0.2; // Mover 20% del rango visible
+      const range = prev.end - prev.start;
+      const newStart = Math.max(0, prev.start - step);
+      const newEnd = Math.min(100, newStart + range);
+      return { start: newStart, end: newEnd };
+    });
+  };
+
+  const handlePanRight = () => {
+    setDataRange(prev => {
+      const itemsToShow = Math.max(5, Math.floor(chartData.length / zoomLevel));
+      const step = (itemsToShow / chartData.length) * 100 * 0.2; // Mover 20% del rango visible
+      const range = prev.end - prev.start;
+      const newEnd = Math.min(100, prev.end + step);
+      const newStart = Math.max(0, newEnd - range);
+      return { start: newStart, end: newEnd };
+    });
+  };
+
+  // Funciones de gestos táctiles
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return Math.sqrt(
+      Math.pow(touch2.clientX - touch1.clientX, 2) + 
+      Math.pow(touch2.clientY - touch1.clientY, 2)
+    );
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsTouching(true);
+    
+    if (e.touches.length === 1) {
+      // Single touch - preparar para pan
+      setTouchStart({
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      });
+    } else if (e.touches.length === 2) {
+      // Multi-touch - preparar para zoom
+      const distance = getTouchDistance(e.touches);
+      setTouchStart({
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        distance
+      });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart || !isTouching) return;
+    e.preventDefault();
+
+    if (e.touches.length === 1 && !touchStart.distance) {
+      // Single touch - pan horizontal
+      const deltaX = e.touches[0].clientX - touchStart.x;
+      const sensitivity = 0.5;
+      
+      if (Math.abs(deltaX) > 10) { // Threshold mínimo
+        if (deltaX > 0) {
+          handlePanLeft();
+        } else {
+          handlePanRight();
+        }
+        setTouchStart({
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY
+        });
+      }
+    } else if (e.touches.length === 2 && touchStart.distance) {
+      // Multi-touch - zoom pinch
+      const currentDistance = getTouchDistance(e.touches);
+      const distanceRatio = currentDistance / touchStart.distance;
+      
+      if (distanceRatio > 1.1) {
+        handleZoomIn();
+        setTouchStart({
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+          distance: currentDistance
+        });
+      } else if (distanceRatio < 0.9) {
+        handleZoomOut();
+        setTouchStart({
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+          distance: currentDistance
+        });
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setIsTouching(false);
+    setTouchStart(null);
+  };
 
   // Funciones para calcular indicadores técnicos reales
   const calculateSMA = (data: any[], period: number) => {
@@ -502,6 +683,79 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
 
           {/* Controles adicionales */}
           <div className="flex items-center space-x-2">
+            {/* Controles de Zoom */}
+            <div className="flex items-center space-x-1 bg-gray-800/50 rounded-lg p-1">
+              {/* Controles completos para desktop */}
+              <div className="hidden sm:flex items-center space-x-1">
+                <button
+                  onClick={handlePanLeft}
+                  title="Mover a la izquierda"
+                  className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                  disabled={dataRange.start <= 0}
+                >
+                  <span className="text-sm">◀</span>
+                </button>
+                <button
+                  onClick={handleZoomOut}
+                  title="Alejar (Zoom Out)"
+                  className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                  disabled={zoomLevel <= 0.5}
+                >
+                  <span className="text-sm font-bold">−</span>
+                </button>
+                <button
+                  onClick={handleResetZoom}
+                  title="Resetear zoom"
+                  className="px-2 py-1 rounded text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                >
+                  {zoomLevel.toFixed(1)}x
+                </button>
+                <button
+                  onClick={handleZoomIn}
+                  title="Acercar (Zoom In)"
+                  className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                  disabled={zoomLevel >= 10}
+                >
+                  <span className="text-sm font-bold">+</span>
+                </button>
+                <button
+                  onClick={handlePanRight}
+                  title="Mover a la derecha"
+                  className="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                  disabled={dataRange.end >= 100}
+                >
+                  <span className="text-sm">▶</span>
+                </button>
+              </div>
+
+              {/* Controles simplificados para móvil */}
+              <div className="flex sm:hidden items-center space-x-1">
+                <button
+                  onClick={handleZoomOut}
+                  title="Alejar"
+                  className="p-2 rounded text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                  disabled={zoomLevel <= 0.5}
+                >
+                  <span className="text-base font-bold">−</span>
+                </button>
+                <button
+                  onClick={handleResetZoom}
+                  title="Resetear zoom"
+                  className="px-3 py-2 rounded text-xs font-medium text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                >
+                  {zoomLevel.toFixed(1)}x
+                </button>
+                <button
+                  onClick={handleZoomIn}
+                  title="Acercar"
+                  className="p-2 rounded text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
+                  disabled={zoomLevel >= 10}
+                >
+                  <span className="text-base font-bold">+</span>
+                </button>
+              </div>
+            </div>
+
             {/* Indicadores */}
             <button
               onClick={() => setShowIndicators(!showIndicators)}
@@ -578,11 +832,20 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
               </div>
             )}
           </div>
-          {chartData.length > 0 && (
+          {zoomedChartData.length > 0 && (
             <div className="text-xs text-gray-400">
-              {chartData.length} velas • Última actualización: {new Date(chartData[chartData.length - 1]?.date).toLocaleTimeString()}
+              Mostrando {zoomedChartData.length} de {zoomedResult.totalItems} velas • Zoom {zoomLevel.toFixed(1)}x 
+              {zoomLevel > 1 && <span className="text-blue-400"> (Vista ampliada)</span>}
+              {zoomLevel < 1 && <span className="text-yellow-400"> (Vista panorámica)</span>}
+              • Rango: {zoomedResult.visibleRange.start + 1}-{zoomedResult.visibleRange.end} 
+              • Última actualización: {new Date(chartData[chartData.length - 1]?.date).toLocaleTimeString()}
             </div>
           )}
+          
+          {/* Instrucciones de uso móvil */}
+          <div className="sm:hidden mt-2 text-xs text-gray-500 italic">
+            💡 Desliza horizontalmente para navegar • Pellizca para zoom visual {zoomLevel > 1 ? '(ampliado)' : zoomLevel < 1 ? '(panorámico)' : '(normal)'}
+          </div>
         </div>
         {showLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
@@ -602,31 +865,46 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
               {marketError && <div>Market: {marketError}</div>}
             </div>
           </div>
-        ) : chartData.length === 0 ? (
+        ) : zoomedChartData.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
             <div className="text-lg font-medium mb-2">No hay datos disponibles</div>
             <div className="text-sm text-gray-500">Símbolo: {symbol}</div>
           </div>
         ) : (
           chartType === 'candlestick' ? (
-            <CandlestickChart data={chartData} />
+            <CandlestickChart 
+              data={zoomedChartData} 
+              zoomLevel={zoomLevel}
+              onTouchStart={handleTouchStart} 
+              onTouchMove={handleTouchMove} 
+              onTouchEnd={handleTouchEnd}
+            />
           ) : chartType === 'line' ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#a0aec0" 
-                  fontSize={12}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return date.toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit',
-                      hour12: false 
-                    });
-                  }}
-                />
+            <div 
+              onTouchStart={handleTouchStart} 
+              onTouchMove={handleTouchMove} 
+              onTouchEnd={handleTouchEnd}
+              className="touch-none select-none"
+            >
+                            <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={zoomedChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#a0aec0" 
+                    fontSize={12}
+                    domain={['dataMin', 'dataMax']}
+                    type="category"
+                    interval={Math.max(0, Math.floor(zoomedChartData.length / Math.min(8, zoomedChartData.length)))}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return date.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                      });
+                    }}
+                  />
                 <YAxis 
                   stroke="#a0aec0" 
                   fontSize={12}
@@ -664,34 +942,44 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                 )}
               </LineChart>
             </ResponsiveContainer>
+            </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38b2ac" stopOpacity={0.8}/>
-                    <stop offset="50%" stopColor="#38b2ac" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#38b2ac" stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="areaGradientHigh" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#a0aec0" 
-                  fontSize={12}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return date.toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit',
-                      hour12: false 
-                    });
-                  }}
-                />
+            <div 
+              onTouchStart={handleTouchStart} 
+              onTouchMove={handleTouchMove} 
+              onTouchEnd={handleTouchEnd}
+              className="touch-none select-none"
+            >
+                            <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={zoomedChartData}>
+                  <defs>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#38b2ac" stopOpacity={0.8}/>
+                      <stop offset="50%" stopColor="#38b2ac" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#38b2ac" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="areaGradientHigh" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#a0aec0" 
+                    fontSize={12}
+                    domain={['dataMin', 'dataMax']}
+                    type="category"
+                    interval={Math.max(0, Math.floor(zoomedChartData.length / Math.min(8, zoomedChartData.length)))}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return date.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                      });
+                    }}
+                  />
                 <YAxis 
                   stroke="#a0aec0" 
                   fontSize={12}
@@ -718,6 +1006,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                 )}
               </AreaChart>
             </ResponsiveContainer>
+            </div>
           )
         )}
 
