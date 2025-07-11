@@ -34,8 +34,8 @@ export const useCandles = (symbol: string, timeInterval: string = '15', count: n
     const cached = candlesCache.get(cacheKey);
     const now = Date.now();
 
-    // Usar cache si es válido (menos de 30 segundos)
-    if (cached && (now - cached.timestamp) < 30000) {
+    // Usar cache si es válido (menos de 10 segundos para carga más rápida)
+    if (cached && (now - cached.timestamp) < 10000) {
       setData(cached.data);
       return;
     }

@@ -200,6 +200,9 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   // Determinar si está cargando (incluyendo cambio de símbolo)
   const isLoading = candleLoading || marketLoading || symbol !== lastSymbol;
 
+  // Mostrar loading inmediato al cambiar símbolo
+  const showLoading = isLoading || !candleData || !marketData;
+
   // Transformar datos de Yahoo Finance al formato del gráfico
   const chartData = candleData && candleData.values
     ? candleData.values.map((item: any) => ({
@@ -342,7 +345,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
 
       {/* Gráfico principal */}
       <div className="p-3 sm:p-4">
-        {isLoading ? (
+        {showLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mb-4"></div>
             <div className="text-center">

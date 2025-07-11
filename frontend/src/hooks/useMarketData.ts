@@ -16,6 +16,29 @@ interface MarketData {
 // Cache simple para evitar llamadas duplicadas
 const marketCache = new Map<string, { data: MarketData; timestamp: number }>();
 
+// Prefetch de símbolos comunes
+const commonSymbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD'];
+const prefetchCommonSymbols = () => {
+  if (marketCache.size === 0) {
+    // Prefetch solo si no hay datos en cache
+    fetch(`http://localhost:8000/api/market-data?symbols=${commonSymbols.join(',')}`)
+      .then(response => response.json())
+      .then(data => {
+        commonSymbols.forEach(symbol => {
+          if (data[symbol]) {
+            marketCache.set(symbol, { data: { [symbol]: data[symbol] }, timestamp: Date.now() });
+          }
+        });
+      })
+      .catch(err => console.log('Prefetch failed:', err));
+  }
+};
+
+// Ejecutar prefetch al cargar el módulo
+if (typeof window !== 'undefined') {
+  setTimeout(prefetchCommonSymbols, 1000);
+}
+
 export const useMarketData = (symbols: string[]) => {
   const [data, setData] = useState<MarketData>({});
   const [loading, setLoading] = useState(false);
@@ -28,8 +51,8 @@ export const useMarketData = (symbols: string[]) => {
     const cached = marketCache.get(cacheKey);
     const now = Date.now();
 
-    // Usar cache si es válido (menos de 15 segundos)
-    if (cached && (now - cached.timestamp) < 15000) {
+    // Usar cache si es válido (menos de 5 segundos para carga más rápida)
+    if (cached && (now - cached.timestamp) < 5000) {
       setData(cached.data);
       return;
     }

@@ -28,13 +28,13 @@ SYMBOL_MAP = {
 
 
 CACHE = {}
-CACHE_TTL = 15  # segundos
+CACHE_TTL = 5  # 5 segundos para respuestas más rápidas
 
 
 
 # Cache para velas de Twelve Data
 CANDLE_CACHE = {}
-CANDLE_TTL = 30  # 30 segundos para velas de Twelve Data
+CANDLE_TTL = 10  # 10 segundos para velas más rápidas
 
 async def fetch_price(symbol: str):
     """Obtiene precio actual usando Yahoo Finance"""
