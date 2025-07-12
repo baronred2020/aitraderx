@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 interface MarketData {
   [symbol: string]: {
@@ -22,7 +22,7 @@ interface CacheEntry {
 
 // Cache global para Yahoo Finance
 const yahooCache = new Map<string, CacheEntry>();
-const YAHOO_CACHE_TTL = 30 * 1000; // 30 segundos para Yahoo Finance (reducido de 2 minutos)
+const YAHOO_CACHE_TTL = 30 * 1000; // 30 segundos para Yahoo Finance
 
 // Función para detectar si es fin de semana
 const isWeekend = (): boolean => {
@@ -34,174 +34,191 @@ const isWeekend = (): boolean => {
 // Función para detectar si el mercado está abierto
 const isMarketOpen = (): boolean => {
   const now = new Date();
-  const dayOfWeek = now.getDay();
   const hour = now.getHours();
+  const dayOfWeek = now.getDay();
   
-  // Fin de semana - mercado cerrado
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return false;
-  }
+  // Lunes a Viernes, 9:00 AM - 5:00 PM EST (simplificado)
+  return dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 9 && hour < 17;
+};
+
+// Datos de fallback para cuando no hay datos disponibles
+const getFallbackData = (symbols: string[]): MarketData => {
+  const fallbackPrices: { [key: string]: number } = {
+    'EURUSD': 1.0850,
+    'GBPUSD': 1.2650,
+    'USDJPY': 148.50,
+    'AUDUSD': 0.6650,
+    'USDCAD': 1.3550,
+    'USDCHF': 0.8850,
+    'NZDUSD': 0.6150,
+    'EURGBP': 0.8580,
+    'GBPJPY': 187.80,
+    'EURJPY': 161.20,
+    'AAPL': 175.50,
+    'GOOGL': 140.20,
+    'MSFT': 380.80,
+    'TSLA': 240.50,
+    'AMZN': 150.30,
+    'BTCUSD': 42000,
+    'ETHUSD': 2500,
+  };
+
+  const result: MarketData = {};
   
-  // Días de semana - verificar horario de trading
-  // Para simplificar, asumimos que está abierto de 9 AM a 4 PM
-  return hour >= 9 && hour < 16;
+  symbols.forEach(symbol => {
+    const basePrice = fallbackPrices[symbol] || 100.00;
+    const change = (Math.random() - 0.5) * 0.01; // ±0.5% cambio
+    const currentPrice = basePrice * (1 + change);
+    const changePercent = (change * 100).toFixed(2);
+    
+    result[symbol] = {
+      price: currentPrice.toFixed(4),
+      change: (change * basePrice).toFixed(4),
+      changePercent: changePercent,
+      volume: (Math.random() * 1000000 + 500000).toFixed(0),
+      high: (currentPrice * 1.002).toFixed(4),
+      low: (currentPrice * 0.998).toFixed(4),
+      open: (currentPrice * (1 + (Math.random() - 0.5) * 0.001)).toFixed(4),
+      previousClose: basePrice.toFixed(4),
+      marketStatus: 'closed'
+    };
+  });
+  
+  return result;
 };
 
 export const useYahooMarketData = (symbols: string[]) => {
   const [data, setData] = useState<MarketData>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [marketStatus, setMarketStatus] = useState<'open' | 'closed' | 'error'>('closed');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [marketStatus, setMarketStatus] = useState<'open' | 'closed'>('open');
 
-  useEffect(() => {
-    if (!symbols.length) return;
+  // Memoizar el array de símbolos para evitar re-renders innecesarios
+  const stableSymbols = useMemo(() => symbols.sort(), [symbols.join(',')]);
 
-    // Verificar si el mercado está abierto
+  // Memoizar la función de fetch para evitar recreaciones
+  const fetchData = useCallback(async () => {
+    console.log('[useYahooMarketData] Hook iniciado con símbolos:', stableSymbols);
+    
     const marketOpen = isMarketOpen();
     const weekend = isWeekend();
     
-    setMarketStatus(marketOpen ? 'open' : 'closed');
+    console.log('[useYahooMarketData] Estado del mercado:', { marketOpen, weekend });
     
-    // Si es fin de semana, usar cache existente o datos de fallback
-    if (weekend) {
-      console.log('[Yahoo Market Data] Weekend detected - using cached data or fallback');
+    // Siempre intentar obtener datos reales primero, independientemente del estado del mercado
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('[useYahooMarketData] Intentando obtener datos reales de Yahoo Finance...');
+      const response = await fetch(`http://localhost:8000/api/market-data?symbols=${stableSymbols.join(',')}`);
       
-      const cacheKey = symbols.sort().join(',');
-      const cached = yahooCache.get(cacheKey);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('[useYahooMarketData] Datos reales recibidos:', result);
       
-      if (cached) {
-        console.log('[Yahoo Market Data] Using cached weekend data');
-        setData(cached.data);
+      // Verificar que los datos son válidos (no están vacíos)
+      const hasValidData = Object.keys(result).length > 0 && 
+                          Object.values(result).some((symbolData: any) => 
+                            symbolData && symbolData.price && symbolData.price !== '0' && symbolData.price !== '0.0000'
+                          );
+      
+      if (hasValidData) {
+        console.log('[useYahooMarketData] Usando datos reales de Yahoo Finance');
+        
+        // Cachear los datos reales
+        const cacheKey = stableSymbols.join(',');
+        yahooCache.set(cacheKey, { 
+          data: result, 
+          timestamp: Date.now(), 
+          callCount: (yahooCache.get(cacheKey)?.callCount || 0) + 1 
+        });
+        
+        setData(result);
+        setMarketStatus(marketOpen ? 'open' : 'closed');
+        setLoading(false);
         setIsInitialLoad(false);
         return;
       } else {
-        // Datos de fallback para fines de semana
-        const fallbackData: MarketData = {};
-        symbols.forEach(symbol => {
-          const fallbackPrices: { [key: string]: string } = {
-            'EURUSD': '1.0850',
-            'GBPUSD': '1.2650',
-            'USDJPY': '148.50',
-            'AUDUSD': '0.6550',
-            'USDCAD': '1.3550',
-            'AAPL': '150.00',
-            'MSFT': '300.00',
-            'TSLA': '200.00',
-            'BTCUSD': '45000.00',
-            'ETHUSD': '2500.00'
-          };
-          
-          fallbackData[symbol] = {
-            price: fallbackPrices[symbol] || '100.00',
-            change: '0.000',
-            changePercent: '0.00',
-            volume: '0',
-            high: fallbackPrices[symbol] || '100.00',
-            low: fallbackPrices[symbol] || '100.00',
-            open: fallbackPrices[symbol] || '100.00',
-            previousClose: fallbackPrices[symbol] || '100.00',
-            marketStatus: 'closed'
-          };
+        console.log('[useYahooMarketData] Datos reales no válidos, usando fallback');
+        throw new Error('No valid data received from Yahoo Finance');
+      }
+      
+    } catch (err) {
+      console.error('[useYahooMarketData] Error obteniendo datos reales:', err);
+      
+      // Solo usar fallback si es fin de semana o si no hay datos reales disponibles
+      if (weekend) {
+        console.log('[useYahooMarketData] Weekend detected - using fallback data');
+        
+        const cacheKey = stableSymbols.join(',');
+        const cached = yahooCache.get(cacheKey);
+        const now = Date.now();
+        
+        if (cached && (now - cached.timestamp) < YAHOO_CACHE_TTL) {
+          console.log('[useYahooMarketData] Using cached fallback data');
+          setData(cached.data);
+          setMarketStatus('closed');
+          setLoading(false);
+          setIsInitialLoad(false);
+          return;
+        }
+        
+        console.log('[useYahooMarketData] No cached data, generating fallback');
+        const fallbackData = getFallbackData(stableSymbols);
+        console.log('[useYahooMarketData] Fallback data set:', fallbackData);
+        
+        // Cachear los datos de fallback
+        yahooCache.set(cacheKey, { 
+          data: fallbackData, 
+          timestamp: now, 
+          callCount: (cached?.callCount || 0) + 1 
         });
         
         setData(fallbackData);
-        setIsInitialLoad(false);
-        return;
-      }
-    }
-
-    const fetchData = async (isBackgroundUpdate = false) => {
-      // Verificar cache primero
-      const cacheKey = symbols.sort().join(',');
-      const cached = yahooCache.get(cacheKey);
-      const now = Date.now();
-      
-      // Cache válido por 30 segundos (reducido para actualizaciones más frecuentes)
-      if (cached && (now - cached.timestamp) < YAHOO_CACHE_TTL) {
-        console.log(`[Yahoo Market Data] Using cached data for ${symbols.join(',')}`);
-        setData(cached.data);
-        if (isInitialLoad) {
-          setIsInitialLoad(false);
-        }
-        return;
-      }
-
-      console.log(`[Yahoo Market Data] Fetching ${isBackgroundUpdate ? 'background update' : 'fresh data'} for ${symbols.join(',')}`);
-      
-      // Solo mostrar loading en carga inicial, no en actualizaciones background
-      if (!isBackgroundUpdate && isInitialLoad) {
-        setLoading(true);
-      }
-      setError(null);
-
-      try {
-        const response = await fetch(`http://localhost:8000/api/market-data?symbols=${symbols.join(',')}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log(`[Yahoo Market Data] Received ${isBackgroundUpdate ? 'background update' : 'data'}:`, result);
-        
-        // Actualizar cache
-        yahooCache.set(cacheKey, {
-          data: result,
-          timestamp: now,
-          callCount: (cached?.callCount || 0) + 1
-        });
-
-        setData(result);
-        if (isInitialLoad) {
-          setIsInitialLoad(false);
-        }
-      } catch (err) {
-        console.error('Error fetching Yahoo Finance market data:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        
-        // En caso de error, usar cache si está disponible
-        if (cached) {
-          console.log(`[Yahoo Market Data] Using cached data due to error`);
-          setData(cached.data);
-          if (isInitialLoad) {
-            setIsInitialLoad(false);
-          }
-        }
-      } finally {
-        // Solo ocultar loading si lo habíamos mostrado
-        if (!isBackgroundUpdate && isInitialLoad) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Limpiar cache anterior si los símbolos cambiaron
-    const currentCacheKey = symbols.sort().join(',');
-    const previousCacheKeys = Array.from(yahooCache.keys()).filter(key => 
-      key !== currentCacheKey && symbols.some(s => key.includes(s))
-    );
-    
-    if (previousCacheKeys.length > 0) {
-      console.log(`[Yahoo Market Data] Clearing old cache for symbol change: ${previousCacheKeys.join(', ')}`);
-      previousCacheKeys.forEach(key => yahooCache.delete(key));
-      setIsInitialLoad(true); // Reset cuando cambian los símbolos
-    }
-
-    // Fetch inicial inmediato
-    fetchData(false);
-
-    // Configurar intervalo - solo actualizar si el mercado está abierto
-    const interval = setInterval(() => {
-      if (isMarketOpen() && !isWeekend()) {
-        fetchData(true); // Marcar como actualización background
+        setMarketStatus('closed');
+        setError('Mercado cerrado - datos de fin de semana');
       } else {
-        console.log('[Yahoo Market Data] Market closed - skipping background update');
+        // Si no es fin de semana, mostrar error pero intentar con datos de fallback
+        console.log('[useYahooMarketData] Market should be open but no data available');
+        const fallbackData = getFallbackData(stableSymbols);
+        setData(fallbackData);
+        setMarketStatus('error');
+        setError('Error obteniendo datos de mercado');
       }
-    }, 30 * 1000); // 30 segundos
+    } finally {
+      setLoading(false);
+      setIsInitialLoad(false);
+    }
+  }, [stableSymbols]);
 
-    return () => clearInterval(interval);
-  }, [symbols, isInitialLoad]);
+  useEffect(() => {
+    if (stableSymbols.length === 0) return;
+    
+    fetchData();
+  }, [fetchData]);
 
-  return { data, loading, error, marketStatus };
+  // Log del estado actual para debugging
+  useEffect(() => {
+    console.log('[useYahooMarketData] Current state:', { 
+      data, 
+      loading, 
+      error, 
+      marketStatus, 
+      isInitialLoad 
+    });
+  }, [data, loading, error, marketStatus, isInitialLoad]);
+
+  return { 
+    data, 
+    loading, 
+    error, 
+    marketStatus, 
+    isInitialLoad,
+    refetch: fetchData 
+  };
 }; 

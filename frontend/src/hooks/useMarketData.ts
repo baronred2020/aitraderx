@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 interface MarketData {
   [symbol: string]: {
@@ -44,10 +44,13 @@ export const useMarketData = (symbols: string[]) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!symbols.length) return;
+  // Memoizar el array de símbolos para evitar re-renders innecesarios
+  const stableSymbols = useMemo(() => symbols.sort(), [symbols.join(',')]);
 
-    const cacheKey = symbols.sort().join(',');
+  useEffect(() => {
+    if (!stableSymbols.length) return;
+
+    const cacheKey = stableSymbols.join(',');
     const cached = marketCache.get(cacheKey);
     const now = Date.now();
 
@@ -62,7 +65,7 @@ export const useMarketData = (symbols: string[]) => {
       setError(null);
 
       try {
-        const response = await fetch(`http://localhost:8000/api/market-data?symbols=${symbols.join(',')}`);
+        const response = await fetch(`http://localhost:8000/api/market-data?symbols=${stableSymbols.join(',')}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -83,7 +86,7 @@ export const useMarketData = (symbols: string[]) => {
     };
 
     fetchData();
-  }, [symbols]);
+  }, [stableSymbols]);
 
   return { data, loading, error };
 }; 
