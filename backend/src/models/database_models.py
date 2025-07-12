@@ -4,7 +4,7 @@ Modelos de Base de Datos - Sistema de Suscripciones
 Modelos SQLAlchemy para integrar con MySQL
 """
 
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, JSON, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, JSON, ForeignKey, Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -238,3 +238,23 @@ class SubscriptionAudit(Base):
     # Timestamps
     action_date = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow) 
+
+class VirtualWallet(Base):
+    __tablename__ = "virtual_wallets"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True, unique=True)
+    balance = Column(Numeric(precision=12, scale=2), nullable=False, default=10000.00)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user = relationship("User")
+    transactions = relationship("WalletTransaction", back_populates="wallet")
+
+class WalletTransaction(Base):
+    __tablename__ = "wallet_transactions"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    wallet_id = Column(Integer, ForeignKey("virtual_wallets.id"), nullable=False, index=True)
+    type = Column(String(20), nullable=False)  # 'recharge', 'trade', 'withdrawal', etc
+    amount = Column(Numeric(precision=12, scale=2), nullable=False)
+    description = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    wallet = relationship("VirtualWallet", back_populates="transactions") 

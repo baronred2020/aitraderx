@@ -11,6 +11,8 @@ import logging
 from sqlalchemy import create_engine, text
 from alembic import command
 from alembic.config import Config
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)

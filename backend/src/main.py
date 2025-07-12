@@ -51,6 +51,7 @@ from api.subscription_routes import subscription_router
 from api.auth_routes import auth_router
 from services.subscription_service import SubscriptionService
 from api import market_data_routes
+from api.wallet_routes import router as wallet_router
 
 # Variables globales
 app_state = {}
@@ -110,6 +111,7 @@ app.add_middleware(
 app.include_router(subscription_router)
 app.include_router(auth_router)
 app.include_router(market_data_routes.router)
+app.include_router(wallet_router)
 
 # Models de datos
 class Asset(BaseModel):

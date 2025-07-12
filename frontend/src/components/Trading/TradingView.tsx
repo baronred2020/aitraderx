@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { YahooTradingChart } from './YahooTradingChart';
 import { useYahooMarketData } from '../../hooks/useYahooMarketData';
+import Wallet from './Wallet';
+import { useWallet } from '../../hooks/useWallet';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const TradingView: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('EURUSD');
@@ -24,6 +27,22 @@ export const TradingView: React.FC = () => {
   const [orderSide, setOrderSide] = useState<'buy' | 'sell'>('buy');
   const [orderAmount, setOrderAmount] = useState('10000');
   const [orderPrice, setOrderPrice] = useState('1.0925');
+
+  // Estado para SL y TP
+  const [orderSL, setOrderSL] = useState('');
+  const [orderTP, setOrderTP] = useState('');
+  const [orderError, setOrderError] = useState('');
+
+  const { isLoading: authLoading } = useAuth();
+  const token = localStorage.getItem('auth_token') || '';
+  const {
+    balance,
+    loading: walletLoading,
+    error: walletError,
+    trade,
+    fetchWallet,
+    refreshTransactions,
+  } = useWallet(token);
 
   // Definir símbolos base sin precios hardcodeados
   const baseSymbols = [
@@ -76,9 +95,50 @@ export const TradingView: React.FC = () => {
     { id: 3, pair: 'USDJPY', type: 'BUY', amount: '15,000', openPrice: '148.23', currentPrice: '148.45', pnl: '+$22', pnlPercent: '+0.15%' },
   ];
 
-  const handlePlaceOrder = () => {
-    // Simular colocación de orden
-    console.log('Orden colocada:', { orderType, orderSide, orderAmount, orderPrice });
+  // Validaciones y resumen
+  const isBuy = orderSide === 'buy';
+  const priceNum = parseFloat(orderPrice);
+  const slNum = parseFloat(orderSL);
+  const tpNum = parseFloat(orderTP);
+  const amountNum = parseFloat(orderAmount);
+  const validSL = !orderSL || (isBuy ? slNum < priceNum : slNum > priceNum);
+  const validTP = !orderTP || (isBuy ? tpNum > priceNum : tpNum < priceNum);
+  const validAmount = amountNum > 0 && !isNaN(amountNum);
+  const validPrice = priceNum > 0 && !isNaN(priceNum);
+  const canPlaceOrder = validSL && validTP && validAmount && validPrice;
+
+  // Calcular costo estimado de la orden (simple: cantidad * precio / 10000)
+  const estimatedCost = validAmount && validPrice ? amountNum * priceNum / 10000 : 0;
+  const hasFunds = (balance ?? 0) >= estimatedCost;
+  const canPlaceOrderWithFunds = canPlaceOrder && hasFunds;
+
+  const orderSummary = `${orderSide === 'buy' ? 'Comprar' : 'Vender'} ${orderAmount} ${selectedSymbol} a ${orderPrice}` +
+    (orderSL ? ` | SL: ${orderSL}` : '') + (orderTP ? ` | TP: ${orderTP}` : '');
+
+  // Feedback visual
+  const [orderSuccess, setOrderSuccess] = useState('');
+
+  const handleAddFunds = (amount: number) => {
+    // This function is now handled by useWallet, but keeping it for now
+    // as it might be re-introduced or refactored later.
+    console.log('Adding funds:', amount);
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!canPlaceOrderWithFunds) {
+      setOrderError(!hasFunds ? 'Saldo insuficiente para operar.' : 'Verifica los datos de la orden (SL/TP, cantidad, precio).');
+      return;
+    }
+    setOrderError('');
+    setOrderSuccess('');
+    const ok = await trade(estimatedCost, `Orden ${orderSide} ${orderAmount} ${selectedSymbol} a ${orderPrice}`);
+    if (ok) {
+      setOrderSuccess('¡Orden colocada exitosamente!');
+      fetchWallet();
+      refreshTransactions();
+    } else {
+      setOrderError('Error al colocar la orden.');
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -135,6 +195,8 @@ export const TradingView: React.FC = () => {
 
         {/* Panel lateral - Ocupa 1/3 parte */}
         <div className="xl:col-span-1 order-2 space-y-4 sm:space-y-6">
+          {/* Wallet */}
+          <Wallet />
           {/* Selector de símbolos desplegable */}
           <div className="trading-card p-3 sm:p-4">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Símbolo</h3>
@@ -242,6 +304,42 @@ export const TradingView: React.FC = () => {
               </div>
             )}
 
+            {/* Stop Loss (SL) */}
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Stop Loss (SL)</label>
+              <input
+                type="text"
+                value={orderSL}
+                onChange={(e) => setOrderSL(e.target.value)}
+                className={`w-full trading-input px-3 py-2 text-sm ${orderSL && !validSL ? 'border-red-500' : ''}`}
+                placeholder={isBuy ? 'Menor que el precio' : 'Mayor que el precio'}
+              />
+              {orderSL && !validSL && (
+                <div className="text-xs text-red-400 mt-1">El SL debe ser {isBuy ? 'menor' : 'mayor'} que el precio.</div>
+              )}
+            </div>
+
+            {/* Take Profit (TP) */}
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Take Profit (TP)</label>
+              <input
+                type="text"
+                value={orderTP}
+                onChange={(e) => setOrderTP(e.target.value)}
+                className={`w-full trading-input px-3 py-2 text-sm ${orderTP && !validTP ? 'border-red-500' : ''}`}
+                placeholder={isBuy ? 'Mayor que el precio' : 'Menor que el precio'}
+              />
+              {orderTP && !validTP && (
+                <div className="text-xs text-red-400 mt-1">El TP debe ser {isBuy ? 'mayor' : 'menor'} que el precio.</div>
+              )}
+            </div>
+
+            {/* Resumen de la orden */}
+            <div className="mb-3 sm:mb-4 bg-gray-800/60 rounded p-2 text-xs text-gray-300">
+              <div className="font-semibold text-white mb-1">Resumen:</div>
+              <div>{orderSummary}</div>
+            </div>
+
             {/* Botón de orden */}
             <button
               onClick={handlePlaceOrder}
@@ -249,10 +347,23 @@ export const TradingView: React.FC = () => {
                 orderSide === 'buy'
                   ? 'bg-green-500 hover:bg-green-600 text-white'
                   : 'bg-red-500 hover:bg-red-600 text-white'
-              }`}
+              } ${!canPlaceOrderWithFunds ? 'opacity-60 cursor-not-allowed' : ''}`}
+              disabled={!canPlaceOrderWithFunds || walletLoading || authLoading}
             >
               {orderSide === 'buy' ? 'Comprar' : 'Vender'} {selectedSymbol}
             </button>
+            {orderError && (
+              <div className="text-xs text-red-400 mt-2">{orderError}</div>
+            )}
+            {orderSuccess && (
+              <div className="text-xs text-green-400 mt-2">{orderSuccess}</div>
+            )}
+            {walletError && (
+              <div className="text-xs text-red-400 mt-2">{walletError}</div>
+            )}
+            {!hasFunds && (
+              <div className="text-xs text-yellow-400 mt-2">Saldo insuficiente para esta operación.</div>
+            )}
           </div>
 
           {/* Posiciones abiertas */}
