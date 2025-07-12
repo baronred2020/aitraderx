@@ -44,6 +44,15 @@ export const TradingView: React.FC = () => {
     refreshTransactions,
   } = useWallet(token);
 
+  // Log de depuración
+  console.log('TOKEN en TradingView:', token);
+  console.log('BALANCE en TradingView:', balance);
+
+  // Llamar a fetchWallet al montar el componente
+  useEffect(() => {
+    if (token) fetchWallet();
+  }, [token, fetchWallet]);
+
   // Definir símbolos base sin precios hardcodeados
   const baseSymbols = [
     { pair: 'EURUSD', label: 'EUR/USD' },
@@ -55,7 +64,7 @@ export const TradingView: React.FC = () => {
 
   // Obtener datos de mercado reales
   const symbolList = baseSymbols.map(s => s.pair);
-  const { data: marketData, loading: marketLoading, error: marketError } = useYahooMarketData(symbolList);
+  const { data: marketData, loading: marketLoading, error: marketError, marketStatus } = useYahooMarketData(symbolList);
 
   // Combinar datos base con datos de mercado reales
   const symbols = baseSymbols.map(baseSymbol => {
@@ -107,8 +116,8 @@ export const TradingView: React.FC = () => {
   const validPrice = priceNum > 0 && !isNaN(priceNum);
   const canPlaceOrder = validSL && validTP && validAmount && validPrice;
 
-  // Calcular costo estimado de la orden (simple: cantidad * precio / 10000)
-  const estimatedCost = validAmount && validPrice ? amountNum * priceNum / 10000 : 0;
+  // Calcular costo estimado de la orden (para forex, usar la cantidad directamente)
+  const estimatedCost = validAmount && validPrice ? amountNum : 0;
   const hasFunds = (balance ?? 0) >= estimatedCost;
   const canPlaceOrderWithFunds = canPlaceOrder && hasFunds;
 
@@ -163,6 +172,22 @@ export const TradingView: React.FC = () => {
           <p className="text-sm sm:text-base text-gray-400">Plataforma de trading profesional con IA</p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          {/* Estado del mercado */}
+          <div className={`flex items-center space-x-2 border rounded-lg px-3 py-2 ${
+            marketStatus === 'open' 
+              ? 'bg-green-500/20 border-green-500/30' 
+              : 'bg-red-500/20 border-red-500/30'
+          }`}>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${
+              marketStatus === 'open' ? 'bg-green-400' : 'bg-red-400'
+            }`}></div>
+            <span className={`text-sm font-medium ${
+              marketStatus === 'open' ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {marketStatus === 'open' ? 'Mercado Abierto' : 'Mercado Cerrado'}
+            </span>
+          </div>
+          
           <div className="flex items-center space-x-2 bg-green-500/20 border border-green-500/30 rounded-lg px-3 py-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-sm text-green-400 font-medium">Trading Activo</span>
@@ -338,6 +363,12 @@ export const TradingView: React.FC = () => {
             <div className="mb-3 sm:mb-4 bg-gray-800/60 rounded p-2 text-xs text-gray-300">
               <div className="font-semibold text-white mb-1">Resumen:</div>
               <div>{orderSummary}</div>
+              <div className="mt-1 text-blue-300">
+                Costo estimado: ${estimatedCost.toLocaleString()}
+              </div>
+              <div className="mt-1 text-gray-400">
+                Saldo disponible: {walletLoading || balance === null ? 'Cargando...' : `$${(balance ?? 0).toLocaleString()}`}
+              </div>
             </div>
 
             {/* Botón de orden */}
@@ -347,8 +378,8 @@ export const TradingView: React.FC = () => {
                 orderSide === 'buy'
                   ? 'bg-green-500 hover:bg-green-600 text-white'
                   : 'bg-red-500 hover:bg-red-600 text-white'
-              } ${!canPlaceOrderWithFunds ? 'opacity-60 cursor-not-allowed' : ''}`}
-              disabled={!canPlaceOrderWithFunds || walletLoading || authLoading}
+              } ${!canPlaceOrderWithFunds || walletLoading || authLoading || balance === null ? 'opacity-60 cursor-not-allowed' : ''}`}
+              disabled={!canPlaceOrderWithFunds || walletLoading || authLoading || balance === null}
             >
               {orderSide === 'buy' ? 'Comprar' : 'Vender'} {selectedSymbol}
             </button>
@@ -363,6 +394,23 @@ export const TradingView: React.FC = () => {
             )}
             {!hasFunds && (
               <div className="text-xs text-yellow-400 mt-2">Saldo insuficiente para esta operación.</div>
+            )}
+            
+            {/* Información del estado del mercado */}
+            {marketStatus === 'closed' && (
+              <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                  <span className="text-sm font-medium text-yellow-400">Mercado Cerrado</span>
+                </div>
+                <p className="text-xs text-yellow-300">
+                  El mercado forex está cerrado durante los fines de semana. 
+                  Los datos mostrados son del último cierre de mercado.
+                </p>
+                <p className="text-xs text-yellow-300 mt-1">
+                  El trading se reanudará el lunes a las 9:00 AM.
+                </p>
+              </div>
             )}
           </div>
 

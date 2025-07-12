@@ -25,21 +25,116 @@ SYMBOL_MAP = {
     "US10Y": "^TNX"    # 10-year Treasury
 }
 
-
-
+# Cache para datos de mercado
 CACHE = {}
 CACHE_TTL = 5  # 5 segundos para respuestas más rápidas
 
-
-
-# Cache para velas de Twelve Data
+# Cache para velas
 CANDLE_CACHE = {}
-CANDLE_TTL = 10  # 10 segundos para velas más rápidas
+CANDLE_TTL = 10
+
+def is_market_open(symbol: str) -> bool:
+    """
+    Determina si el mercado está abierto para un símbolo específico.
+    
+    Args:
+        symbol: Símbolo del instrumento (ej: 'EURUSD', 'AAPL')
+    
+    Returns:
+        bool: True si el mercado está abierto, False si está cerrado
+    """
+    now = datetime.now()
+    current_weekday = now.weekday()  # 0=Lunes, 6=Domingo
+    
+    # Verificar si es fin de semana
+    if current_weekday >= 5:  # Sábado (5) o Domingo (6)
+        print(f"[Backend] Market closed for {symbol} - Weekend detected")
+        return False
+    
+    # Para Forex (pares de divisas), el mercado está abierto 24/5 (Lunes-Viernes)
+    forex_symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD']
+    if symbol in forex_symbols:
+        # Forex está abierto de domingo 22:00 UTC a viernes 22:00 UTC
+        # Para simplificar, consideramos que está abierto de lunes a viernes
+        if current_weekday < 5:  # Lunes a Viernes
+            print(f"[Backend] Forex market open for {symbol}")
+            return True
+        else:
+            print(f"[Backend] Forex market closed for {symbol} - Weekend")
+            return False
+    
+    # Para acciones (NYSE/NASDAQ), verificar horarios específicos
+    stock_symbols = ['AAPL', 'MSFT', 'TSLA', 'SPX']
+    if symbol in stock_symbols:
+        # NYSE/NASDAQ horario: 9:30 AM - 4:00 PM EST (Lunes-Viernes)
+        # Convertir a hora local (asumiendo EST)
+        current_hour = now.hour
+        if current_weekday < 5 and 9 <= current_hour < 16:
+            print(f"[Backend] Stock market open for {symbol}")
+            return True
+        else:
+            print(f"[Backend] Stock market closed for {symbol} - Outside trading hours or weekend")
+            return False
+    
+    # Para criptomonedas, siempre abierto
+    crypto_symbols = ['BTCUSD', 'ETHUSD']
+    if symbol in crypto_symbols:
+        print(f"[Backend] Crypto market always open for {symbol}")
+        return True
+    
+    # Para otros instrumentos (futures, etc.), usar horario de trading
+    other_symbols = ['XAUUSD', 'OIL', 'US10Y']
+    if symbol in other_symbols:
+        # Futuros tienen horarios específicos, pero para simplificar usamos horario de trading
+        if current_weekday < 5 and 9 <= current_hour < 16:
+            print(f"[Backend] Futures market open for {symbol}")
+            return True
+        else:
+            print(f"[Backend] Futures market closed for {symbol}")
+            return False
+    
+    # Por defecto, asumir que está abierto si no es fin de semana
+    return current_weekday < 5
 
 async def fetch_price(symbol: str):
     """Obtiene precio actual usando Yahoo Finance"""
     try:
         print(f"[Backend] Fetching price for symbol: {symbol}")
+        
+        # Verificar si el mercado está abierto
+        if not is_market_open(symbol):
+            print(f"[Backend] Market closed for {symbol}, using cached data or fallback")
+            # Si el mercado está cerrado, usar datos de fallback o cache
+            fallback_prices = {
+                "EURUSD": 1.0850,
+                "GBPUSD": 1.2650,
+                "USDJPY": 148.50,
+                "AUDUSD": 0.6550,
+                "USDCAD": 1.3550,
+                "AAPL": 150.00,
+                "MSFT": 300.00,
+                "TSLA": 200.00,
+                "BTCUSD": 45000.00,
+                "ETHUSD": 2500.00,
+                "XAUUSD": 2000.00,
+                "OIL": 75.00,
+                "SPX": 4500.00,
+                "US10Y": 4.50
+            }
+            
+            price = fallback_prices.get(symbol, 100.0)
+            return {
+                "price": f"{price:.5f}",
+                "change": "0.000",
+                "changePercent": "0.00",
+                "volume": "0",
+                "high": f"{price:.5f}",
+                "low": f"{price:.5f}",
+                "open": f"{price:.5f}",
+                "previousClose": f"{price:.5f}",
+                "marketStatus": "closed"
+            }
+        
         yahoo_symbol = SYMBOL_MAP.get(symbol, symbol)
         print(f"[Backend] Mapped to Yahoo symbol: {yahoo_symbol}")
         
@@ -95,7 +190,8 @@ async def fetch_price(symbol: str):
             "high": f"{current_price * 1.001:.5f}",  # Aproximación
             "low": f"{current_price * 0.999:.5f}",   # Aproximación
             "open": f"{current_price:.5f}",
-            "previousClose": f"{current_price - change:.5f}"
+            "previousClose": f"{current_price - change:.5f}",
+            "marketStatus": "open"
         }
         
         print(f"[Backend] Successfully fetched price for {symbol}: {result}")
@@ -119,12 +215,9 @@ async def fetch_price(symbol: str):
             "high": f"{price * 1.001:.5f}",
             "low": f"{price * 0.999:.5f}",
             "open": f"{price:.5f}",
-            "previousClose": f"{price:.5f}"
+            "previousClose": f"{price:.5f}",
+            "marketStatus": "error"
         }
-
-
-
-
 
 @router.get("/market-data")
 async def get_market_data(symbols: str = Query(...)):
@@ -155,12 +248,20 @@ async def get_market_data(symbols: str = Query(...)):
     print(f"[Backend] Returning results: {results}")
     return results
 
-
-
 async def fetch_candles(symbol: str, interval: str, outputsize: int):
     """Obtiene datos de velas usando Yahoo Finance"""
     try:
         print(f"[Backend] Fetching candles for symbol: {symbol}, interval: {interval}, count: {outputsize}")
+        
+        # Verificar si el mercado está abierto
+        if not is_market_open(symbol):
+            print(f"[Backend] Market closed for {symbol}, returning empty candles")
+            return {
+                "symbol": symbol,
+                "interval": interval,
+                "values": []
+            }
+        
         yahoo_symbol = SYMBOL_MAP.get(symbol, symbol)
         print(f"[Backend] Mapped to Yahoo symbol: {yahoo_symbol}")
         
@@ -204,24 +305,24 @@ async def fetch_candles(symbol: str, interval: str, outputsize: int):
                 "close": str(row['Close']),
                 "volume": str(row['Volume'])
             })
-            
+        
         result = {
-            "values": values,
-            "meta": {
-                "symbol": symbol,
-                "interval": interval,
-                "currency_base": "USD",
-                "currency_quote": "USD"
-            }
+            "symbol": symbol,
+            "interval": interval,
+            "values": values
         }
         
-        print(f"[Backend] Successfully fetched candles for {symbol}: {len(values)} candles")
+        print(f"[Backend] Successfully processed candles for {symbol}")
         return result
+        
     except Exception as e:
         print(f"[Backend] Error fetching candles for {symbol}: {str(e)}")
-        return {"error": str(e)}
-
-
+        return {
+            "symbol": symbol,
+            "interval": interval,
+            "values": [],
+            "error": str(e)
+        }
 
 @router.get("/candles")
 async def get_market_candles(
@@ -262,5 +363,19 @@ async def get_market_candles(
     except Exception as e:
         print(f"[Backend] Error for candles {symbol}: {str(e)}")
         return {"error": str(e)}
+
+@router.get("/market-status")
+async def get_market_status(symbol: str):
+    """Endpoint para verificar el estado del mercado para un símbolo"""
+    is_open = is_market_open(symbol)
+    now = datetime.now()
+    
+    return {
+        "symbol": symbol,
+        "is_open": is_open,
+        "current_time": now.isoformat(),
+        "weekday": now.strftime("%A"),
+        "timezone": "UTC"
+    }
 
  

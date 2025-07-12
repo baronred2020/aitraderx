@@ -83,48 +83,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // Simular llamada a API
-      const response = await fetch('http://localhost:8000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      // Intentar llamada a API
+      try {
+        const response = await fetch('http://localhost:8000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        setSubscription(data.subscription);
-        localStorage.setItem('auth_token', data.token);
-        return true;
-      } else {
-        // Fallback para desarrollo - usar credenciales por defecto
-        if (username === 'admin' && password === 'admin123') {
-          const defaultUser: User = {
-            id: '1',
-            username: 'admin',
-            email: 'admin@aitraderx.com',
-            role: 'admin',
-            isActive: true
-          };
-          
-          const defaultSubscription: Subscription = {
-            id: '1',
-            planType: 'elite',
-            status: 'active',
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            isTrial: false
-          };
-          
-          setUser(defaultUser);
-          setSubscription(defaultSubscription);
-          localStorage.setItem('auth_token', 'dev-token');
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          setSubscription(data.subscription);
+          localStorage.setItem('auth_token', data.token);
           return true;
         }
-        return false;
+      } catch (apiError) {
+        console.warn('API no disponible, usando modo desarrollo:', apiError);
       }
+      
+      // Fallback para desarrollo - usar credenciales por defecto
+      if (username === 'admin' && password === 'admin123') {
+        const defaultUser: User = {
+          id: '1',
+          username: 'admin',
+          email: 'admin@aitraderx.com',
+          role: 'admin',
+          isActive: true
+        };
+        
+        const defaultSubscription: Subscription = {
+          id: '1',
+          planType: 'elite',
+          status: 'active',
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          isTrial: false
+        };
+        
+        setUser(defaultUser);
+        setSubscription(defaultSubscription);
+        localStorage.setItem('auth_token', 'dev-token');
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -147,6 +151,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
+      // Si es token de desarrollo, no hacer llamada al backend
+      if (token === 'dev-token') {
+        console.log('Usando modo desarrollo, saltando verificación de suscripción');
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch('http://localhost:8000/api/subscriptions/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -156,9 +167,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         setSubscription(data.subscription);
+      } else if (response.status === 401) {
+        // Token inválido o expirado, limpiar y continuar
+        console.warn('Token inválido, limpiando sesión');
+        localStorage.removeItem('auth_token');
+        setUser(null);
+        setSubscription(null);
+      } else {
+        console.error('Error checking subscription:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
+      // En caso de error de red, mantener el estado actual pero no bloquear
     } finally {
       setIsLoading(false);
     }

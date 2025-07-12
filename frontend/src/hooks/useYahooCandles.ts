@@ -1,22 +1,17 @@
 import { useState, useEffect } from 'react';
 
-interface CandleData {
-  datetime: string;
-  open: string;
-  high: string;
-  low: string;
-  close: string;
-  volume: string;
-}
-
 interface CandlesResponse {
-  values: CandleData[];
-  meta: {
-    symbol: string;
-    interval: string;
-    currency_base: string;
-    currency_quote: string;
-  };
+  symbol: string;
+  interval: string;
+  values: Array<{
+    datetime: string;
+    open: string;
+    high: string;
+    low: string;
+    close: string;
+    volume: string;
+  }>;
+  error?: string;
 }
 
 interface CacheEntry {
@@ -29,14 +24,70 @@ interface CacheEntry {
 const yahooCandlesCache = new Map<string, CacheEntry>();
 const YAHOO_CANDLES_CACHE_TTL = 60 * 1000; // 1 minuto para velas de Yahoo Finance (reducido de 5 minutos)
 
+// Función para detectar si es fin de semana
+const isWeekend = (): boolean => {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = Domingo, 6 = Sábado
+  return dayOfWeek === 0 || dayOfWeek === 6;
+};
+
+// Función para detectar si el mercado está abierto
+const isMarketOpen = (): boolean => {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const hour = now.getHours();
+  
+  // Fin de semana - mercado cerrado
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    return false;
+  }
+  
+  // Días de semana - verificar horario de trading
+  // Para simplificar, asumimos que está abierto de 9 AM a 4 PM
+  return hour >= 9 && hour < 16;
+};
+
 export const useYahooCandles = (symbol: string, timeInterval: string = '15', count: number = 100) => {
   const [data, setData] = useState<CandlesResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [marketStatus, setMarketStatus] = useState<'open' | 'closed'>('open');
 
   useEffect(() => {
     if (!symbol) return;
+
+    // Verificar si el mercado está abierto
+    const marketOpen = isMarketOpen();
+    const weekend = isWeekend();
+    
+    setMarketStatus(marketOpen ? 'open' : 'closed');
+    
+    // Si es fin de semana, usar cache existente o datos vacíos
+    if (weekend) {
+      console.log(`[Yahoo Candles] Weekend detected for ${symbol} - using cached data or empty candles`);
+      
+      const cacheKey = `yahoo_${symbol}-${timeInterval}-${count}`;
+      const cached = yahooCandlesCache.get(cacheKey);
+      
+      if (cached) {
+        console.log(`[Yahoo Candles] Using cached weekend data for ${symbol}`);
+        setData(cached.data);
+        setIsInitialLoad(false);
+        return;
+      } else {
+        // Datos vacíos para fines de semana
+        const emptyData: CandlesResponse = {
+          symbol: symbol,
+          interval: timeInterval,
+          values: []
+        };
+        
+        setData(emptyData);
+        setIsInitialLoad(false);
+        return;
+      }
+    }
 
     const fetchCandles = async (isBackgroundUpdate = false) => {
       // Verificar cache primero
@@ -121,12 +172,17 @@ export const useYahooCandles = (symbol: string, timeInterval: string = '15', cou
     fetchCandles(false);
 
     // Configurar intervalo - velas de Yahoo Finance se actualizan cada 1 minuto en background
+    // Solo si el mercado está abierto
     const updateInterval = setInterval(() => {
-      fetchCandles(true); // Marcar como actualización background
+      if (isMarketOpen() && !isWeekend()) {
+        fetchCandles(true); // Marcar como actualización background
+      } else {
+        console.log(`[Yahoo Candles] Market closed for ${symbol} - skipping background update`);
+      }
     }, 60 * 1000); // 1 minuto
 
     return () => clearInterval(updateInterval);
   }, [symbol, timeInterval, count, isInitialLoad]);
 
-  return { data, loading, error };
+  return { data, loading, error, marketStatus };
 }; 

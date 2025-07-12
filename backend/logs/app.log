@@ -355,3 +355,30 @@ WHERE users.username = %s
 2025-07-11 21:18:36,532 - main - INFO - AI Trading System iniciado correctamente
 2025-07-11 21:18:49,227 - main - INFO - Iniciando AI Trading System...
 2025-07-11 21:18:49,228 - main - INFO - AI Trading System iniciado correctamente
+2025-07-11 21:54:35,302 - main - INFO - Deteniendo AI Trading System...
+2025-07-11 21:54:53,150 - main - INFO - Iniciando AI Trading System...
+2025-07-11 21:54:53,150 - main - INFO - AI Trading System iniciado correctamente
+2025-07-11 22:06:28,243 - main - INFO - Iniciando AI Trading System...
+2025-07-11 22:06:28,243 - main - INFO - AI Trading System iniciado correctamente
+2025-07-11 22:11:26,828 - api.subscription_routes - ERROR - Error obteniendo suscripción: (MySQLdb.OperationalError) (2013, 'Lost connection to server during query')
+[SQL: SELECT users.user_id AS users_user_id, users.username AS users_username, users.email AS users_email, users.first_name AS users_first_name, users.last_name AS users_last_name, users.phone AS users_phone, users.password_hash AS users_password_hash, users.is_active AS users_is_active, users.is_verified AS users_is_verified, users.role AS users_role, users.timezone AS users_timezone, users.language AS users_language, users.created_at AS users_created_at, users.updated_at AS users_updated_at, users.last_login AS users_last_login 
+FROM users 
+WHERE users.username = %s 
+ LIMIT %s]
+[parameters: ('prueba1', 1)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-11 22:11:26,853 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:27,697 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:27,702 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:27,707 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:27,709 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:27,711 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:27,714 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:27,716 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:38,717 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:39,025 - api.subscription_routes - ERROR - Error obteniendo suscripción: Can't reconnect until invalid transaction is rolled back.  Please rollback() fully before proceeding (Background on this error at: https://sqlalche.me/e/20/8s2b)
+2025-07-11 22:11:50,410 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-11 22:39:06,204 - main - INFO - Deteniendo AI Trading System...
+2025-07-11 22:39:37,034 - main - INFO - Iniciando AI Trading System...
+2025-07-11 22:39:37,035 - main - INFO - AI Trading System iniciado correctamente

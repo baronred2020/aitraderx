@@ -10,6 +10,7 @@ interface MarketData {
     low: string;
     open: string;
     previousClose: string;
+    marketStatus?: 'open' | 'closed' | 'error';
   };
 }
 
@@ -23,14 +24,92 @@ interface CacheEntry {
 const yahooCache = new Map<string, CacheEntry>();
 const YAHOO_CACHE_TTL = 30 * 1000; // 30 segundos para Yahoo Finance (reducido de 2 minutos)
 
+// Función para detectar si es fin de semana
+const isWeekend = (): boolean => {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = Domingo, 6 = Sábado
+  return dayOfWeek === 0 || dayOfWeek === 6;
+};
+
+// Función para detectar si el mercado está abierto
+const isMarketOpen = (): boolean => {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const hour = now.getHours();
+  
+  // Fin de semana - mercado cerrado
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    return false;
+  }
+  
+  // Días de semana - verificar horario de trading
+  // Para simplificar, asumimos que está abierto de 9 AM a 4 PM
+  return hour >= 9 && hour < 16;
+};
+
 export const useYahooMarketData = (symbols: string[]) => {
   const [data, setData] = useState<MarketData>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [marketStatus, setMarketStatus] = useState<'open' | 'closed'>('open');
 
   useEffect(() => {
     if (!symbols.length) return;
+
+    // Verificar si el mercado está abierto
+    const marketOpen = isMarketOpen();
+    const weekend = isWeekend();
+    
+    setMarketStatus(marketOpen ? 'open' : 'closed');
+    
+    // Si es fin de semana, usar cache existente o datos de fallback
+    if (weekend) {
+      console.log('[Yahoo Market Data] Weekend detected - using cached data or fallback');
+      
+      const cacheKey = symbols.sort().join(',');
+      const cached = yahooCache.get(cacheKey);
+      
+      if (cached) {
+        console.log('[Yahoo Market Data] Using cached weekend data');
+        setData(cached.data);
+        setIsInitialLoad(false);
+        return;
+      } else {
+        // Datos de fallback para fines de semana
+        const fallbackData: MarketData = {};
+        symbols.forEach(symbol => {
+          const fallbackPrices: { [key: string]: string } = {
+            'EURUSD': '1.0850',
+            'GBPUSD': '1.2650',
+            'USDJPY': '148.50',
+            'AUDUSD': '0.6550',
+            'USDCAD': '1.3550',
+            'AAPL': '150.00',
+            'MSFT': '300.00',
+            'TSLA': '200.00',
+            'BTCUSD': '45000.00',
+            'ETHUSD': '2500.00'
+          };
+          
+          fallbackData[symbol] = {
+            price: fallbackPrices[symbol] || '100.00',
+            change: '0.000',
+            changePercent: '0.00',
+            volume: '0',
+            high: fallbackPrices[symbol] || '100.00',
+            low: fallbackPrices[symbol] || '100.00',
+            open: fallbackPrices[symbol] || '100.00',
+            previousClose: fallbackPrices[symbol] || '100.00',
+            marketStatus: 'closed'
+          };
+        });
+        
+        setData(fallbackData);
+        setIsInitialLoad(false);
+        return;
+      }
+    }
 
     const fetchData = async (isBackgroundUpdate = false) => {
       // Verificar cache primero
@@ -112,13 +191,17 @@ export const useYahooMarketData = (symbols: string[]) => {
     // Fetch inicial inmediato
     fetchData(false);
 
-    // Configurar intervalo - actualizar cada 30 segundos en background
+    // Configurar intervalo - solo actualizar si el mercado está abierto
     const interval = setInterval(() => {
-      fetchData(true); // Marcar como actualización background
+      if (isMarketOpen() && !isWeekend()) {
+        fetchData(true); // Marcar como actualización background
+      } else {
+        console.log('[Yahoo Market Data] Market closed - skipping background update');
+      }
     }, 30 * 1000); // 30 segundos
 
     return () => clearInterval(interval);
   }, [symbols, isInitialLoad]);
 
-  return { data, loading, error };
+  return { data, loading, error, marketStatus };
 }; 
