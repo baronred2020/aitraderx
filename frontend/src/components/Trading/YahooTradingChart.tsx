@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   LineChart, 
   Line, 
@@ -26,12 +26,14 @@ import {
   Calendar,
   CandlestickChart as CandlestickChartIcon,
   Activity,
-  AreaChart as AreaChartIcon
+  AreaChart as AreaChartIcon,
+  BarChart3,
+  Target
 } from 'lucide-react';
 import { useCandles } from '../../hooks/useCandles';
 import { useMarketData } from '../../hooks/useMarketData';
-import { useEffect, useRef, useMemo } from 'react';
 import { useIntelligentAnalysis, TradingType } from '../../hooks/useIntelligentAnalysis';
+import { AnalysisResults } from './AnalysisResults';
 
 // Tipos simples para lightweight-charts
 declare const createChart: any;
@@ -247,7 +249,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
   const [tradingType, setTradingType] = useState<(TradingType & { icon: any })>(tradingTypes[0]);
   const [timeframe, setTimeframe] = useState(tradingTypes[0].timeframe); // Estado local para timeframe
   const [showTradingTypeMenu, setShowTradingTypeMenu] = useState(false);
-  const { executeAnalysis } = useIntelligentAnalysis();
+  const { executeAnalysis, lastAnalysis, isAnalyzing } = useIntelligentAnalysis();
   const [lastSymbol, setLastSymbol] = useState(symbol);
   const [initialLoadingCandles, setInitialLoadingCandles] = useState(true);
   const [initialLoadingMarket, setInitialLoadingMarket] = useState(true);
@@ -257,6 +259,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
   const [isTouching, setIsTouching] = useState(false);
   const [showSmartAnalysis, setShowSmartAnalysis] = useState(true);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
 
   // Función para mapear timeframe de trading type a intervalo del backend
   const mapTimeframeToInterval = (timeframe: string): string => {
@@ -1060,8 +1063,9 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
     setTimeframe(type.timeframe);
     setShowTradingTypeMenu(false);
     console.log(`[YahooTradingChart] Executing intelligent analysis for ${symbol} with type: ${type.name}`);
-    await executeAnalysis(type, symbol);
+    const result = await executeAnalysis(type, symbol);
     console.log(`[YahooTradingChart] Analysis completed for ${type.name}`);
+    
     // Los indicadores técnicos y el gráfico se actualizan automáticamente por el nuevo timeframe
   };
 
@@ -1733,8 +1737,40 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
                 <span>🤖</span>
                 <span>Análisis Inteligente de Trading</span>
               </h4>
-              <div className="text-xs text-purple-400">
-                AI-Powered • Tiempo real
+              <div className="flex items-center space-x-2">
+                <div className="text-xs text-purple-400">
+                  AI-Powered • Tiempo real
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const result = await executeAnalysis(tradingType, symbol);
+                      if (result) {
+                        setShowAnalysisModal(true);
+                      }
+                    } catch (error) {
+                      console.error('Error ejecutando análisis:', error);
+                    }
+                  }}
+                  disabled={isAnalyzing}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    isAnalyzing 
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}
+                >
+                  {isAnalyzing ? (
+                    <span className="flex items-center space-x-1">
+                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Analizando...</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center space-x-1">
+                      <Target className="w-3 h-3" />
+                      <span>Ver Análisis Completo</span>
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -1940,6 +1976,14 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
           </div>
         )}
       </div>
+
+      {/* Modal de Análisis Inteligente */}
+      {showAnalysisModal && lastAnalysis && (
+        <AnalysisResults 
+          result={lastAnalysis} 
+          onClose={() => setShowAnalysisModal(false)} 
+        />
+      )}
     </div>
   );
 }; 
