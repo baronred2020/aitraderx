@@ -38,7 +38,6 @@ declare const createChart: any;
 
 interface TradingChartProps {
   symbol: string;
-  timeframe: string;
 }
 
 const CandlestickChart: React.FC<{ 
@@ -241,11 +240,12 @@ const tradingTypes: (TradingType & { icon: any })[] = [
   }
 ];
 
-export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timeframe }) => {
+export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
   const [chartType, setChartType] = useState<'candlestick' | 'line' | 'area'>('candlestick');
   const [showIndicators, setShowIndicators] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [tradingType, setTradingType] = useState<(TradingType & { icon: any })>(tradingTypes[0]);
+  const [timeframe, setTimeframe] = useState(tradingTypes[0].timeframe); // Estado local para timeframe
   const [showTradingTypeMenu, setShowTradingTypeMenu] = useState(false);
   const { executeAnalysis } = useIntelligentAnalysis();
   const [lastSymbol, setLastSymbol] = useState(symbol);
@@ -258,11 +258,31 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   const [isTouching, setIsTouching] = useState(false);
   const [showSmartAnalysis, setShowSmartAnalysis] = useState(true);
 
-  // Hook para datos de velas
-  const { data: candleData, loading: candleLoading, error: candleError } = useCandles(symbol, '15', 100);
-  // Hook para precio real
+  // Función para mapear timeframe de trading type a intervalo del backend
+  const mapTimeframeToInterval = (timeframe: string): string => {
+    switch (timeframe) {
+      case '1-5m':
+        return '5'; // 5 minutos para scalping
+      case '15-30m':
+        return '15'; // 15 minutos para day trading
+      case '1-4h':
+        return '60'; // 1 hora para swing trading
+      case '1d':
+        return 'D'; // 1 día para position trading (usar 'D' en lugar de '1440')
+      default:
+        return '15'; // Default a 15 minutos
+    }
+  };
+
+  // Hook para datos de velas y mercado con timeframe dinámico
+  const { data: candleData, loading: candleLoading, error: candleError } = useCandles(symbol, mapTimeframeToInterval(timeframe), 100);
   const { data: marketData, loading: marketLoading, error: marketError } = useMarketData([symbol]);
   const realPrice = marketData[symbol]?.price;
+
+  // Log para debugging de timeframe
+  useEffect(() => {
+    console.log(`[YahooTradingChart] Timeframe changed to: ${timeframe} (mapped to: ${mapTimeframeToInterval(timeframe)})`);
+  }, [timeframe]);
 
   // Detectar cambio de símbolo
   useEffect(() => {
@@ -774,15 +794,15 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   };
 
   // Generar señales de trading inteligentes
-  const generateTradingSignals = (data: any[]) => {
+  const generateTradingSignals = (data: any[], rsiPeriod: number = 14, smaPeriod: number = 20, emaPeriod: number = 50) => {
     if (data.length < 50) return [];
     
     const signals = [];
     const lastCandle = data[data.length - 1];
-    const rsi = calculateRSI(data);
+    const rsi = calculateRSI(data, rsiPeriod);
     const macd = calculateMACD(data);
-    const sma20 = calculateSMA(data, 20);
-    const sma50 = calculateSMA(data, 50);
+    const sma = calculateSMA(data, smaPeriod);
+    const ema = calculateEMA(data, emaPeriod);
     const adx = calculateADX(data);
     const patterns = detectCandlestickPatterns(data);
     const levels = detectSupportResistanceLevels(data);
@@ -814,11 +834,11 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
     }
     
     // Análisis de Medias Móviles
-    if (sma20 !== null && sma50 !== null && lastCandle) {
-      if (lastCandle.close > sma20 && sma20 > sma50) {
+    if (sma !== null && ema !== null && lastCandle) {
+      if (lastCandle.close > sma && sma > ema) {
         bullishSignals++;
         signalStrength += 0.6;
-      } else if (lastCandle.close < sma20 && sma20 < sma50) {
+      } else if (lastCandle.close < sma && sma < ema) {
         bearishSignals++;
         signalStrength += 0.6;
       }
@@ -859,9 +879,9 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
         strength: Math.min(signalStrength / 5, 1),
         confidence: Math.min((bullishSignals / (bullishSignals + bearishSignals)) * 100, 95),
         reasons: [
-          ...(rsi !== null && rsi < 30 ? ['RSI sobreventa'] : []),
+          ...(rsi !== null && rsi < 30 ? [`RSI sobreventa (${rsi.toFixed(1)})`] : []),
           ...(macd !== null && macd > 0 ? ['MACD alcista'] : []),
-          ...(sma20 !== null && sma50 !== null && lastCandle && lastCandle.close > sma20 && sma20 > sma50 ? ['Tendencia alcista'] : []),
+          ...(sma !== null && ema !== null && lastCandle && lastCandle.close > sma && sma > ema ? ['Tendencia alcista'] : []),
           ...recentPatterns.filter(p => p.type === 'bullish').map(p => p.name),
           ...nearLevels.filter(l => l.type === 'support').map(l => `Soporte en ${l.price.toFixed(4)}`)
         ],
@@ -875,9 +895,9 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
         strength: Math.min(signalStrength / 5, 1),
         confidence: Math.min((bearishSignals / (bullishSignals + bearishSignals)) * 100, 95),
         reasons: [
-          ...(rsi !== null && rsi > 70 ? ['RSI sobrecompra'] : []),
+          ...(rsi !== null && rsi > 70 ? [`RSI sobrecompra (${rsi.toFixed(1)})`] : []),
           ...(macd !== null && macd < 0 ? ['MACD bajista'] : []),
-          ...(sma20 !== null && sma50 !== null && lastCandle && lastCandle.close < sma20 && sma20 < sma50 ? ['Tendencia bajista'] : []),
+          ...(sma !== null && ema !== null && lastCandle && lastCandle.close < sma && sma < ema ? ['Tendencia bajista'] : []),
           ...recentPatterns.filter(p => p.type === 'bearish').map(p => p.name),
           ...nearLevels.filter(l => l.type === 'resistance').map(l => `Resistencia en ${l.price.toFixed(4)}`)
         ],
@@ -894,18 +914,71 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   const smartAnalysis = useMemo(() => {
     if (chartData.length < 50) return null;
     
+    // Ajustar parámetros según el tipo de trading
+    let rsiPeriod = 14;
+    let smaPeriod = 20;
+    let emaPeriod = 50;
+    let riskRewardRatio = 2;
+    let stopLossPercent = 0.02; // 2%
+    let takeProfitPercent = 0.04; // 4%
+    
+    // Ajustar parámetros según el tipo de trading
+    switch (tradingType.id) {
+      case 'scalping':
+        rsiPeriod = 7; // RSI más rápido para scalping
+        smaPeriod = 10;
+        emaPeriod = 20;
+        riskRewardRatio = 1.5; // Ratio más conservador
+        stopLossPercent = 0.01; // 1% stop loss
+        takeProfitPercent = 0.015; // 1.5% take profit
+        break;
+      case 'day_trading':
+        rsiPeriod = 14; // RSI estándar
+        smaPeriod = 20;
+        emaPeriod = 50;
+        riskRewardRatio = 2;
+        stopLossPercent = 0.02;
+        takeProfitPercent = 0.04;
+        break;
+      case 'swing_trading':
+        rsiPeriod = 21; // RSI más lento para swing
+        smaPeriod = 50;
+        emaPeriod = 100;
+        riskRewardRatio = 3; // Ratio más agresivo
+        stopLossPercent = 0.03; // 3% stop loss
+        takeProfitPercent = 0.09; // 9% take profit
+        break;
+      case 'position_trading':
+        rsiPeriod = 30; // RSI muy lento para position
+        smaPeriod = 100;
+        emaPeriod = 200;
+        riskRewardRatio = 4; // Ratio muy agresivo
+        stopLossPercent = 0.05; // 5% stop loss
+        takeProfitPercent = 0.20; // 20% take profit
+        break;
+    }
+    
+    // Generar señales con parámetros ajustados
+    const tradingSignals = generateTradingSignals(chartData, rsiPeriod, smaPeriod, emaPeriod);
+    const candlestickPatterns = detectCandlestickPatterns(chartData.slice(-20));
+    const supportResistanceLevels = detectSupportResistanceLevels(chartData);
+    
+    const currentPrice = chartData[chartData.length - 1]?.close || 0;
+    
     return {
-      tradingSignals: generateTradingSignals(chartData),
-      candlestickPatterns: detectCandlestickPatterns(chartData.slice(-20)), // Últimos 20 patrones
-      supportResistanceLevels: detectSupportResistanceLevels(chartData),
+      tradingSignals,
+      candlestickPatterns,
+      supportResistanceLevels,
       riskRewardSuggestion: {
-        currentPrice: chartData[chartData.length - 1]?.close || 0,
-        suggestedStopLoss: (chartData[chartData.length - 1]?.close || 0) * 0.98,
-        suggestedTakeProfit: (chartData[chartData.length - 1]?.close || 0) * 1.04,
-        riskRewardRatio: 2, // 1:2 risk/reward
+        currentPrice,
+        suggestedStopLoss: currentPrice * (1 - stopLossPercent),
+        suggestedTakeProfit: currentPrice * (1 + takeProfitPercent),
+        riskRewardRatio,
+        tradingType: tradingType.name,
+        timeframe: timeframe
       }
     };
-  }, [chartData]);
+  }, [chartData, tradingType, timeframe]); // Agregar dependencias
 
   const chartTypes = [
     {
@@ -982,9 +1055,14 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
 
   // Manejar cambio de tipo de trading
   const handleTradingTypeChange = async (type: TradingType & { icon: any }) => {
+    console.log(`[YahooTradingChart] Changing trading type to: ${type.name} with timeframe: ${type.timeframe}`);
     setTradingType(type);
+    setTimeframe(type.timeframe);
     setShowTradingTypeMenu(false);
+    console.log(`[YahooTradingChart] Executing intelligent analysis for ${symbol} with type: ${type.name}`);
     await executeAnalysis(type, symbol);
+    console.log(`[YahooTradingChart] Analysis completed for ${type.name}`);
+    // Los indicadores técnicos y el gráfico se actualizan automáticamente por el nuevo timeframe
   };
 
   // Cerrar menú al hacer click fuera
@@ -1660,6 +1738,28 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
               </div>
             </div>
 
+            {/* Información del Tipo de Trading */}
+            <div className="mb-4 p-3 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-lg border border-blue-500/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg ${tradingType.color} bg-gray-800/50`}>
+                    {React.createElement(tradingType.icon, { className: "w-4 h-4" })}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-white">{tradingType.name}</div>
+                    <div className="text-xs text-gray-400">{tradingType.description}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-400">Timeframe</div>
+                  <div className="text-sm font-semibold text-blue-400">{timeframe}</div>
+                </div>
+              </div>
+              <div className="mt-2 text-xs text-gray-400">
+                <strong>Razón:</strong> {tradingType.reason}
+              </div>
+            </div>
+
             {/* Señales de Trading */}
             {smartAnalysis.tradingSignals.length > 0 && (
               <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 rounded-lg border border-purple-500/30">
@@ -1806,7 +1906,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                     {smartAnalysis.riskRewardSuggestion.suggestedStopLoss.toFixed(4)}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    -2.0% riesgo
+                    -{Math.abs(((smartAnalysis.riskRewardSuggestion.suggestedStopLoss / smartAnalysis.riskRewardSuggestion.currentPrice) - 1) * 100).toFixed(1)}% riesgo
                   </div>
                 </div>
                 <div className="text-center">
@@ -1815,7 +1915,7 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                     {smartAnalysis.riskRewardSuggestion.suggestedTakeProfit.toFixed(4)}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    +4.0% beneficio
+                    +{Math.abs(((smartAnalysis.riskRewardSuggestion.suggestedTakeProfit / smartAnalysis.riskRewardSuggestion.currentPrice) - 1) * 100).toFixed(1)}% beneficio
                   </div>
                 </div>
                 <div className="text-center">

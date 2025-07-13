@@ -215,7 +215,7 @@ export const TradingView: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         {/* Gráfico principal - Ocupa 2/3 partes */}
         <div className="xl:col-span-2 order-1">
-          <YahooTradingChart symbol={selectedSymbol} timeframe={selectedTimeframe} />
+          <YahooTradingChart symbol={selectedSymbol} />
         </div>
 
         {/* Panel lateral - Ocupa 1/3 parte */}

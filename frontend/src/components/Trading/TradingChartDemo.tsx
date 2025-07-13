@@ -144,7 +144,7 @@ export const TradingChartDemo: React.FC<TradingChartDemoProps> = ({ symbol, time
         
         <div className="p-4">
           {dataSource === 'yahoo' ? (
-            <YahooTradingChart symbol={symbol} timeframe={timeframe} />
+            <YahooTradingChart symbol={symbol} />
           ) : (
             <TradingChart symbol={symbol} timeframe={timeframe} />
           )}
