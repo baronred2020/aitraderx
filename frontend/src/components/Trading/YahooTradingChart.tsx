@@ -21,11 +21,17 @@ import {
   Maximize2,
   Minimize2,
   RefreshCw,
-  Download
+  Zap,
+  Clock,
+  Calendar,
+  CandlestickChart as CandlestickChartIcon,
+  Activity,
+  AreaChart as AreaChartIcon
 } from 'lucide-react';
 import { useCandles } from '../../hooks/useCandles';
 import { useMarketData } from '../../hooks/useMarketData';
 import { useEffect, useRef, useMemo } from 'react';
+import { useIntelligentAnalysis, TradingType } from '../../hooks/useIntelligentAnalysis';
 
 // Tipos simples para lightweight-charts
 declare const createChart: any;
@@ -195,10 +201,53 @@ const CandlestickChart: React.FC<{
   );
 };
 
+// Opciones de tipo de trading (declarar antes del useState)
+const tradingTypes: (TradingType & { icon: any })[] = [
+  {
+    id: 'scalping',
+    name: 'Scalping',
+    description: '1-5 minutos Máxima precisión',
+    timeframe: '1-5m',
+    reason: 'Operaciones rápidas de alta precisión',
+    icon: Zap,
+    color: 'text-pink-400'
+  },
+  {
+    id: 'day_trading',
+    name: 'Day Trading',
+    description: '15-30 minutos Balance óptimo',
+    timeframe: '15-30m',
+    reason: 'Operaciones intradía con balance riesgo/beneficio',
+    icon: Clock,
+    color: 'text-blue-400'
+  },
+  {
+    id: 'swing_trading',
+    name: 'Swing Trading',
+    description: '1-4 horas Tendencias medias',
+    timeframe: '1-4h',
+    reason: 'Captura de tendencias de mediano plazo',
+    icon: TrendingUp,
+    color: 'text-green-400'
+  },
+  {
+    id: 'position_trading',
+    name: 'Position Trading',
+    description: '1 día Tendencias largas',
+    timeframe: '1d',
+    reason: 'Posiciones de largo plazo',
+    icon: Calendar,
+    color: 'text-yellow-400'
+  }
+];
+
 export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timeframe }) => {
   const [chartType, setChartType] = useState<'candlestick' | 'line' | 'area'>('candlestick');
   const [showIndicators, setShowIndicators] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [tradingType, setTradingType] = useState<(TradingType & { icon: any })>(tradingTypes[0]);
+  const [showTradingTypeMenu, setShowTradingTypeMenu] = useState(false);
+  const { executeAnalysis } = useIntelligentAnalysis();
   const [lastSymbol, setLastSymbol] = useState(symbol);
   const [initialLoadingCandles, setInitialLoadingCandles] = useState(true);
   const [initialLoadingMarket, setInitialLoadingMarket] = useState(true);
@@ -859,22 +908,22 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
   }, [chartData]);
 
   const chartTypes = [
-    { 
-      id: 'candlestick', 
-      name: 'Candlestick', 
-      icon: '📊',
+    {
+      id: 'candlestick',
+      name: 'Candlestick',
+      icon: <CandlestickChartIcon className="w-5 h-5" />, 
       description: 'Gráfico de velas japonesas'
     },
-    { 
-      id: 'line', 
-      name: 'Línea', 
-      icon: '📈',
+    {
+      id: 'line',
+      name: 'Línea',
+      icon: <Activity className="w-5 h-5" />, 
       description: 'Gráfico de líneas del precio de cierre'
     },
-    { 
-      id: 'area', 
-      name: 'Área', 
-      icon: '📉',
+    {
+      id: 'area',
+      name: 'Área',
+      icon: <AreaChartIcon className="w-5 h-5" />, 
       description: 'Gráfico de área con gradiente'
     },
   ];
@@ -931,6 +980,26 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
     return null;
   };
 
+  // Manejar cambio de tipo de trading
+  const handleTradingTypeChange = async (type: TradingType & { icon: any }) => {
+    setTradingType(type);
+    setShowTradingTypeMenu(false);
+    await executeAnalysis(type, symbol);
+  };
+
+  // Cerrar menú al hacer click fuera
+  React.useEffect(() => {
+    if (!showTradingTypeMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.trading-type-menu-container')) {
+        setShowTradingTypeMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showTradingTypeMenu]);
+
   return (
     <div className={`trading-card ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
       {/* Header del gráfico */}
@@ -953,7 +1022,6 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
             <span className="text-lg sm:text-2xl font-bold text-green-400">
               {realPrice ? parseFloat(realPrice).toFixed(5) : '...'}
             </span>
-            {/* Mostrar cambio porcentual si está disponible */}
             {marketData[symbol]?.changePercent && (
               <span className={`text-sm font-medium px-2 py-1 rounded-full ${
                 parseFloat(marketData[symbol].changePercent) >= 0 
@@ -966,22 +1034,22 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
             )}
           </div>
         </div>
-
         {/* Segunda fila: Controles */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
-          {/* Selector de tipo de gráfico - Más prominente */}
-          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-            <span className="text-sm font-medium text-gray-400">Tipo de gráfico:</span>
-            <div className="flex items-center space-x-1 bg-gray-800/50 rounded-lg p-1">
+        <div className="flex flex-col gap-y-2 sm:flex-row sm:items-center sm:justify-between">
+          {/* Fila 1: Tipo de gráfico + Tipo de trading */}
+          <div className="flex flex-row flex-wrap gap-x-2 w-full sm:w-auto">
+            {/* Tipo de gráfico */}
+            <div className="flex flex-row items-center bg-gray-800/50 rounded-lg p-1">
+              <span className="text-xs font-medium text-gray-400 hidden xs:inline">Tipo de gráfico:</span>
               {chartTypes.map((type) => (
                 <button
                   key={type.id}
                   onClick={() => setChartType(type.id as any)}
                   title={type.description}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  className={`px-2 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm font-medium transition-colors ${
                     chartType === type.id
-                      ? 'bg-blue-500 text-white shadow-lg scale-105'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
                   <span className="flex items-center space-x-1">
@@ -991,10 +1059,52 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                 </button>
               ))}
             </div>
+            {/* Tipo de trading */}
+            <div className="flex flex-row items-center gap-x-1">
+              <span className="text-xs font-medium text-gray-400 hidden xs:inline">Tipo de trading:</span>
+              <div className="relative trading-type-menu-container">
+                <button
+                  onClick={() => setShowTradingTypeMenu((v) => !v)}
+                  className={`flex flex-col items-center justify-center text-center p-1.5 rounded-xl transition-all duration-150 ${tradingType.color} bg-gray-800 hover:bg-gray-700 shadow min-w-[80px]`}
+                  title={tradingType.description}
+                  aria-haspopup="listbox"
+                  aria-expanded={showTradingTypeMenu}
+                >
+                  <div className="flex flex-col items-center justify-center gap-y-0.5">
+                    {React.createElement(tradingType.icon, { className: "w-5 h-5 mb-0.5" })}
+                    <span className="text-[10px] text-white font-semibold">Tipo de Trading</span>
+                    <span className={`text-xs font-bold ${tradingType.color}`}>{tradingType.name}</span>
+                  </div>
+                </button>
+                {showTradingTypeMenu && (
+                  <div className="absolute z-50 mt-2 w-full sm:w-44 right-0 bg-gray-900 border border-gray-700 rounded-lg shadow-xl animate-fade-in">
+                    {tradingTypes.map((type) => {
+                      const Icon = type.icon;
+                      return (
+                        <button
+                          key={type.id}
+                          onClick={() => handleTradingTypeChange(type)}
+                          className={`w-full flex items-center px-3 py-2 text-left transition-colors group
+                            ${tradingType.id === type.id
+                              ? `bg-blue-900/40 border-l-4 ${type.color} font-bold`
+                              : 'hover:bg-gray-800'}
+                          `}
+                          title={type.description}
+                          role="option"
+                          aria-selected={tradingType.id === type.id}
+                        >
+                          <Icon className={`w-4 h-4 mr-2 ${type.color}`} />
+                          <span className={`text-xs ${type.color}`}>{type.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-
-          {/* Controles adicionales */}
-          <div className="flex items-center space-x-2">
+          {/* Fila 2: Controles adicionales */}
+          <div className="flex flex-row flex-wrap gap-x-2 w-full sm:w-auto">
             {/* Controles de Zoom */}
             <div className="flex items-center space-x-1 bg-gray-800/50 rounded-lg p-1">
               {/* Controles completos para desktop */}
@@ -1067,7 +1177,6 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
                 </button>
               </div>
             </div>
-
             {/* Análisis Inteligente */}
             <button
               onClick={() => setShowSmartAnalysis(!showSmartAnalysis)}
@@ -1080,7 +1189,6 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
             >
               <span className="text-sm">🤖</span>
             </button>
-
             {/* Indicadores */}
             <button
               onClick={() => setShowIndicators(!showIndicators)}
@@ -1093,7 +1201,6 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
             >
               <Settings className="w-4 h-4" />
             </button>
-
             {/* Fullscreen */}
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
@@ -1102,21 +1209,12 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol, timefra
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
-
             {/* Refresh */}
             <button 
               title="Actualizar datos"
               className="p-2 rounded-lg bg-gray-700/50 text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
             >
               <RefreshCw className="w-4 h-4" />
-            </button>
-
-            {/* Download */}
-            <button 
-              title="Descargar gráfico"
-              className="p-2 rounded-lg bg-gray-700/50 text-gray-400 hover:text-white hover:bg-gray-600/50 transition-all duration-200"
-            >
-              <Download className="w-4 h-4" />
             </button>
           </div>
         </div>
