@@ -16,7 +16,7 @@ class PredictionResponse(BaseModel):
     timeframe: str
     reasoning: str
     brain_type: str
-    timestamp: datetime
+    timestamp: str
 
 class SignalResponse(BaseModel):
     pair: str
@@ -27,7 +27,7 @@ class SignalResponse(BaseModel):
     stop_loss: float
     take_profit: float
     brain_type: str
-    timestamp: datetime
+    timestamp: str
 
 class TrendResponse(BaseModel):
     pair: str
@@ -38,7 +38,7 @@ class TrendResponse(BaseModel):
     resistance: float
     description: str
     brain_type: str
-    timestamp: datetime
+    timestamp: str
 
 class MegaMindPredictionResponse(BaseModel):
     pair: str
@@ -51,7 +51,7 @@ class MegaMindPredictionResponse(BaseModel):
     fusion_method: str
     collaboration_score: float
     fusion_details: dict
-    timestamp: datetime
+    timestamp: str
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -78,7 +78,7 @@ async def root():
         "message": "AI Trader X - Brain Trader API",
         "version": "2.0.0",
         "status": "running",
-        "timestamp": datetime.now(),
+        "timestamp": datetime.now().isoformat(),
         "services": {
             "brain_trader": "active",
             "mega_mind": "active"
@@ -91,7 +91,7 @@ async def health_check():
         "status": "healthy",
         "service": "AI Trader X API",
         "version": "2.0.0",
-        "timestamp": datetime.now()
+        "timestamp": datetime.now().isoformat()
     }
 
 # ===== BRAIN TRADER ENDPOINTS =====
@@ -132,7 +132,7 @@ async def get_predictions(brain_type: str, pair: str = "EURUSD", style: str = "d
             timeframe='1H',
             reasoning=f'Análisis técnico basado en {brain_type} - {direction.upper()}',
             brain_type=brain_type,
-            timestamp=datetime.now()
+            timestamp=datetime.now().isoformat()
         )
         predictions.append(prediction)
     
@@ -162,7 +162,7 @@ async def get_signals(brain_type: str, pair: str = "EURUSD", limit: int = 5):
             stop_loss=entry_price - 0.005,
             take_profit=entry_price + 0.015,
             brain_type=brain_type,
-            timestamp=datetime.now()
+            timestamp=datetime.now().isoformat()
         )
         signals.append(signal)
     
@@ -192,7 +192,7 @@ async def get_trends(brain_type: str, pair: str = "EURUSD", limit: int = 3):
             resistance=resistance,
             description=f'Tendencia {direction} con soporte en {support:.4f}',
             brain_type=brain_type,
-            timestamp=datetime.now()
+            timestamp=datetime.now().isoformat()
         )
         trends.append(trend)
     
@@ -229,7 +229,7 @@ async def get_mega_mind_predictions(pair: str = "EURUSD", style: str = "day_trad
             fusion_method='weighted_consensus',
             collaboration_score=random.uniform(0.85, 0.98),
             fusion_details=fusion_details,
-            timestamp=datetime.now()
+            timestamp=datetime.now().isoformat()
         )
         predictions.append(prediction)
     
@@ -256,7 +256,7 @@ async def get_brain_collaboration(pair: str = "EURUSD"):
             "risk_reduction": random.uniform(0.10, 0.20),
             "prediction_stability": random.uniform(0.85, 0.95)
         },
-        "timestamp": datetime.now()
+        "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/mega-mind/arena")
@@ -286,7 +286,7 @@ async def get_brain_arena_results(pair: str = "EURUSD"):
         },
         "champion": "brain_predictor",
         "overall_performance": random.uniform(0.85, 0.95),
-        "timestamp": datetime.now()
+        "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/v1/mega-mind/performance")
@@ -306,7 +306,7 @@ async def get_mega_mind_performance():
         "calmar_ratio": random.uniform(2.0, 4.0),
         "sortino_ratio": random.uniform(2.5, 4.5),
         "information_ratio": random.uniform(1.8, 3.0),
-        "timestamp": datetime.now()
+        "timestamp": datetime.now().isoformat()
     }
 
 # ===== EXCEPTION HANDLERS =====
@@ -323,7 +323,7 @@ async def not_found_handler(request, exc):
                 "docs": "/docs",
                 "health": "/health"
             },
-            "timestamp": datetime.now()
+            "timestamp": datetime.now().isoformat()
         }
     )
 
