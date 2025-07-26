@@ -10,7 +10,7 @@ export interface User {
 
 export interface Subscription {
   id: string;
-  planType: 'freemium' | 'basic' | 'pro' | 'elite';
+  planType: 'freemium' | 'basic' | 'pro' | 'elite' | 'institutional';
   status: 'active' | 'expired' | 'cancelled' | 'trial';
   startDate: string;
   endDate: string;
@@ -78,6 +78,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'api_access', 'custom_models', 'priority_support', 'brain_trader_elite'
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community', 'brain-trader']
+    },
+    institutional: {
+      features: [
+        'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
+        'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
+        'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
+        'api_access', 'custom_models', 'priority_support', 'brain_trader_elite',
+        'mega_mind', 'institutional_features', 'dedicated_support'
+      ],
+      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community', 'brain-trader', 'mega-mind']
     }
   }), []);
 

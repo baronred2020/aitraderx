@@ -16,6 +16,7 @@ class PlanType(str, Enum):
     BASIC = "basic"
     PRO = "pro"
     ELITE = "elite"
+    INSTITUTIONAL = "institutional"
 
 class SubscriptionStatus(str, Enum):
     """Estados de suscripción"""
@@ -350,5 +351,62 @@ DEFAULT_PLANS = {
         max_portfolios=100,
         support_level="phone",
         response_time_hours=4
+    ),
+    
+    PlanType.INSTITUTIONAL: SubscriptionPlan(
+        name="Institutional",
+        plan_type=PlanType.INSTITUTIONAL,
+        price=999.0,
+        description="Plan para empresas de trading y fondos institucionales",
+        benefits=[
+            "AI Tradicional Elite + máxima precisión",
+            "Reinforcement Learning completo (DQN + PPO)",
+            "Ensemble AI avanzado optimizado",
+            "MEGA MIND - Fusión de cerebros IA",
+            "Predicciones institucionales (60 días)",
+            "Backtesting institucional avanzado",
+            "Todos los instrumentos (Forex, Stocks, Crypto, Commodities)",
+            "Risk Management institucional",
+            "Portfolio Optimization avanzado",
+            "Auto-Trading con AI completa",
+            "Custom Models personalizados",
+            "Integración MT4/MT5 completa",
+            "API personalizada con alta frecuencia",
+            "Soporte dedicado 24/7",
+            "Análisis fundamental avanzado",
+            "Machine Learning personalizado"
+        ],
+        ai_capabilities=AICapabilities(
+            traditional_ai=True,
+            reinforcement_learning=True,
+            ensemble_ai=True,
+            lstm_predictions=True,
+            custom_models=True,
+            auto_training=True
+        ),
+        api_limits=APILimits(
+            daily_requests=50000,
+            prediction_days=60,
+            backtest_days=3650,  # 10 años
+            trading_pairs=5000,
+            alerts_limit=1000,
+            portfolio_size=1000
+        ),
+        ui_features=UIFeatures(
+            advanced_charts=True,
+            multiple_timeframes=True,
+            rl_dashboard=True,
+            ai_monitor=True,
+            mt4_integration=True,
+            api_access=True,
+            custom_reports=True,
+            priority_support=True
+        ),
+        max_indicators=100,
+        max_predictions_per_day=5000,
+        max_backtests_per_month=2000,
+        max_portfolios=1000,
+        support_level="dedicated",
+        response_time_hours=1
     )
 } 
