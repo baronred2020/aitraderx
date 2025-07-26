@@ -31,7 +31,7 @@ REDIS_CACHE_TTL=300
 
 # External APIs (configuración para desarrollo)
 ALPHA_VANTAGE_API_KEY=demo
-FINNHUB_API_KEY=sandbox_key
+FINNHUB_API_KEY=d1nvqv1r01qtrauu8fggd1nvqv1r01qtrauu8fh0
 YAHOO_FINANCE_ENABLED=true
 NEWS_API_KEY=your_news_api_key
 

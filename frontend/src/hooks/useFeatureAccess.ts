@@ -38,6 +38,10 @@ const featureConfig: FeatureAccessConfig = {
   'custom_models': {
     requiredPlan: 'elite',
     feature: 'custom_models'
+  },
+  'brain-trader': {
+    requiredPlan: 'freemium',
+    feature: 'brain_trader_basic'
   }
 };
 
