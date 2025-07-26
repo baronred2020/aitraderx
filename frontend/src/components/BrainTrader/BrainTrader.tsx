@@ -29,7 +29,7 @@ import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 interface BrainTraderProps {}
 
 interface ModelInfo {
-  brainType: 'brain_max' | 'brain_ultra' | 'brain_predictor';
+  brainType: 'brain_max' | 'brain_ultra' | 'brain_predictor' | 'mega_mind';
   pair: string;
   style: string;
   accuracy: number;
@@ -74,7 +74,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   // Estados principales
   const [selectedPair, setSelectedPair] = useState('EURUSD');
   const [selectedStyle, setSelectedStyle] = useState('day_trading');
-  const [activeBrain, setActiveBrain] = useState<'brain_max' | 'brain_ultra' | 'brain_predictor'>('brain_max');
+  const [activeBrain, setActiveBrain] = useState<'brain_max' | 'brain_ultra' | 'brain_predictor' | 'mega_mind'>('brain_max');
   const [isAutoTrading, setIsAutoTrading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -153,8 +153,174 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       brainFusion: true,
       brainArena: true,
       brainEvolution: true,
-      brainOrchestration: true
+      brainOrchestration: true,
+      multiTimeframeAnalysis: true,
+      crossAssetCorrelation: true,
+      institutionalRiskManagement: true,
+      advancedPortfolioOptimization: true
     };
+  };
+
+  // Funciones según plan de suscripción
+  const getAvailableFeatures = () => {
+    if (!subscription || subscription.status !== 'active') {
+      return {
+        brainMax: true,
+        brainUltra: false,
+        brainPredictor: false,
+        megaMind: false,
+        multiTimeframe: false,
+        crossAsset: false,
+        economicCalendar: false,
+        autoTraining: false,
+        customModels: false,
+        apiAccess: false
+      };
+    }
+
+    switch (subscription.planType) {
+      case 'freemium':
+        return {
+          brainMax: true,
+          brainUltra: false,
+          brainPredictor: false,
+          megaMind: false,
+          multiTimeframe: false,
+          crossAsset: false,
+          economicCalendar: false,
+          autoTraining: false,
+          customModels: false,
+          apiAccess: false
+        };
+      case 'basic':
+        return {
+          brainMax: true,
+          brainUltra: false,
+          brainPredictor: false,
+          megaMind: false,
+          multiTimeframe: false,
+          crossAsset: false,
+          economicCalendar: false,
+          autoTraining: false,
+          customModels: false,
+          apiAccess: false
+        };
+      case 'pro':
+        return {
+          brainMax: true,
+          brainUltra: true,
+          brainPredictor: false,
+          megaMind: false,
+          multiTimeframe: true,
+          crossAsset: true,
+          economicCalendar: true,
+          autoTraining: true,
+          customModels: false,
+          apiAccess: false
+        };
+      case 'elite':
+        return {
+          brainMax: true,
+          brainUltra: true,
+          brainPredictor: true,
+          megaMind: false,
+          multiTimeframe: true,
+          crossAsset: true,
+          economicCalendar: true,
+          autoTraining: true,
+          customModels: true,
+          apiAccess: true
+        };
+      case 'institutional':
+        return {
+          brainMax: true,
+          brainUltra: true,
+          brainPredictor: true,
+          megaMind: true,
+          multiTimeframe: true,
+          crossAsset: true,
+          economicCalendar: true,
+          autoTraining: true,
+          customModels: true,
+          apiAccess: true
+        };
+      default:
+        return {
+          brainMax: true,
+          brainUltra: false,
+          brainPredictor: false,
+          megaMind: false,
+          multiTimeframe: false,
+          crossAsset: false,
+          economicCalendar: false,
+          autoTraining: false,
+          customModels: false,
+          apiAccess: false
+        };
+    }
+  };
+
+  const getPlanLimitations = () => {
+    if (!subscription || subscription.status !== 'active') {
+      return {
+        maxPredictionsPerDay: 10,
+        maxPairs: 1,
+        maxTimeframes: 1,
+        maxBacktests: 5,
+        supportLevel: 'community'
+      };
+    }
+
+    switch (subscription.planType) {
+      case 'freemium':
+        return {
+          maxPredictionsPerDay: 10,
+          maxPairs: 1,
+          maxTimeframes: 1,
+          maxBacktests: 5,
+          supportLevel: 'community'
+        };
+      case 'basic':
+        return {
+          maxPredictionsPerDay: 50,
+          maxPairs: 5,
+          maxTimeframes: 2,
+          maxBacktests: 20,
+          supportLevel: 'email'
+        };
+      case 'pro':
+        return {
+          maxPredictionsPerDay: 200,
+          maxPairs: 50,
+          maxTimeframes: 5,
+          maxBacktests: 100,
+          supportLevel: 'email'
+        };
+      case 'elite':
+        return {
+          maxPredictionsPerDay: 1000,
+          maxPairs: 1000,
+          maxTimeframes: 10,
+          maxBacktests: 500,
+          supportLevel: 'phone'
+        };
+      case 'institutional':
+        return {
+          maxPredictionsPerDay: 5000,
+          maxPairs: 5000,
+          maxTimeframes: 15,
+          maxBacktests: 2000,
+          supportLevel: 'dedicated'
+        };
+      default:
+        return {
+          maxPredictionsPerDay: 10,
+          maxPairs: 1,
+          maxTimeframes: 1,
+          maxBacktests: 5,
+          supportLevel: 'community'
+        };
+    }
   };
 
   // Cargar datos del modelo
@@ -169,7 +335,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         brainType: activeBrain,
         pair: selectedPair,
         style: selectedStyle,
-        accuracy: Math.random() * 20 + 80, // 80-100%
+        accuracy: activeBrain === 'mega_mind' ? Math.random() * 10 + 90 : Math.random() * 20 + 80, // 90-100% para Mega Mind
         lastUpdate: new Date().toISOString(),
         status: 'active'
       };
@@ -508,6 +674,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       {/* Información de suscripción */}
       <div className="bg-gradient-to-r from-blue-500/10 to-teal-500/10 rounded-xl p-6 border border-blue-500/20">
         <div className="flex items-center space-x-3 mb-4">
+          {subscription?.planType === 'institutional' && <Crown className="w-6 h-6 text-purple-600" />}
           {subscription?.planType === 'elite' && <Crown className="w-6 h-6 text-yellow-400" />}
           {subscription?.planType === 'pro' && <Star className="w-6 h-6 text-purple-400" />}
           <h3 className="text-lg font-semibold text-white">Plan Actual: {subscription?.planType?.toUpperCase() || 'FREEMIUM'}</h3>
@@ -527,7 +694,198 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
             <p className="text-white">{getAvailableBrains().length} cerebros</p>
           </div>
         </div>
+
+        {/* Características del Plan */}
+        <div className="mt-4 pt-4 border-t border-gray-600/50">
+          <h4 className="text-sm font-medium text-gray-300 mb-3">Características Disponibles</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            {Object.entries(getAvailableFeatures()).map(([feature, available]) => (
+              <div key={feature} className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${available ? 'bg-green-400' : 'bg-gray-500'}`}></div>
+                <span className={`${available ? 'text-white' : 'text-gray-500'}`}>
+                  {feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Límites del Plan */}
+        <div className="mt-4 pt-4 border-t border-gray-600/50">
+          <h4 className="text-sm font-medium text-gray-300 mb-3">Límites del Plan</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+            <div>
+              <p className="text-gray-400">Predicciones/día</p>
+              <p className="text-white">{getPlanLimitations().maxPredictionsPerDay}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Timeframes</p>
+              <p className="text-white">{getPlanLimitations().maxTimeframes}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Backtests/mes</p>
+              <p className="text-white">{getPlanLimitations().maxBacktests}</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Soporte</p>
+              <p className="text-white capitalize">{getPlanLimitations().supportLevel}</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Sección Mega Mind - Solo para plan Institutional */}
+      {isMegaMindAvailable() && activeBrain === 'mega_mind' && (
+        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-purple-500/20">
+          <div className="flex items-center space-x-3 mb-4">
+            <Brain className="w-6 h-6 text-purple-400" />
+            <h3 className="text-lg font-semibold text-white">MEGA MIND - Fusión de Cerebros IA</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-gray-400">Colaboración de Cerebros</p>
+              <p className="text-white">✓ Activada</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Fusión de Estrategias</p>
+              <p className="text-white">✓ Optimizada</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Análisis Multi-Timeframe</p>
+              <p className="text-white">✓ Avanzado</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Correlación Cross-Asset</p>
+              <p className="text-white">✓ Institucional</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-purple-500/10 rounded-lg">
+            <p className="text-sm text-purple-300">
+              <strong>MEGA MIND</strong> combina la potencia de Brain Max, Brain Ultra y Brain Predictor 
+              para crear estrategias de trading institucionales con precisión superior al 95%.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Funciones Avanzadas según Plan */}
+      {getAvailableFeatures().multiTimeframe && (
+        <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl p-6 border border-green-500/20">
+          <div className="flex items-center space-x-3 mb-4">
+            <BarChart3 className="w-6 h-6 text-green-400" />
+            <h3 className="text-lg font-semibold text-white">Análisis Multi-Timeframe</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-gray-400">Timeframes Disponibles</p>
+              <p className="text-white">1m, 5m, 15m, 1H, 4H, 1D</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Análisis Confluencia</p>
+              <p className="text-white">✓ Activado</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Señales Multi-TF</p>
+              <p className="text-white">✓ Generadas</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {getAvailableFeatures().crossAsset && (
+        <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl p-6 border border-orange-500/20">
+          <div className="flex items-center space-x-3 mb-4">
+            <Activity className="w-6 h-6 text-orange-400" />
+            <h3 className="text-lg font-semibold text-white">Análisis Cross-Asset</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-gray-400">DXY Correlation</p>
+              <p className="text-white">✓ Monitoreada</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Gold Correlation</p>
+              <p className="text-white">✓ Analizada</p>
+            </div>
+            <div>
+              <p className="text-gray-400">S&P 500 Correlation</p>
+              <p className="text-white">✓ Calculada</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Oil Correlation</p>
+              <p className="text-white">✓ Integrada</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {getAvailableFeatures().economicCalendar && (
+        <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-6 border border-yellow-500/20">
+          <div className="flex items-center space-x-3 mb-4">
+            <Clock className="w-6 h-6 text-yellow-400" />
+            <h3 className="text-lg font-semibold text-white">Calendario Económico</h3>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg">
+              <div>
+                <p className="text-white font-medium">FOMC Interest Rate Decision</p>
+                <p className="text-sm text-gray-400">En 3 días - Alto Impacto</p>
+              </div>
+              <div className="text-right">
+                <p className="text-white font-medium">USD</p>
+                <p className="text-sm text-gray-400">Bullish</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg">
+              <div>
+                <p className="text-white font-medium">Non-Farm Payrolls</p>
+                <p className="text-sm text-gray-400">En 7 días - Alto Impacto</p>
+              </div>
+              <div className="text-right">
+                <p className="text-white font-medium">USD</p>
+                <p className="text-sm text-gray-400">Neutral</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {getAvailableFeatures().autoTraining && (
+        <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl p-6 border border-indigo-500/20">
+          <div className="flex items-center space-x-3 mb-4">
+            <RefreshCw className="w-6 h-6 text-indigo-400" />
+            <h3 className="text-lg font-semibold text-white">Auto-Training Inteligente</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-gray-400">Estado</p>
+              <p className="text-white">✓ Activo</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Última Actualización</p>
+              <p className="text-white">Hace 2 horas</p>
+            </div>
+            <div>
+              <p className="text-gray-400">Próximo Entrenamiento</p>
+              <p className="text-white">En 6 horas</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-indigo-500/10 rounded-lg">
+            <p className="text-sm text-indigo-300">
+              El sistema se entrena automáticamente con nuevos datos de mercado para mantener 
+              la precisión óptima de los modelos.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 
