@@ -1,0 +1,39 @@
+============================================================
+📊 RESULTADOS DEL ENTRENAMIENTO
+============================================================
+📈 Símbolos procesados: 5
+✅ Símbolos exitosos: 5
+❌ Símbolos fallidos: 0
+
+📋 DETALLES POR SÍMBOLO:
+✅ EURUSD=X:
+   📊 Estilos exitosos: 4/4
+   🎯 Targets alcanzados: 3
+   📈 Precisión promedio: 0.827
+   🎯 Precisión señales: 0.833
+✅ USDJPY=X:
+   📊 Estilos exitosos: 4/4
+   🎯 Targets alcanzados: 2
+   📈 Precisión promedio: 0.764
+   🎯 Precisión señales: 0.827
+✅ GBPUSD=X:
+   📊 Estilos exitosos: 4/4
+   🎯 Targets alcanzados: 3
+   📈 Precisión promedio: 0.808
+   🎯 Precisión señales: 0.856
+✅ AUDUSD=X:
+   📊 Estilos exitosos: 4/4
+   🎯 Targets alcanzados: 2
+   📈 Precisión promedio: 0.724
+   🎯 Precisión señales: 0.773
+✅ USDCAD=X:
+   📊 Estilos exitosos: 4/4
+   🎯 Targets alcanzados: 2
+   📈 Precisión promedio: 0.767
+   🎯 Precisión señales: 0.817
+
+⏱️ TIEMPO TOTAL: 4161.7 segundos (69.4 minutos)
+
+🎉 ¡ENTRENAMIENTO COMPLETADO EXITOSAMENTE!
+✅ 5/5 símbolos procesados correctamente
+✅ Entrenamiento completado en Google Colab

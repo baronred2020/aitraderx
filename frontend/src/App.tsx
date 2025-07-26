@@ -12,6 +12,7 @@ import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import { Brain } from 'lucide-react';
 import './index.css';
 import AIMonitorPage from './components/AIMonitor';
+import { BrainTrader } from './components/BrainTrader/BrainTrader';
 
 // Componentes temporales para las nuevas secciones
 const Portfolio = () => (
@@ -296,6 +297,11 @@ function AppContent() {
         return null;
       case 'help':
         return <Help />;
+      case 'brain-trader':
+        if (requireAccess('brain-trader')) {
+          return <BrainTrader />;
+        }
+        return null;
       default:
         return <Dashboard />;
     }

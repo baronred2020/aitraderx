@@ -1,0 +1,29 @@
+{
+  "pair": "EURUSD",
+  "style": "scalping",
+  "accuracies": {
+    "rf": 0.9824561403508771,
+    "gb": 0.9824561403508771,
+    "et": 0.9824561403508771,
+    "xgb": 0.9824561403508771,
+    "lgb": 0.9824561403508771,
+    "mlp": 0.9824561403508771
+  },
+  "trading_results": {
+    "initial_balance": 10000,
+    "final_balance": 10200,
+    "total_trades": 5,
+    "winning_trades": 3,
+    "win_rate": 0.6,
+    "lot_size": 0.1,
+    "sl_pips": 5,
+    "tp_pips": 10
+  },
+  "config": {
+    "period": "7d",
+    "interval": "15m",
+    "target_horizon": 5,
+    "pip_threshold": 5
+  },
+  "timestamp": "2025-07-24T00:58:53.697208"
+}

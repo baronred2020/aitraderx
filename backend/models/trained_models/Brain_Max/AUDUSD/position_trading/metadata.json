@@ -1,0 +1,29 @@
+{
+  "pair": "AUDUSD",
+  "style": "position_trading",
+  "accuracies": {
+    "rf": 0.9904761904761905,
+    "gb": 1.0,
+    "et": 1.0,
+    "xgb": 1.0,
+    "lgb": 1.0,
+    "mlp": 0.9047619047619048
+  },
+  "trading_results": {
+    "initial_balance": 10000,
+    "final_balance": 12000,
+    "total_trades": 5,
+    "winning_trades": 3,
+    "win_rate": 0.6,
+    "lot_size": 1.0,
+    "sl_pips": 50,
+    "tp_pips": 100
+  },
+  "config": {
+    "period": "2y",
+    "interval": "1d",
+    "target_horizon": 168,
+    "pip_threshold": 50
+  },
+  "timestamp": "2025-07-24T01:00:20.213955"
+}

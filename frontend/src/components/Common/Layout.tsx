@@ -62,6 +62,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
     { id: 'trading', name: 'Trading', icon: Target, badge: 'LIVE' },
     { id: 'portfolio', name: 'Portfolio', icon: PieChart, badge: null },
     { id: 'analysis', name: 'Análisis', icon: TrendingUp, badge: null },
+    { id: 'brain-trader', name: 'Brain Trader', icon: Brain, badge: 'AI' },
     { id: 'ai-monitor', name: 'Monitor IA', icon: Brain, badge: 'AI' },
     { id: 'rl', name: 'Reinforcement Learning', icon: Zap, badge: 'RL' },
     { id: 'alerts', name: 'Alertas', icon: Bell, badge: '3' },

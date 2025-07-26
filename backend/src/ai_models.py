@@ -725,7 +725,7 @@ def setup_environment():
         'DATABASE_URL': 'postgresql://trader:password@localhost:5432/trading_db',
         'REDIS_URL': 'redis://localhost:6379',
         'API_KEY_ALPHA_VANTAGE': 'your_api_key_here',
-        'API_KEY_FINNHUB': 'your_api_key_here',
+        'API_KEY_FINNHUB': 'd1nvqv1r01qtrauu8fggd1nvqv1r01qtrauu8fh0',
         'SECRET_KEY': 'your_secret_key_here'
     }
     

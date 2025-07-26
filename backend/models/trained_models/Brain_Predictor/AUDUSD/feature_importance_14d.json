@@ -1,0 +1,28 @@
+{
+  "price_importance": {
+    "price_momentum": 0.1675833367837519,
+    "volatility": 0.3488911932633501,
+    "news_sentiment": 0.0,
+    "economic_federal_funds_rate": 0.0,
+    "economic_treasury_10y": 0.0,
+    "market_strength": 0.0,
+    "price": 0.08594898957484923,
+    "open": 0.07917725540784955,
+    "high": 0.1511901816377474,
+    "low": 0.1672090433324517,
+    "volume": 0.0
+  },
+  "direction_importance": {
+    "price_momentum": 0.10435532816180686,
+    "volatility": 0.22467437076155203,
+    "news_sentiment": 0.0,
+    "economic_federal_funds_rate": 0.0,
+    "economic_treasury_10y": 0.0,
+    "market_strength": 0.0,
+    "price": 0.16631339238494927,
+    "open": 0.11692218882879223,
+    "high": 0.1565076336428576,
+    "low": 0.23122708622004198,
+    "volume": 0.0
+  }
+}

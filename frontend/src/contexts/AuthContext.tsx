@@ -50,32 +50,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Mapeo de características por plan - mover fuera del componente o memoizar
   const planFeatures = useMemo(() => ({
     freemium: {
-      features: ['basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis'],
-      sections: ['dashboard', 'trading', 'portfolio', 'analysis']
+      features: ['basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis', 'brain_trader_basic'],
+      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'brain-trader']
     },
     basic: {
       features: [
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
-        'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts'
+        'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
+        'brain_trader_advanced'
       ],
-      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts']
+      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'brain-trader']
     },
     pro: {
       features: [
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
-        'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration'
+        'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
+        'brain_trader_pro'
       ],
-      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports']
+      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'brain-trader']
     },
     elite: {
       features: [
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
         'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
-        'api_access', 'custom_models', 'priority_support'
+        'api_access', 'custom_models', 'priority_support', 'brain_trader_elite'
       ],
-      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community']
+      sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community', 'brain-trader']
     }
   }), []);
 
