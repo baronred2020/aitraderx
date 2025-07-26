@@ -1,5 +1,5 @@
 // API Service for Brain Trader and Mega Mind
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 export interface BrainTraderPrediction {
   pair: string;

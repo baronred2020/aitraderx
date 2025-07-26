@@ -1,7 +1,7 @@
 // Test script to verify frontend-backend connection
 const fetch = require('node-fetch');
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 async function testApiConnection() {
   console.log('🧪 Probando conexión Frontend-Backend...');
@@ -10,7 +10,7 @@ async function testApiConnection() {
   try {
     // Test 1: Health check
     console.log('1. Probando Health Check...');
-    const healthResponse = await fetch(`http://localhost:8080/health`);
+    const healthResponse = await fetch(`http://localhost:8000/health`);
     const healthData = await healthResponse.json();
     console.log('✅ Health Check:', healthData.status);
     console.log('');
