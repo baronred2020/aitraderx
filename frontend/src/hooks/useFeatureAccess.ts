@@ -42,11 +42,15 @@ const featureConfig: FeatureAccessConfig = {
   'brain-trader': {
     requiredPlan: 'freemium',
     feature: 'brain_trader_basic'
+  },
+  'mega-mind': {
+    requiredPlan: 'elite',
+    feature: 'mega_mind_institutional'
   }
 };
 
 export const useFeatureAccess = () => {
-  const { subscription, canAccess, hasFeature } = useAuth();
+  const { subscription, canAccess, hasFeature, user } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeInfo, setUpgradeInfo] = useState<{
     currentPlan: string;
@@ -57,26 +61,37 @@ export const useFeatureAccess = () => {
   // Memoizar las funciones de verificación para evitar re-renders
   const checkAccess = useMemo(() => {
     return (section: string): boolean => {
+      // El admin tiene acceso a todas las secciones
+      if (user?.role === 'admin') {
+        return true;
+      }
+      
       if (!subscription || subscription.status !== 'active') {
         return section === 'dashboard';
       }
       return canAccess(section);
     };
-  }, [subscription, canAccess]);
+  }, [subscription, canAccess, user]);
 
   const checkFeature = useMemo(() => {
     return (feature: string): boolean => {
+      // El admin tiene acceso a todas las características
+      if (user?.role === 'admin') {
+        return true;
+      }
+      
       if (!subscription || subscription.status !== 'active') {
         return false;
       }
       return hasFeature(feature);
     };
-  }, [subscription, hasFeature]);
+  }, [subscription, hasFeature, user]);
 
   const requireAccess = useCallback((section: string): boolean => {
     const hasAccess = checkAccess(section);
     
-    if (!hasAccess) {
+    // No mostrar modal de upgrade al admin
+    if (!hasAccess && user?.role !== 'admin') {
       const config = featureConfig[section];
       if (config) {
         setUpgradeInfo({
@@ -89,12 +104,13 @@ export const useFeatureAccess = () => {
     }
     
     return hasAccess;
-  }, [checkAccess, subscription]);
+  }, [checkAccess, subscription, user]);
 
   const requireFeature = useCallback((feature: string): boolean => {
     const hasFeatureAccess = checkFeature(feature);
     
-    if (!hasFeatureAccess) {
+    // No mostrar modal de upgrade al admin
+    if (!hasFeatureAccess && user?.role !== 'admin') {
       // Encontrar la sección que requiere esta característica
       const section = Object.keys(featureConfig).find(
         key => featureConfig[key].feature === feature
@@ -112,7 +128,7 @@ export const useFeatureAccess = () => {
     }
     
     return hasFeatureAccess;
-  }, [checkFeature, subscription]);
+  }, [checkFeature, subscription, user]);
 
   const closeUpgradeModal = useCallback(() => {
     setShowUpgradeModal(false);

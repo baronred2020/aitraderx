@@ -13,6 +13,7 @@ import { Brain } from 'lucide-react';
 import './index.css';
 import AIMonitorPage from './components/AIMonitor';
 import { BrainTrader } from './components/BrainTrader/BrainTrader';
+import { MegaMind } from './components/MegaMind';
 
 // Componentes temporales para las nuevas secciones
 const Portfolio = () => (
@@ -300,6 +301,11 @@ function AppContent() {
       case 'brain-trader':
         if (requireAccess('brain-trader')) {
           return <BrainTrader />;
+        }
+        return null;
+      case 'mega-mind':
+        if (requireAccess('mega-mind')) {
+          return <MegaMind />;
         }
         return null;
       default:

@@ -63,6 +63,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
     { id: 'portfolio', name: 'Portfolio', icon: PieChart, badge: null },
     { id: 'analysis', name: 'Análisis', icon: TrendingUp, badge: null },
     { id: 'brain-trader', name: 'Brain Trader', icon: Brain, badge: 'AI' },
+    { id: 'mega-mind', name: 'Mega Mind', icon: Crown, badge: 'INSTITUTIONAL' },
     { id: 'ai-monitor', name: 'Monitor IA', icon: Brain, badge: 'AI' },
     { id: 'rl', name: 'Reinforcement Learning', icon: Zap, badge: 'RL' },
     { id: 'alerts', name: 'Alertas', icon: Bell, badge: '3' },
@@ -274,6 +275,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                       ${item.badge === 'LIVE' ? 'bg-red-500/20 text-red-400' :
                         item.badge === 'AI' ? 'bg-purple-500/20 text-purple-400' :
                         item.badge === 'RL' ? 'bg-orange-500/20 text-orange-400' :
+                        item.badge === 'INSTITUTIONAL' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 border border-purple-500/30' :
                         'bg-blue-500/20 text-blue-400'}
                     `}>
                       {item.badge}
