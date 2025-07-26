@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
+import { useBrainTraderApi } from '../../hooks/useBrainTraderApi';
 
 interface BrainTraderProps {}
 
@@ -41,9 +42,11 @@ interface Prediction {
   pair: string;
   direction: 'up' | 'down' | 'sideways';
   confidence: number;
-  targetPrice: number;
+  target_price: number;
   timeframe: string;
   reasoning: string;
+  brain_type: string;
+  timestamp: string;
 }
 
 interface Signal {
@@ -51,9 +54,10 @@ interface Signal {
   type: 'buy' | 'sell' | 'hold';
   strength: 'strong' | 'medium' | 'weak';
   confidence: number;
-  entryPrice: number;
-  stopLoss: number;
-  takeProfit: number;
+  entry_price: number;
+  stop_loss: number;
+  take_profit: number;
+  brain_type: string;
   timestamp: string;
 }
 
@@ -65,11 +69,34 @@ interface Trend {
   support: number;
   resistance: number;
   description: string;
+  brain_type: string;
+  timestamp: string;
 }
 
 export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const { subscription } = useAuth();
   const { checkAccess, checkFeature } = useFeatureAccess();
+  const {
+    predictions,
+    signals,
+    trends,
+    megaMindPredictions,
+    megaMindCollaboration,
+    megaMindArena,
+    megaMindPerformance,
+    availableBrains,
+    defaultBrain,
+    loading,
+    errors,
+    loadPredictions,
+    loadSignals,
+    loadTrends,
+    loadMegaMindPredictions,
+    loadMegaMindCollaboration,
+    loadMegaMindArena,
+    loadMegaMindPerformance,
+    refreshAll,
+  } = useBrainTraderApi();
   
   // Estados principales
   const [selectedPair, setSelectedPair] = useState('EURUSD');
@@ -80,10 +107,6 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   // Estados de datos
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [signals, setSignals] = useState<Signal[]>([]);
-  const [trends, setTrends] = useState<Trend[]>([]);
-  const [loading, setLoading] = useState(false);
 
   // Configuración según suscripción
   const getAvailablePairs = () => {
@@ -325,66 +348,37 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   // Cargar datos del modelo
   const loadModelData = async () => {
-    setLoading(true);
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Datos simulados según el cerebro activo
-      const mockModelInfo: ModelInfo = {
+      // Actualizar información del modelo
+      const currentModelInfo: ModelInfo = {
         brainType: activeBrain,
         pair: selectedPair,
         style: selectedStyle,
-        accuracy: activeBrain === 'mega_mind' ? Math.random() * 10 + 90 : Math.random() * 20 + 80, // 90-100% para Mega Mind
+        accuracy: activeBrain === 'mega_mind' ? 95 : 85, // Valores fijos para simplicidad
         lastUpdate: new Date().toISOString(),
         status: 'active'
       };
       
-      const mockPredictions: Prediction[] = [
-        {
-          pair: selectedPair,
-          direction: Math.random() > 0.5 ? 'up' : 'down',
-          confidence: Math.random() * 30 + 70,
-          targetPrice: 1.0925 + (Math.random() - 0.5) * 0.01,
-          timeframe: '1H',
-          reasoning: 'Análisis técnico basado en RSI y MACD'
-        }
-      ];
+      setModelInfo(currentModelInfo);
       
-      const mockSignals: Signal[] = [
-        {
-          pair: selectedPair,
-          type: Math.random() > 0.5 ? 'buy' : 'sell',
-          strength: Math.random() > 0.7 ? 'strong' : 'medium',
-          confidence: Math.random() * 40 + 60,
-          entryPrice: 1.0925,
-          stopLoss: 1.0925 - 0.005,
-          takeProfit: 1.0925 + 0.015,
-          timestamp: new Date().toISOString()
-        }
-      ];
-      
-      const mockTrends: Trend[] = [
-        {
-          pair: selectedPair,
-          direction: Math.random() > 0.5 ? 'bullish' : 'bearish',
-          strength: Math.random() * 50 + 50,
-          timeframe: '4H',
-          support: 1.0900,
-          resistance: 1.0950,
-          description: 'Tendencia alcista con soporte en 1.0900'
-        }
-      ];
-      
-      setModelInfo(mockModelInfo);
-      setPredictions(mockPredictions);
-      setSignals(mockSignals);
-      setTrends(mockTrends);
+      // Cargar datos según el cerebro activo
+      if (activeBrain === 'mega_mind') {
+        await Promise.all([
+          loadMegaMindPredictions(selectedPair, selectedStyle),
+          loadMegaMindCollaboration(selectedPair),
+          loadMegaMindArena(selectedPair),
+          loadMegaMindPerformance(),
+        ]);
+      } else {
+        await Promise.all([
+          loadPredictions(activeBrain, selectedPair, selectedStyle),
+          loadSignals(activeBrain, selectedPair),
+          loadTrends(activeBrain, selectedPair),
+        ]);
+      }
       
     } catch (error) {
       console.error('Error cargando datos del modelo:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -392,6 +386,18 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   useEffect(() => {
     loadModelData();
   }, [selectedPair, selectedStyle, activeBrain]);
+
+  // Función para mostrar errores de API
+  const hasApiErrors = () => {
+    return Object.values(errors).some(error => error !== null);
+  };
+
+  const getApiErrorMessages = () => {
+    return Object.entries(errors)
+      .filter(([_, error]) => error !== null)
+      .map(([key, error]) => `${key}: ${error}`)
+      .join(', ');
+  };
 
   // Verificar acceso
   if (!checkAccess('brain-trader')) {
@@ -416,6 +422,14 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-teal-500 rounded-xl flex items-center justify-center">
             <Brain className="w-6 h-6 text-white" />
+          </div>
+          
+          {/* Estado de conexión API */}
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${hasApiErrors() ? 'bg-red-500' : 'bg-green-500'}`}></div>
+            <span className="text-sm text-gray-500">
+              {hasApiErrors() ? 'Error de conexión' : 'API conectada'}
+            </span>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Brain Trader</h1>
@@ -498,15 +512,32 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">&nbsp;</label>
           <button
-            onClick={loadModelData}
-            disabled={loading}
+            onClick={() => refreshAll(activeBrain, selectedPair, selectedStyle)}
+            disabled={Object.values(loading).some(l => l)}
             className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition-all"
           >
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            <span>{loading ? 'Actualizando...' : 'Actualizar'}</span>
+            {Object.values(loading).some(l => l) ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            <span>{Object.values(loading).some(l => l) ? 'Actualizando...' : 'Actualizar'}</span>
           </button>
         </div>
       </div>
+
+      {/* Errores de API */}
+      {hasApiErrors() && (
+        <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <h3 className="text-lg font-semibold text-red-400">Errores de Conexión</h3>
+          </div>
+          <p className="text-red-300 text-sm">{getApiErrorMessages()}</p>
+          <button
+            onClick={() => refreshAll(activeBrain, selectedPair, selectedStyle)}
+            className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+          >
+            Reintentar Conexión
+          </button>
+        </div>
+      )}
 
       {/* Información del Modelo */}
       {modelInfo && (
@@ -571,12 +602,68 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                 </div>
                 
                 <div className="text-right">
-                  <p className="text-white font-medium">${prediction.targetPrice.toFixed(4)}</p>
+                                      <p className="text-white font-medium">${prediction.target_price.toFixed(4)}</p>
                   <p className="text-sm text-gray-400">{prediction.confidence.toFixed(1)}% confianza</p>
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Mega Mind - Sección Especial */}
+      {activeBrain === 'mega_mind' && megaMindPredictions.length > 0 && (
+        <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl p-6 border border-purple-500/50">
+          <h3 className="text-lg font-semibold text-white flex items-center space-x-2 mb-4">
+            <Crown className="w-5 h-5 text-yellow-400" />
+            <span>MEGA MIND - Fusión de Cerebros</span>
+          </h3>
+          
+          <div className="space-y-4">
+            {megaMindPredictions.map((prediction, index) => (
+              <div key={index} className="flex items-center justify-between p-4 bg-purple-700/30 rounded-lg border border-purple-500/30">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                    prediction.direction === 'up' ? 'bg-green-500/20 text-green-400' :
+                    prediction.direction === 'down' ? 'bg-red-500/20 text-red-400' :
+                    'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {prediction.direction === 'up' ? <TrendingUp className="w-6 h-6" /> :
+                     prediction.direction === 'down' ? <TrendingDown className="w-6 h-6" /> :
+                     <Activity className="w-6 h-6" />}
+                  </div>
+                  
+                  <div>
+                    <p className="text-white font-medium">{prediction.pair}</p>
+                    <p className="text-sm text-gray-400">{prediction.reasoning}</p>
+                    <p className="text-xs text-purple-400">Colaboración: {(prediction.collaboration_score * 100).toFixed(1)}%</p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <p className="text-white font-medium">${prediction.target_price.toFixed(4)}</p>
+                  <p className="text-sm text-gray-400">{prediction.confidence.toFixed(1)}% confianza</p>
+                  <p className="text-xs text-purple-400">Método: {prediction.fusion_method}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Información adicional de Mega Mind */}
+          {megaMindCollaboration && (
+            <div className="mt-4 p-4 bg-purple-800/30 rounded-lg">
+              <h4 className="text-sm font-semibold text-purple-300 mb-2">Estado de Colaboración</h4>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <p className="text-gray-400">Score: {(megaMindCollaboration.collaboration_score * 100).toFixed(1)}%</p>
+                  <p className="text-gray-400">Consenso: {(megaMindCollaboration.consensus_level * 100).toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-gray-400">Estado: {megaMindCollaboration.collaboration_status}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -609,7 +696,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                 </div>
                 
                 <div className="text-right">
-                  <p className="text-white font-medium">${signal.entryPrice.toFixed(4)}</p>
+                                      <p className="text-white font-medium">${signal.entry_price.toFixed(4)}</p>
                   <p className="text-sm text-gray-400">{signal.confidence.toFixed(1)}% confianza</p>
                 </div>
               </div>
