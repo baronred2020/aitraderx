@@ -71,6 +71,15 @@ class SubscriptionResponse(BaseModel):
     endDate: datetime
     isTrial: bool
 
+class User(BaseModel):
+    """Modelo para usuario interno del sistema"""
+    id: int
+    username: str
+    email: str
+    plan_type: str = "starter"
+    role: str = "user"
+    isActive: bool = True
+
 class AuthResponse(BaseModel):
     """Modelo para respuesta de autenticación"""
     user: UserResponse

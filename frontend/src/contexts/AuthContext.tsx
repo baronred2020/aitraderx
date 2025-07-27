@@ -113,6 +113,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setSubscription(data.subscription);
           localStorage.setItem('auth_token', data.token);
           return true;
+        } else {
+          console.warn('Login falló en el backend:', response.status, response.statusText);
         }
       } catch (apiError) {
         console.warn('API no disponible, usando modo desarrollo:', apiError);
@@ -131,6 +133,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const defaultSubscription: Subscription = {
           id: '1',
           planType: 'premium',
+          status: 'active',
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          isTrial: false
+        };
+        
+        setUser(defaultUser);
+        setSubscription(defaultSubscription);
+        localStorage.setItem('auth_token', 'dev-token');
+        return true;
+      }
+      
+      // Fallback para usuarios normales en desarrollo
+      if (username === 'user' && password === 'user123') {
+        const defaultUser: User = {
+          id: '2',
+          username: 'user',
+          email: 'user@aitraderx.com',
+          role: 'user',
+          isActive: true
+        };
+        
+        const defaultSubscription: Subscription = {
+          id: '2',
+          planType: 'starter',
           status: 'active',
           startDate: new Date().toISOString(),
           endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),

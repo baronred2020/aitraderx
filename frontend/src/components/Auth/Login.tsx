@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
     try {
       const success = await login(username, password);
       if (!success) {
-        setError('Credenciales inválidas. Intenta con admin/admin123');
+        setError('Credenciales inválidas. Intenta con admin/admin123 o user/user123');
       }
     } catch (error) {
       setError('Error de conexión. Verifica que el backend esté corriendo.');
@@ -115,14 +115,14 @@ export const Login: React.FC = () => {
           </form>
 
           {/* Información de desarrollo */}
-          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <h3 className="text-sm font-semibold text-blue-400 mb-2">Credenciales de Desarrollo</h3>
-            <div className="text-xs text-gray-400 space-y-1">
-              <p><strong>Usuario:</strong> admin</p>
-              <p><strong>Contraseña:</strong> admin123</p>
-              <p><strong>Plan:</strong> Elite (acceso completo)</p>
-            </div>
-          </div>
+                     <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+             <h3 className="text-sm font-semibold text-blue-400 mb-2">Credenciales Disponibles</h3>
+             <div className="text-xs text-gray-400 space-y-1">
+               <p><strong>👑 Admin:</strong> admin / admin123 (Plan: Premium)</p>
+               <p><strong>👤 User:</strong> user / user123 (Plan: Starter)</p>
+               <p><strong>📈 Trader:</strong> trader / trader123 (Plan: Trader)</p>
+             </div>
+           </div>
         </div>
 
         {/* Footer */}

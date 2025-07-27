@@ -55,6 +55,8 @@ from api import market_data_routes
 from api.wallet_routes import router as wallet_router
 from api.mega_mind_routes import router as mega_mind_router
 from api.monitoring_routes import router as monitoring_router
+from api.brain_trader_routes import router as brain_trader_router
+from api.prediction_routes import router as prediction_router
 
 # Variables globales
 app_state = {}
@@ -117,6 +119,8 @@ app.include_router(market_data_routes.router)
 app.include_router(wallet_router)
 app.include_router(mega_mind_router)
 app.include_router(monitoring_router)
+app.include_router(brain_trader_router)
+app.include_router(prediction_router)
 
 # Models de datos
 class Asset(BaseModel):

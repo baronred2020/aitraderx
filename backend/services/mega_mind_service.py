@@ -6,6 +6,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 import json
 import os
+import yfinance as yf
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +35,18 @@ class MegaMindService:
         self.brain_orchestration = BrainOrchestration()
         self.brain_gamification = BrainGamification()
         self.brain_personalization = BrainPersonalization()
+        
+        # Mapeo de símbolos para Yahoo Finance
+        self.symbol_map = {
+            "EURUSD": "EURUSD=X",
+            "GBPUSD": "GBPUSD=X",
+            "USDJPY": "USDJPY=X",
+            "AUDUSD": "AUDUSD=X",
+            "USDCAD": "USDCAD=X",
+            "EURGBP": "EURGBP=X",
+            "GBPJPY": "GBPJPY=X",
+            "EURJPY": "EURJPY=X"
+        }
         
         # Pesos de fusión para cada cerebro (dinámicos)
         self.fusion_weights = {
@@ -421,13 +434,51 @@ class MegaMindService:
             logger.error(f"Error training brain {brain_type}: {str(e)}")
             raise
     
+    async def get_real_price(self, pair: str) -> float:
+        """Obtener precio real actual desde Yahoo Finance"""
+        try:
+            yahoo_symbol = self.symbol_map.get(pair, pair)
+            ticker = yf.Ticker(yahoo_symbol)
+            
+            # Intentar obtener datos históricos recientes
+            hist = ticker.history(period="5d")
+            if len(hist) >= 1:
+                current_price = float(hist['Close'].iloc[-1])
+                logger.info(f"✅ Precio real obtenido para {pair}: {current_price}")
+                return current_price
+            
+            # Fallback: intentar info del ticker
+            info = ticker.info
+            current_price = info.get('regularMarketPrice', 0) or info.get('previousClose', 0)
+            if current_price > 0:
+                logger.info(f"✅ Precio real obtenido para {pair}: {current_price}")
+                return current_price
+                
+        except Exception as e:
+            logger.error(f"❌ Error obteniendo precio real para {pair}: {e}")
+        
+        # Fallback a precios base si no se pueden obtener datos reales
+        base_prices = {
+            'EURUSD': 1.0925,
+            'GBPUSD': 1.2500,
+            'USDJPY': 150.00,
+            'AUDUSD': 0.6500,
+            'USDCAD': 1.3500,
+            'EURGBP': 0.8750,
+            'GBPJPY': 187.50,
+            'EURJPY': 163.75
+        }
+        fallback_price = base_prices.get(pair, 1.0925)
+        logger.warning(f"⚠️ Usando precio de fallback para {pair}: {fallback_price}")
+        return fallback_price
+    
     # Métodos privados auxiliares
     
     async def _get_brain_predictions(self, brain_type: str, pair: str, style: str, limit: int) -> List[Dict[str, Any]]:
         """Obtener predicciones de un cerebro específico"""
         # Simular predicciones por ahora
         predictions = []
-        base_price = self._get_base_price(pair)
+        base_price = await self.get_real_price(pair)  # Usar precio real
         
         for i in range(limit):
             direction = random.choice(['up', 'down', 'sideways'])
