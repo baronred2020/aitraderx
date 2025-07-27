@@ -27,6 +27,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import { useBrainTraderApi } from '../../hooks/useBrainTraderApi';
 
+
 interface BrainTraderProps {}
 
 interface ModelInfo {
@@ -975,6 +976,8 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           </div>
         </div>
       )}
+
+
     </div>
   );
 }; 

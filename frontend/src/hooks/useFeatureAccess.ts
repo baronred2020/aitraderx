@@ -46,6 +46,18 @@ const featureConfig: FeatureAccessConfig = {
   'mega-mind': {
     requiredPlan: 'premium',
     feature: 'mega_mind_institutional'
+  },
+  'monitoring_agents': {
+    requiredPlan: 'trader',
+    feature: 'monitoring_agents'
+  },
+  'monitoring_alerts': {
+    requiredPlan: 'trader',
+    feature: 'monitoring_alerts'
+  },
+  'monitoring_config': {
+    requiredPlan: 'expert',
+    feature: 'monitoring_config'
   }
 };
 

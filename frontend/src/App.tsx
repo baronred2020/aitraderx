@@ -11,7 +11,7 @@ import { UpgradeModal } from './components/Common/UpgradeModal';
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import { Brain } from 'lucide-react';
 import './index.css';
-import AIMonitorPage from './components/AIMonitor';
+import MonitorIA from './components/MonitorIA';
 import { BrainTrader } from './components/BrainTrader/BrainTrader';
 import { MegaMind } from './components/MegaMind';
 import Subscriptions from './components/Subscriptions';
@@ -274,7 +274,7 @@ function AppContent() {
         return null;
       case 'ai-monitor':
         if (requireAccess('ai-monitor')) {
-          return <AIMonitorPage />;
+          return <MonitorIA />;
         }
         return null;
       case 'rl':

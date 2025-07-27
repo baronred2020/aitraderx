@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       features: [
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
-        'brain_trader_advanced'
+        'brain_trader_advanced', 'monitoring_agents', 'monitoring_alerts'
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'brain-trader']
     },
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
         'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
-        'brain_trader_pro'
+        'brain_trader_pro', 'monitoring_agents', 'monitoring_alerts', 'monitoring_config'
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'brain-trader']
     },
@@ -75,7 +75,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
         'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
-        'api_access', 'custom_models', 'priority_support', 'brain_trader_premium'
+        'api_access', 'custom_models', 'priority_support', 'brain_trader_premium',
+        'monitoring_agents', 'monitoring_alerts', 'monitoring_config'
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community', 'brain-trader']
     },
@@ -85,7 +86,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
         'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
         'api_access', 'custom_models', 'priority_support', 'brain_trader_premium',
-        'mega_mind', 'institutional_features', 'dedicated_support'
+        'mega_mind', 'institutional_features', 'dedicated_support',
+        'monitoring_agents', 'monitoring_alerts', 'monitoring_config'
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community', 'brain-trader', 'mega-mind']
     }
