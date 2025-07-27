@@ -21,11 +21,17 @@ import {
   Play,
   Pause,
   Eye,
-  EyeOff
+  EyeOff,
+  History,
+  Calendar,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import { useBrainTraderApi } from '../../hooks/useBrainTraderApi';
+import { apiService } from '../../services/api';
+import type { PredictionHistoryItem, PredictionLimits, UserStats } from '../../services/api';
 
 
 interface BrainTraderProps {}
@@ -48,6 +54,7 @@ interface Prediction {
   reasoning: string;
   brain_type: string;
   timestamp: string;
+  expires_at?: string;
 }
 
 interface Signal {
@@ -109,6 +116,16 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   // Estados de datos
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
 
+  // Estados del sistema de predicciones
+  const [currentPrediction, setCurrentPrediction] = useState<Prediction | null>(null);
+  const [isGeneratingPrediction, setIsGeneratingPrediction] = useState(false);
+  const [predictionLimits, setPredictionLimits] = useState<PredictionLimits | null>(null);
+  const [predictionHistory, setPredictionHistory] = useState<PredictionHistoryItem[]>([]);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [activeTab, setActiveTab] = useState<'predictions' | 'signals' | 'trends' | 'history'>('predictions');
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+
   // Configuración según suscripción
   const getAvailablePairs = () => {
     if (!subscription || subscription.status !== 'active') {
@@ -149,28 +166,28 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   const getAvailableBrains = () => {
     if (!subscription || subscription.status !== 'active') {
-      return ['brain_max']; // Starter
+      return ['brain_max', 'mega_mind']; // Starter + Mega Mind para testing
     }
     
     switch (subscription.planType) {
       case 'starter':
-        return ['brain_max'];
+        return ['brain_max', 'mega_mind'];
       case 'trader':
-        return ['brain_max'];
+        return ['brain_max', 'mega_mind'];
       case 'expert':
-        return ['brain_max', 'brain_ultra'];
+        return ['brain_max', 'brain_ultra', 'mega_mind'];
       case 'premium':
-        return ['brain_max', 'brain_ultra', 'brain_predictor'];
+        return ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind'];
       case 'institutional':
         return ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind'];
       default:
-        return ['brain_max'];
+        return ['brain_max', 'mega_mind'];
     }
   };
 
   // Configuración especial para MEGA MIND
   const isMegaMindAvailable = () => {
-    return subscription?.planType === 'institutional';
+    return true; // Disponible en todos los planes para testing
   };
 
   const getMegaMindFeatures = () => {
@@ -390,6 +407,20 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     loadModelData();
   }, [selectedPair, selectedStyle, activeBrain]);
 
+  // Efecto para cargar datos del sistema de predicciones
+  useEffect(() => {
+    const loadPredictionData = async () => {
+      await Promise.all([
+        loadPredictionLimits(),
+        loadActivePrediction(),
+        loadPredictionHistory(),
+        loadUserStats()
+      ]);
+    };
+    
+    loadPredictionData();
+  }, [selectedPair, selectedStyle, activeBrain]);
+
   // Función para mostrar errores de API
   const hasApiErrors = () => {
     return Object.values(errors).some(error => error !== null);
@@ -400,6 +431,95 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       .filter(([_, error]) => error !== null)
       .map(([key, error]) => `${key}: ${error}`)
       .join(', ');
+  };
+
+  // Funciones del sistema de predicciones
+  const getPlanLimits = () => {
+    if (!predictionLimits) return { used: 0, limit: 10, canGenerate: false };
+    
+    const used = predictionLimits.max_predictions_per_day - predictionLimits.remaining_predictions;
+    const limit = predictionLimits.max_predictions_per_day;
+    const canGenerate = predictionLimits.can_generate;
+    
+    return { used, limit, canGenerate };
+  };
+
+  const canGeneratePrediction = () => {
+    const { canGenerate } = getPlanLimits();
+    return canGenerate && !isGeneratingPrediction;
+  };
+
+  const generatePrediction = async () => {
+    if (!canGeneratePrediction()) return;
+    
+    setIsGeneratingPrediction(true);
+    try {
+      const response = await apiService.generatePrediction(
+        selectedPair,
+        activeBrain,
+        selectedStyle
+      );
+      
+      if (response.success && response.prediction) {
+        setCurrentPrediction(response.prediction);
+      }
+      
+      // Actualizar límites e historial
+      await Promise.all([
+        loadPredictionLimits(),
+        loadPredictionHistory(),
+        loadUserStats()
+      ]);
+      
+    } catch (error) {
+      console.error('Error generando predicción:', error);
+    } finally {
+      setIsGeneratingPrediction(false);
+    }
+  };
+
+  const loadPredictionLimits = async () => {
+    try {
+      const limits = await apiService.getPredictionLimits(selectedStyle);
+      setPredictionLimits(limits);
+    } catch (error) {
+      console.error('Error cargando límites:', error);
+    }
+  };
+
+  const loadActivePrediction = async () => {
+    try {
+      const active = await apiService.getActivePrediction(selectedStyle);
+      if (active) {
+        setCurrentPrediction(active);
+      }
+    } catch (error) {
+      console.error('Error cargando predicción activa:', error);
+    }
+  };
+
+  const loadPredictionHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const history = await apiService.getPredictionHistory();
+      setPredictionHistory(history);
+    } catch (error) {
+      console.error('Error cargando historial:', error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const loadUserStats = async () => {
+    setIsLoadingStats(true);
+    try {
+      const stats = await apiService.getUserStats();
+      setUserStats(stats);
+    } catch (error) {
+      console.error('Error cargando estadísticas:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
   };
 
   // Verificar acceso
@@ -419,124 +539,643 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-teal-500 rounded-xl flex items-center justify-center">
-            <Brain className="w-6 h-6 text-white" />
+    <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, var(--primary-bg), rgba(59, 130, 246, 0.2), var(--primary-bg))' }}>
+      {/* Header Moderno */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl border-b" style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)', borderColor: 'var(--border-color)' }}>
+        <div className="px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Logo y Título */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(to right, var(--accent-text), #06b6d4)', boxShadow: '0 10px 25px rgba(56, 178, 172, 0.25)' }}>
+                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 animate-pulse" style={{ backgroundColor: 'var(--success-color)', borderColor: 'var(--primary-bg)' }}></div>
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold truncate" style={{ color: 'var(--primary-text)' }}>Brain Trader</h1>
+                <p className="text-sm truncate" style={{ color: 'var(--secondary-text)' }}>Sistema de IA para trading automático</p>
+              </div>
+            </div>
+            
+            {/* Estado de API y Controles */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Estado API */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderColor: 'var(--border-color)' }}>
+                <div className={`w-2 h-2 rounded-full ${hasApiErrors() ? 'animate-pulse' : ''}`} style={{ backgroundColor: hasApiErrors() ? 'var(--danger-color)' : 'var(--success-color)' }}></div>
+                <span className="text-xs sm:text-sm hidden sm:inline" style={{ color: 'var(--secondary-text)' }}>
+                  {hasApiErrors() ? 'Error API' : 'API Online'}
+                </span>
+              </div>
+              
+              {/* Botón Auto Trading */}
+              <button
+                onClick={() => setIsAutoTrading(!isAutoTrading)}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: isAutoTrading ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)',
+                  color: isAutoTrading ? 'var(--danger-color)' : 'var(--success-color)',
+                  border: `1px solid ${isAutoTrading ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)'}`,
+                  boxShadow: isAutoTrading ? '0 10px 25px rgba(239, 68, 68, 0.1)' : '0 10px 25px rgba(34, 197, 94, 0.1)'
+                }}
+              >
+                {isAutoTrading ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                <span className="hidden sm:inline text-sm font-medium">
+                  {isAutoTrading ? 'Detener' : 'Iniciar'} Auto Trading
+                </span>
+                <span className="sm:hidden text-sm font-medium">
+                  {isAutoTrading ? 'Stop' : 'Start'}
+                </span>
+              </button>
+              
+              {/* Botón Avanzado */}
+              <button
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 border"
+                style={{
+                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                  color: 'var(--secondary-text)',
+                  borderColor: 'var(--border-color)'
+                }}
+              >
+                {showAdvanced ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span className="hidden sm:inline text-sm font-medium">Avanzado</span>
+                <span className="sm:hidden text-sm font-medium">Adv</span>
+              </button>
+            </div>
           </div>
-          
-          {/* Estado de conexión API */}
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${hasApiErrors() ? 'bg-red-500' : 'bg-green-500'}`}></div>
-            <span className="text-sm text-gray-500">
-              {hasApiErrors() ? 'Error de conexión' : 'API conectada'}
+        </div>
+      </div>
+
+      {/* Contenido Principal */}
+      <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+      {/* Panel de Configuración Moderno */}
+      <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)', borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <Settings className="w-5 h-5" style={{ color: 'var(--accent-text)' }} />
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Configuración de Trading</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Par de divisas */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--secondary-text)' }}>
+              <Target className="w-4 h-4" />
+              Par de Divisas
+            </label>
+            <select
+              value={selectedPair}
+              onChange={(e) => setSelectedPair(e.target.value)}
+              className="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200"
+              style={{
+                backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--primary-text)'
+              }}
+            >
+              {getAvailablePairs().map(pair => (
+                <option key={pair} value={pair}>{pair}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Estilo de trading */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--secondary-text)' }}>
+              <BarChart3 className="w-4 h-4" />
+              Estilo de Trading
+            </label>
+            <select
+              value={selectedStyle}
+              onChange={(e) => setSelectedStyle(e.target.value)}
+              className="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200"
+              style={{
+                backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--primary-text)'
+              }}
+            >
+              {getAvailableStyles().map(style => (
+                <option key={style} value={style}>
+                  {style.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Cerebro activo */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--secondary-text)' }}>
+              <Brain className="w-4 h-4" />
+              Cerebro IA
+            </label>
+            <select
+              value={activeBrain}
+              onChange={(e) => setActiveBrain(e.target.value as any)}
+              className="w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200"
+              style={{
+                backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--primary-text)'
+              }}
+            >
+              {getAvailableBrains().map(brain => (
+                <option key={brain} value={brain}>
+                  {brain.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Botón de actualizar */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>&nbsp;</label>
+            <button
+              onClick={() => refreshAll(activeBrain, selectedPair, selectedStyle)}
+              disabled={Object.values(loading).some(l => l)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:transform-none"
+              style={{
+                background: Object.values(loading).some(l => l) 
+                  ? 'linear-gradient(to right, var(--tertiary-bg), var(--tertiary-bg))'
+                  : 'linear-gradient(to right, var(--accent-text), #06b6d4)',
+                color: 'var(--primary-text)',
+                boxShadow: '0 10px 25px rgba(56, 178, 172, 0.25)'
+              }}
+            >
+              {Object.values(loading).some(l => l) ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+              <span className="text-sm font-medium">
+                {Object.values(loading).some(l => l) ? 'Actualizando...' : 'Actualizar'}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Información del Plan */}
+      <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)', borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <Info className="w-5 h-5" style={{ color: 'var(--accent-text)' }} />
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Información del Plan</h2>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Predicciones usadas hoy:</span>
+            <span className="ml-2 font-semibold text-blue-600">
+              {predictionLimits ? (predictionLimits.max_predictions_per_day - predictionLimits.remaining_predictions) : 0} / {predictionLimits?.max_predictions_per_day || 0}
             </span>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Brain Trader</h1>
-            <p className="text-gray-400">Sistema de IA para trading automático</p>
+            <span className="text-gray-600">Estado de predicción:</span>
+            <span className="ml-2 font-semibold text-blue-600">
+              {predictionLimits?.can_generate ? 'Disponible' : 'No disponible'}
+            </span>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setIsAutoTrading(!isAutoTrading)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
-              isAutoTrading 
-                ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
-                : 'bg-green-500/20 text-green-400 border border-green-500/30'
-            }`}
-          >
-            {isAutoTrading ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            <span>{isAutoTrading ? 'Detener' : 'Iniciar'} Auto Trading</span>
-          </button>
-          
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-700/50 text-gray-300 rounded-lg hover:bg-gray-600/50 transition-all"
-          >
-            {showAdvanced ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span>Avanzado</span>
-          </button>
-        </div>
       </div>
 
-      {/* Configuración */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Par de divisas */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Par de Divisas</label>
-          <select
-            value={selectedPair}
-            onChange={(e) => setSelectedPair(e.target.value)}
-            className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-          >
-            {getAvailablePairs().map(pair => (
-              <option key={pair} value={pair}>{pair}</option>
-            ))}
-          </select>
+      {/* Navegación por Pestañas */}
+      <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)', borderColor: 'var(--border-color)' }}>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {[
+            { id: 'predictions', label: 'Predicciones', icon: TrendingUpIcon },
+            { id: 'signals', label: 'Señales', icon: Zap },
+            { id: 'trends', label: 'Tendencias', icon: BarChart3 },
+            { id: 'history', label: 'Historial', icon: History }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span className="text-sm font-medium">{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Estilo de trading */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Estilo de Trading</label>
-          <select
-            value={selectedStyle}
-            onChange={(e) => setSelectedStyle(e.target.value)}
-            className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-          >
-            {getAvailableStyles().map(style => (
-              <option key={style} value={style}>
-                {style.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </option>
-            ))}
-          </select>
+        {/* Contenido de las Pestañas */}
+        {activeTab === 'predictions' && (
+          <div className="space-y-6">
+            {/* Botón Generar Predicción */}
+            <div className="mb-6">
+              <button
+                onClick={generatePrediction}
+                disabled={isGeneratingPrediction || !canGeneratePrediction()}
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${
+                  canGeneratePrediction()
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {isGeneratingPrediction ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Generando predicción...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <TrendingUpIcon className="w-5 h-5 mr-2" />
+                    Generar Predicción
+                  </div>
+                )}
+              </button>
+              
+              {!canGeneratePrediction() && (
+                <p className="text-sm text-gray-500 mt-2 text-center">
+                  {predictionLimits && (predictionLimits.max_predictions_per_day - predictionLimits.remaining_predictions) >= predictionLimits.max_predictions_per_day
+                    ? 'Has alcanzado el límite diario de predicciones'
+                    : 'No puedes generar una nueva predicción en este momento'
+                  }
+                </p>
+              )}
+            </div>
+
+            {/* Predicción Actual */}
+            {currentPrediction && (
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-gray-800">Predicción Actual</h4>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500">
+                      Expira: {new Date(currentPrediction.expires_at || '').toLocaleString()}
+                    </span>
+                    <div className={`w-3 h-3 rounded-full ${
+                      new Date() < new Date(currentPrediction.expires_at || '') 
+                        ? 'bg-green-500' 
+                        : 'bg-red-500'
+                    }`}></div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Dirección</h5>
+                    <div className="flex items-center">
+                      {currentPrediction.direction === 'up' ? (
+                        <TrendingUpIcon className="w-6 h-6 text-green-600 mr-2" />
+                      ) : (
+                        <TrendingDownIcon className="w-6 h-6 text-red-600 mr-2" />
+                      )}
+                      <span className={`text-lg font-bold ${
+                        currentPrediction.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {currentPrediction.direction.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Confianza</h5>
+                    <div className="flex items-center">
+                      <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${currentPrediction.confidence}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {currentPrediction.confidence}%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Precio Objetivo</h5>
+                    <span className="text-lg font-bold text-gray-800">
+                      ${currentPrediction.target_price.toFixed(4)}
+                    </span>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Timeframe</h5>
+                    <span className="text-lg font-bold text-gray-800">
+                      {currentPrediction.timeframe}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="mt-4 bg-white rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-700 mb-2">Análisis Técnico</h5>
+                  <p className="text-gray-600 text-sm">
+                    {currentPrediction.reasoning}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Mensaje cuando no hay predicción */}
+            {!currentPrediction && !isGeneratingPrediction && (
+              <div className="text-center py-8">
+                <TrendingUpIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 mb-2">
+                  No hay predicción activa
+                </h4>
+                <p className="text-gray-500">
+                  Haz clic en "Generar Predicción" para obtener una nueva predicción
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'signals' && (
+          <div className="space-y-6">
+            {/* Contenido de Señales */}
+            {signals.length > 0 ? (
+              <div className="space-y-3">
+                {signals.map((signal, index) => (
+                  <div key={index} className="rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-200 border" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)', borderColor: 'var(--border-color)' }}>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg`} style={{
+                          backgroundColor: signal.type === 'buy' ? 'rgba(34, 197, 94, 0.2)' :
+                          signal.type === 'sell' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                          color: signal.type === 'buy' ? 'var(--success-color)' :
+                          signal.type === 'sell' ? 'var(--danger-color)' : 'var(--secondary-text)',
+                          boxShadow: signal.type === 'buy' ? '0 10px 25px rgba(34, 197, 94, 0.25)' :
+                          signal.type === 'sell' ? '0 10px 25px rgba(239, 68, 68, 0.25)' : '0 10px 25px rgba(100, 116, 139, 0.25)'
+                        }}>
+                          {signal.type === 'buy' ? <CheckCircle className="w-6 h-6" /> :
+                           signal.type === 'sell' ? <XCircle className="w-6 h-6" /> :
+                           <Pause className="w-6 h-6" />}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{signal.pair}</p>
+                            <span className="px-2 py-1 rounded-full text-xs font-medium" style={{
+                              backgroundColor: signal.type === 'buy' ? 'rgba(34, 197, 94, 0.2)' :
+                              signal.type === 'sell' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                              color: signal.type === 'buy' ? 'var(--success-color)' :
+                              signal.type === 'sell' ? 'var(--danger-color)' : 'var(--secondary-text)'
+                            }}>
+                              {signal.type.toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>Fuerza: {signal.strength}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+                          <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>${signal.entry_price.toFixed(4)}</p>
+                          <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{signal.confidence.toFixed(1)}% confianza</p>
+                          <div className="flex gap-2 mt-1 text-xs">
+                            <span style={{ color: 'var(--danger-color)' }}>SL: ${signal.stop_loss.toFixed(4)}</span>
+                            <span style={{ color: 'var(--success-color)' }}>TP: ${signal.take_profit.toFixed(4)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Zap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 mb-2">
+                  No hay señales disponibles
+                </h4>
+                <p className="text-gray-500">
+                  Las señales aparecerán aquí cuando estén disponibles
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'trends' && (
+          <div className="space-y-6">
+            {/* Contenido de Tendencias */}
+            {trends.length > 0 ? (
+              <div className="space-y-3">
+                {trends.map((trend, index) => (
+                  <div key={index} className="rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-200 border" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)', borderColor: 'var(--border-color)' }}>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg`} style={{
+                          backgroundColor: trend.direction === 'bullish' ? 'rgba(34, 197, 94, 0.2)' :
+                          trend.direction === 'bearish' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                          color: trend.direction === 'bullish' ? 'var(--success-color)' :
+                          trend.direction === 'bearish' ? 'var(--danger-color)' : 'var(--secondary-text)',
+                          boxShadow: trend.direction === 'bullish' ? '0 10px 25px rgba(34, 197, 94, 0.25)' :
+                          trend.direction === 'bearish' ? '0 10px 25px rgba(239, 68, 68, 0.25)' : '0 10px 25px rgba(100, 116, 139, 0.25)'
+                        }}>
+                          {trend.direction === 'bullish' ? <TrendingUp className="w-5 h-5" /> :
+                           trend.direction === 'bearish' ? <TrendingDown className="w-5 h-5" /> :
+                           <Activity className="w-5 h-5" />}
+                        </div>
+                        
+                        <div>
+                          <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{trend.pair}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium capitalize" style={{
+                              backgroundColor: trend.direction === 'bullish' ? 'rgba(34, 197, 94, 0.2)' :
+                              trend.direction === 'bearish' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                              color: trend.direction === 'bullish' ? 'var(--success-color)' :
+                              trend.direction === 'bearish' ? 'var(--danger-color)' : 'var(--secondary-text)'
+                            }}>
+                              {trend.direction}
+                            </span>
+                            <span className="text-sm" style={{ color: 'var(--secondary-text)' }}>{trend.timeframe}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+                          <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>{trend.strength.toFixed(0)}%</p>
+                          <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>Fuerza</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+                        <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Soporte</p>
+                        <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>${trend.support.toFixed(4)}</p>
+                      </div>
+                      <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+                        <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Resistencia</p>
+                        <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>${trend.resistance.toFixed(4)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'rgba(30, 41, 59, 0.2)' }}>
+                      <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{trend.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 mb-2">
+                  No hay tendencias disponibles
+                </h4>
+                <p className="text-gray-500">
+                  Las tendencias aparecerán aquí cuando estén disponibles
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="space-y-6">
+            {/* Estadísticas del Usuario */}
+            {userStats && (
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">Estadísticas del Usuario</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Total Predicciones</h5>
+                    <span className="text-2xl font-bold text-blue-600">{userStats.total_predictions}</span>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Predicciones Exitosas</h5>
+                    <span className="text-2xl font-bold text-green-600">{userStats.successful_predictions}</span>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Tasa de Éxito</h5>
+                    <span className="text-2xl font-bold text-purple-600">
+                      {((userStats.successful_predictions / userStats.total_predictions) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <h5 className="font-semibold text-gray-700 mb-2">Promedio de Éxito</h5>
+                    <span className="text-2xl font-bold text-orange-600">
+                      {userStats.average_success_percentage?.toFixed(2) || '0.00'}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Historial de Predicciones */}
+            <div>
+              <h4 className="text-lg font-semibold text-gray-800 mb-4">Historial de Predicciones</h4>
+              {isLoadingHistory ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Cargando historial...</p>
+                </div>
+              ) : predictionHistory.length > 0 ? (
+                <div className="space-y-3">
+                  {predictionHistory.map((item, index) => (
+                    <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            item.prediction_success ? 'bg-green-100' : 'bg-red-100'
+                          }`}>
+                            {item.prediction_success ? (
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                            ) : (
+                              <XCircle className="w-5 h-5 text-red-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-800">{item.pair}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-bold text-lg ${
+                            item.prediction_success ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {item.prediction_success ? '✓' : '✗'}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {item.direction.toUpperCase()}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="font-medium text-gray-700">Precio Predicho</p>
+                          <p className="font-semibold text-gray-800">${item.target_price.toFixed(4)}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700">Precio Real</p>
+                          <p className="font-semibold text-gray-800">${item.actual_price_at_expiry?.toFixed(4) || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700">Confianza</p>
+                          <p className="font-semibold text-gray-800">{item.confidence}%</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700">Diferencia</p>
+                          <p className={`font-semibold ${
+                            item.actual_price_at_expiry ? 
+                              (item.actual_price_at_expiry > item.target_price ? 'text-green-600' : 'text-red-600') : 
+                              'text-gray-500'
+                          }`}>
+                            {item.actual_price_at_expiry ? 
+                              `${((item.actual_price_at_expiry - item.target_price) / item.target_price * 100).toFixed(2)}%` : 
+                              'N/A'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <History className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h4 className="text-lg font-semibold text-gray-600 mb-2">
+                    No hay historial disponible
+                  </h4>
+                  <p className="text-gray-500">
+                    El historial aparecerá aquí después de generar predicciones
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         </div>
 
-        {/* Cerebro activo */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Cerebro IA</label>
-          <select
-            value={activeBrain}
-            onChange={(e) => setActiveBrain(e.target.value as any)}
-            className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-          >
-            {getAvailableBrains().map(brain => (
-              <option key={brain} value={brain}>
-                {brain.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Botón de actualizar */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">&nbsp;</label>
-          <button
-            onClick={() => refreshAll(activeBrain, selectedPair, selectedStyle)}
-            disabled={Object.values(loading).some(l => l)}
-            className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition-all"
-          >
-            {Object.values(loading).some(l => l) ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            <span>{Object.values(loading).some(l => l) ? 'Actualizando...' : 'Actualizar'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Errores de API */}
+        {/* Errores de API */}
       {hasApiErrors() && (
-        <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <AlertTriangle className="w-5 h-5 text-red-400" />
-            <h3 className="text-lg font-semibold text-red-400">Errores de Conexión</h3>
+        <div className="backdrop-blur-sm border rounded-2xl p-4 sm:p-6 animate-fade-in" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}>
+              <AlertTriangle className="w-5 h-5" style={{ color: 'var(--danger-color)' }} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--danger-color)' }}>Errores de Conexión</h3>
+              <p className="text-sm" style={{ color: 'rgba(239, 68, 68, 0.8)' }}>Problemas con la API de trading</p>
+            </div>
           </div>
-          <p className="text-red-300 text-sm">{getApiErrorMessages()}</p>
+          <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+            <p className="text-sm font-mono" style={{ color: 'rgba(239, 68, 68, 0.8)' }}>{getApiErrorMessages()}</p>
+          </div>
           <button
             onClick={() => refreshAll(activeBrain, selectedPair, selectedStyle)}
-            className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 active:scale-95"
+            style={{
+              backgroundColor: 'var(--danger-color)',
+              color: 'var(--primary-text)'
+            }}
           >
+            <RefreshCw className="w-4 h-4" />
             Reintentar Conexión
           </button>
         </div>
@@ -544,109 +1183,111 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
       {/* Información del Modelo */}
       {modelInfo && (
-        <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50">
+        <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)', borderColor: 'var(--border-color)' }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
-              <Info className="w-5 h-5 text-blue-400" />
-              <span>Información del Modelo</span>
-            </h3>
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${
-                modelInfo.status === 'active' ? 'bg-green-400' :
-                modelInfo.status === 'training' ? 'bg-yellow-400' : 'bg-red-400'
-              }`}></div>
-              <span className="text-sm text-gray-400 capitalize">{modelInfo.status}</span>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)' }}>
+                <Info className="w-5 h-5" style={{ color: 'var(--accent-text)' }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Información del Modelo</h3>
+                <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>Estado y métricas del cerebro IA</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderColor: 'var(--border-color)' }}>
+              <div className={`w-2 h-2 rounded-full ${
+                modelInfo.status === 'active' ? 'animate-pulse' :
+                modelInfo.status === 'training' ? 'animate-pulse' : ''
+              }`} style={{ 
+                backgroundColor: modelInfo.status === 'active' ? 'var(--success-color)' :
+                modelInfo.status === 'training' ? 'var(--warning-color)' : 'var(--danger-color)'
+              }}></div>
+              <span className="text-sm capitalize font-medium" style={{ color: 'var(--secondary-text)' }}>{modelInfo.status}</span>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Cerebro</p>
-              <p className="text-white font-medium">{modelInfo.brainType.replace('_', ' ').toUpperCase()}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Brain className="w-4 h-4" style={{ color: 'var(--accent-text)' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>Cerebro</p>
+              </div>
+              <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{modelInfo.brainType.replace('_', ' ').toUpperCase()}</p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Precisión</p>
-              <p className="text-white font-medium">{modelInfo.accuracy.toFixed(1)}%</p>
+            <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-4 h-4" style={{ color: 'var(--success-color)' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>Precisión</p>
+              </div>
+              <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{modelInfo.accuracy.toFixed(1)}%</p>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Última Actualización</p>
-              <p className="text-white font-medium">{new Date(modelInfo.lastUpdate).toLocaleString()}</p>
+            <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4" style={{ color: '#a855f7' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>Última Actualización</p>
+              </div>
+              <p className="font-semibold text-sm" style={{ color: 'var(--primary-text)' }}>{new Date(modelInfo.lastUpdate).toLocaleString()}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Predicciones */}
-      {predictions.length > 0 && (
-        <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50">
-          <h3 className="text-lg font-semibold text-white flex items-center space-x-2 mb-4">
-            <Target className="w-5 h-5 text-green-400" />
-            <span>Predicciones</span>
-          </h3>
-          
-          <div className="space-y-4">
-            {predictions.map((prediction, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                    prediction.direction === 'up' ? 'bg-green-500/20 text-green-400' :
-                    prediction.direction === 'down' ? 'bg-red-500/20 text-red-400' :
-                    'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {prediction.direction === 'up' ? <TrendingUp className="w-6 h-6" /> :
-                     prediction.direction === 'down' ? <TrendingDown className="w-6 h-6" /> :
-                     <Activity className="w-6 h-6" />}
-                  </div>
-                  
-                  <div>
-                    <p className="text-white font-medium">{prediction.pair}</p>
-                    <p className="text-sm text-gray-400">{prediction.reasoning}</p>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                                      <p className="text-white font-medium">${prediction.target_price.toFixed(4)}</p>
-                  <p className="text-sm text-gray-400">{prediction.confidence.toFixed(1)}% confianza</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       {/* Mega Mind - Sección Especial */}
-      {activeBrain === 'mega_mind' && megaMindPredictions.length > 0 && (
-        <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl p-6 border border-purple-500/50">
-          <h3 className="text-lg font-semibold text-white flex items-center space-x-2 mb-4">
-            <Crown className="w-5 h-5 text-yellow-400" />
-            <span>MEGA MIND - Fusión de Cerebros</span>
-          </h3>
+      {isMegaMindAvailable() && activeBrain === 'mega_mind' && (
+        <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ 
+          background: 'linear-gradient(to bottom right, rgba(147, 51, 234, 0.3), rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.3))',
+          borderColor: 'rgba(147, 51, 234, 0.3)'
+        }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ 
+              background: 'linear-gradient(to right, #a855f7, #eab308)',
+              boxShadow: '0 10px 25px rgba(147, 51, 234, 0.25)'
+            }}>
+              <Crown className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>MEGA MIND</h3>
+              <p className="text-sm" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Fusión de Cerebros IA - Máxima Precisión</p>
+            </div>
+          </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             {megaMindPredictions.map((prediction, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-purple-700/30 rounded-lg border border-purple-500/30">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                    prediction.direction === 'up' ? 'bg-green-500/20 text-green-400' :
-                    prediction.direction === 'down' ? 'bg-red-500/20 text-red-400' :
-                    'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {prediction.direction === 'up' ? <TrendingUp className="w-6 h-6" /> :
-                     prediction.direction === 'down' ? <TrendingDown className="w-6 h-6" /> :
-                     <Activity className="w-6 h-6" />}
+              <div key={index} className="rounded-xl p-4 hover:bg-purple-700/30 transition-all duration-200 border" style={{ backgroundColor: 'rgba(147, 51, 234, 0.2)', borderColor: 'rgba(147, 51, 234, 0.3)' }}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg`} style={{
+                      backgroundColor: prediction.direction === 'up' ? 'rgba(34, 197, 94, 0.2)' :
+                      prediction.direction === 'down' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                      color: prediction.direction === 'up' ? 'var(--success-color)' :
+                      prediction.direction === 'down' ? 'var(--danger-color)' : 'var(--secondary-text)',
+                      boxShadow: prediction.direction === 'up' ? '0 10px 25px rgba(34, 197, 94, 0.25)' :
+                      prediction.direction === 'down' ? '0 10px 25px rgba(239, 68, 68, 0.25)' : '0 10px 25px rgba(100, 116, 139, 0.25)'
+                    }}>
+                      {prediction.direction === 'up' ? <TrendingUp className="w-6 h-6" /> :
+                       prediction.direction === 'down' ? <TrendingDown className="w-6 h-6" /> :
+                       <Activity className="w-6 h-6" />}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{prediction.pair}</p>
+                      <p className="text-sm line-clamp-2" style={{ color: 'var(--secondary-text)' }}>{prediction.reasoning}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#a855f7' }}></div>
+                        <p className="text-xs" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Colaboración: {(prediction.collaboration_score * 100).toFixed(1)}%</p>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div>
-                    <p className="text-white font-medium">{prediction.pair}</p>
-                    <p className="text-sm text-gray-400">{prediction.reasoning}</p>
-                    <p className="text-xs text-purple-400">Colaboración: {(prediction.collaboration_score * 100).toFixed(1)}%</p>
+                  <div className="text-right">
+                    <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                      <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>${prediction.target_price.toFixed(4)}</p>
+                      <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{prediction.confidence.toFixed(1)}% confianza</p>
+                      <p className="text-xs" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Método: {prediction.fusion_method}</p>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="text-right">
-                  <p className="text-white font-medium">${prediction.target_price.toFixed(4)}</p>
-                  <p className="text-sm text-gray-400">{prediction.confidence.toFixed(1)}% confianza</p>
-                  <p className="text-xs text-purple-400">Método: {prediction.fusion_method}</p>
                 </div>
               </div>
             ))}
@@ -654,145 +1295,108 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           
           {/* Información adicional de Mega Mind */}
           {megaMindCollaboration && (
-            <div className="mt-4 p-4 bg-purple-800/30 rounded-lg">
-              <h4 className="text-sm font-semibold text-purple-300 mb-2">Estado de Colaboración</h4>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                  <p className="text-gray-400">Score: {(megaMindCollaboration.collaboration_score * 100).toFixed(1)}%</p>
-                  <p className="text-gray-400">Consenso: {(megaMindCollaboration.consensus_level * 100).toFixed(1)}%</p>
+            <div className="mt-4 rounded-xl p-4 border" style={{ backgroundColor: 'rgba(147, 51, 234, 0.2)', borderColor: 'rgba(147, 51, 234, 0.2)' }}>
+              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>
+                <Brain className="w-4 h-4" />
+                Estado de Colaboración
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Score</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{(megaMindCollaboration.collaboration_score * 100).toFixed(1)}%</p>
                 </div>
-                <div>
-                  <p className="text-gray-400">Estado: {megaMindCollaboration.collaboration_status}</p>
+                <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Consenso</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{(megaMindCollaboration.consensus_level * 100).toFixed(1)}%</p>
                 </div>
+                <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Estado</p>
+                  <p className="font-semibold capitalize" style={{ color: 'var(--primary-text)' }}>{megaMindCollaboration.collaboration_status}</p>
+                </div>
+                <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Cerebros</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>3 Activos</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Información general de Mega Mind cuando no hay predicciones */}
+          {megaMindPredictions.length === 0 && (
+            <div className="mt-4 rounded-xl p-4 border" style={{ backgroundColor: 'rgba(147, 51, 234, 0.1)', borderColor: 'rgba(147, 51, 234, 0.2)' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="text-sm font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Colaboración de Cerebros</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Activada</p>
+                </div>
+                <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="text-sm font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Fusión de Estrategias</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Optimizada</p>
+                </div>
+                <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="text-sm font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Análisis Multi-Timeframe</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Avanzado</p>
+                </div>
+                <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
+                  <p className="text-sm font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Correlación Cross-Asset</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Institucional</p>
+                </div>
+              </div>
+              
+              <div className="rounded-xl p-4 border" style={{ backgroundColor: 'rgba(147, 51, 234, 0.1)', borderColor: 'rgba(147, 51, 234, 0.2)' }}>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>
+                  <strong>MEGA MIND</strong> combina la potencia de Brain Max, Brain Ultra y Brain Predictor 
+                  para crear estrategias de trading institucionales con precisión superior al 95%.
+                </p>
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Señales */}
-      {signals.length > 0 && (
-        <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50">
-          <h3 className="text-lg font-semibold text-white flex items-center space-x-2 mb-4">
-            <Zap className="w-5 h-5 text-yellow-400" />
-            <span>Señales de Trading</span>
-          </h3>
-          
-          <div className="space-y-4">
-            {signals.map((signal, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                    signal.type === 'buy' ? 'bg-green-500/20 text-green-400' :
-                    signal.type === 'sell' ? 'bg-red-500/20 text-red-400' :
-                    'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {signal.type === 'buy' ? <CheckCircle className="w-6 h-6" /> :
-                     signal.type === 'sell' ? <XCircle className="w-6 h-6" /> :
-                     <Pause className="w-6 h-6" />}
-                  </div>
-                  
-                  <div>
-                    <p className="text-white font-medium">{signal.pair} - {signal.type.toUpperCase()}</p>
-                    <p className="text-sm text-gray-400">Fuerza: {signal.strength}</p>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                                      <p className="text-white font-medium">${signal.entry_price.toFixed(4)}</p>
-                  <p className="text-sm text-gray-400">{signal.confidence.toFixed(1)}% confianza</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Tendencias */}
-      {trends.length > 0 && (
-        <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50">
-          <h3 className="text-lg font-semibold text-white flex items-center space-x-2 mb-4">
-            <BarChart3 className="w-5 h-5 text-purple-400" />
-            <span>Tendencias</span>
-          </h3>
-          
-          <div className="space-y-4">
-            {trends.map((trend, index) => (
-              <div key={index} className="p-4 bg-gray-700/30 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      trend.direction === 'bullish' ? 'bg-green-500/20 text-green-400' :
-                      trend.direction === 'bearish' ? 'bg-red-500/20 text-red-400' :
-                      'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      {trend.direction === 'bullish' ? <TrendingUp className="w-5 h-5" /> :
-                       trend.direction === 'bearish' ? <TrendingDown className="w-5 h-5" /> :
-                       <Activity className="w-5 h-5" />}
-                    </div>
-                    
-                    <div>
-                      <p className="text-white font-medium">{trend.pair}</p>
-                      <p className="text-sm text-gray-400 capitalize">{trend.direction}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className="text-white font-medium">{trend.strength.toFixed(0)}%</p>
-                    <p className="text-sm text-gray-400">Fuerza</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-400">Soporte</p>
-                    <p className="text-white">${trend.support.toFixed(4)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Resistencia</p>
-                    <p className="text-white">${trend.resistance.toFixed(4)}</p>
-                  </div>
-                </div>
-                
-                <p className="text-sm text-gray-400 mt-3">{trend.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Información de suscripción */}
-      <div className="bg-gradient-to-r from-blue-500/10 to-teal-500/10 rounded-xl p-6 border border-blue-500/20">
-        <div className="flex items-center space-x-3 mb-4">
-          {subscription?.planType === 'institutional' && <Crown className="w-6 h-6 text-purple-600" />}
-          {subscription?.planType === 'premium' && <Crown className="w-6 h-6 text-yellow-400" />}
-          {subscription?.planType === 'expert' && <Star className="w-6 h-6 text-purple-400" />}
-          <h3 className="text-lg font-semibold text-white">Plan Actual: {subscription?.planType?.toUpperCase() || 'STARTER'}</h3>
+      <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ 
+        background: 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.1), rgba(20, 184, 166, 0.1), rgba(6, 182, 212, 0.1))',
+        borderColor: 'rgba(59, 130, 246, 0.2)'
+      }}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(to right, var(--accent-text), #06b6d4)' }}>
+            {subscription?.planType === 'institutional' && <Crown className="w-5 h-5 text-white" />}
+            {subscription?.planType === 'premium' && <Crown className="w-5 h-5 text-white" />}
+            {subscription?.planType === 'expert' && <Star className="w-5 h-5 text-white" />}
+            {!subscription?.planType && <Shield className="w-5 h-5 text-white" />}
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Plan Actual</h3>
+            <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{subscription?.planType?.toUpperCase() || 'STARTER'}</p>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <p className="text-gray-400">Pares Disponibles</p>
-            <p className="text-white">{getAvailablePairs().length} pares</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>Pares Disponibles</p>
+            <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{getAvailablePairs().length} pares</p>
           </div>
-          <div>
-            <p className="text-gray-400">Estilos de Trading</p>
-            <p className="text-white">{getAvailableStyles().length} estilos</p>
+          <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>Estilos de Trading</p>
+            <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{getAvailableStyles().length} estilos</p>
           </div>
-          <div>
-            <p className="text-gray-400">Cerebros IA</p>
-            <p className="text-white">{getAvailableBrains().length} cerebros</p>
+          <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>Cerebros IA</p>
+            <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{getAvailableBrains().length} cerebros</p>
           </div>
         </div>
 
         {/* Características del Plan */}
-        <div className="mt-4 pt-4 border-t border-gray-600/50">
-          <h4 className="text-sm font-medium text-gray-300 mb-3">Características Disponibles</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-slate-300 mb-3">Características Disponibles</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             {Object.entries(getAvailableFeatures()).map(([feature, available]) => (
-              <div key={feature} className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${available ? 'bg-green-400' : 'bg-gray-500'}`}></div>
-                <span className={`${available ? 'text-white' : 'text-gray-500'}`}>
+              <div key={feature} className="flex items-center gap-2 p-2 bg-slate-700/30 rounded-lg">
+                <div className={`w-2 h-2 rounded-full ${available ? 'bg-green-400 animate-pulse' : 'bg-slate-500'}`}></div>
+                <span className={`${available ? 'text-white' : 'text-slate-500'}`}>
                   {feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </span>
               </div>
@@ -801,145 +1405,135 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         </div>
 
         {/* Límites del Plan */}
-        <div className="mt-4 pt-4 border-t border-gray-600/50">
-          <h4 className="text-sm font-medium text-gray-300 mb-3">Límites del Plan</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-            <div>
-              <p className="text-gray-400">Predicciones/día</p>
-              <p className="text-white">{getPlanLimitations().maxPredictionsPerDay}</p>
+        <div>
+          <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--secondary-text)' }}>Límites del Plan</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+              <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Predicciones/día</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{getPlanLimitations().maxPredictionsPerDay}</p>
             </div>
-            <div>
-              <p className="text-gray-400">Timeframes</p>
-              <p className="text-white">{getPlanLimitations().maxTimeframes}</p>
+            <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+              <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Timeframes</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{getPlanLimitations().maxTimeframes}</p>
             </div>
-            <div>
-              <p className="text-gray-400">Backtests/mes</p>
-              <p className="text-white">{getPlanLimitations().maxBacktests}</p>
+            <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+              <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Backtests/mes</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{getPlanLimitations().maxBacktests}</p>
             </div>
-            <div>
-              <p className="text-gray-400">Soporte</p>
-              <p className="text-white capitalize">{getPlanLimitations().supportLevel}</p>
+            <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+              <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Soporte</p>
+              <p className="font-semibold capitalize" style={{ color: 'var(--primary-text)' }}>{getPlanLimitations().supportLevel}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sección Mega Mind - Solo para plan Institutional */}
-      {isMegaMindAvailable() && activeBrain === 'mega_mind' && (
-        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-purple-500/20">
-          <div className="flex items-center space-x-3 mb-4">
-            <Brain className="w-6 h-6 text-purple-400" />
-            <h3 className="text-lg font-semibold text-white">MEGA MIND - Fusión de Cerebros IA</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-400">Colaboración de Cerebros</p>
-              <p className="text-white">✓ Activada</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Fusión de Estrategias</p>
-              <p className="text-white">✓ Optimizada</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Análisis Multi-Timeframe</p>
-              <p className="text-white">✓ Avanzado</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Correlación Cross-Asset</p>
-              <p className="text-white">✓ Institucional</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 p-3 bg-purple-500/10 rounded-lg">
-            <p className="text-sm text-purple-300">
-              <strong>MEGA MIND</strong> combina la potencia de Brain Max, Brain Ultra y Brain Predictor 
-              para crear estrategias de trading institucionales con precisión superior al 95%.
-            </p>
-          </div>
-        </div>
-      )}
+
 
       {/* Funciones Avanzadas según Plan */}
       {getAvailableFeatures().multiTimeframe && (
-        <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl p-6 border border-green-500/20">
-          <div className="flex items-center space-x-3 mb-4">
-            <BarChart3 className="w-6 h-6 text-green-400" />
-            <h3 className="text-lg font-semibold text-white">Análisis Multi-Timeframe</h3>
+        <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ 
+          background: 'linear-gradient(to bottom right, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.1), rgba(20, 184, 166, 0.1))',
+          borderColor: 'rgba(34, 197, 94, 0.2)'
+        }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(to right, var(--success-color), var(--accent-text))' }}>
+              <BarChart3 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Análisis Multi-Timeframe</h3>
+              <p className="text-sm" style={{ color: 'rgba(34, 197, 94, 0.8)' }}>Análisis de confluencia temporal</p>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <p className="text-gray-400">Timeframes Disponibles</p>
-              <p className="text-white">1m, 5m, 15m, 1H, 4H, 1D</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(34, 197, 94, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(34, 197, 94, 0.8)' }}>Timeframes Disponibles</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>1m, 5m, 15m, 1H, 4H, 1D</p>
             </div>
-            <div>
-              <p className="text-gray-400">Análisis Confluencia</p>
-              <p className="text-white">✓ Activado</p>
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(34, 197, 94, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(34, 197, 94, 0.8)' }}>Análisis Confluencia</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Activado</p>
             </div>
-            <div>
-              <p className="text-gray-400">Señales Multi-TF</p>
-              <p className="text-white">✓ Generadas</p>
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(34, 197, 94, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(34, 197, 94, 0.8)' }}>Señales Multi-TF</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Generadas</p>
             </div>
           </div>
         </div>
       )}
 
       {getAvailableFeatures().crossAsset && (
-        <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl p-6 border border-orange-500/20">
-          <div className="flex items-center space-x-3 mb-4">
-            <Activity className="w-6 h-6 text-orange-400" />
-            <h3 className="text-lg font-semibold text-white">Análisis Cross-Asset</h3>
+        <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ 
+          background: 'linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), rgba(239, 68, 68, 0.1), rgba(236, 72, 153, 0.1))',
+          borderColor: 'rgba(249, 115, 22, 0.2)'
+        }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(to right, #f97316, #ef4444)' }}>
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Análisis Cross-Asset</h3>
+              <p className="text-sm" style={{ color: 'rgba(249, 115, 22, 0.8)' }}>Correlaciones entre activos</p>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-400">DXY Correlation</p>
-              <p className="text-white">✓ Monitoreada</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(249, 115, 22, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(249, 115, 22, 0.8)' }}>DXY Correlation</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Monitoreada</p>
             </div>
-            <div>
-              <p className="text-gray-400">Gold Correlation</p>
-              <p className="text-white">✓ Analizada</p>
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(249, 115, 22, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(249, 115, 22, 0.8)' }}>Gold Correlation</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Analizada</p>
             </div>
-            <div>
-              <p className="text-gray-400">S&P 500 Correlation</p>
-              <p className="text-white">✓ Calculada</p>
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(249, 115, 22, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(249, 115, 22, 0.8)' }}>S&P 500 Correlation</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Calculada</p>
             </div>
-            <div>
-              <p className="text-gray-400">Oil Correlation</p>
-              <p className="text-white">✓ Integrada</p>
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(249, 115, 22, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(249, 115, 22, 0.8)' }}>Oil Correlation</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Integrada</p>
             </div>
           </div>
         </div>
       )}
 
       {getAvailableFeatures().economicCalendar && (
-        <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-6 border border-yellow-500/20">
-          <div className="flex items-center space-x-3 mb-4">
-            <Clock className="w-6 h-6 text-yellow-400" />
-            <h3 className="text-lg font-semibold text-white">Calendario Económico</h3>
+        <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ 
+          background: 'linear-gradient(to bottom right, rgba(234, 179, 8, 0.1), rgba(249, 115, 22, 0.1), rgba(239, 68, 68, 0.1))',
+          borderColor: 'rgba(234, 179, 8, 0.2)'
+        }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(to right, #eab308, #f97316)' }}>
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Calendario Económico</h3>
+              <p className="text-sm" style={{ color: 'rgba(234, 179, 8, 0.8)' }}>Eventos económicos importantes</p>
+            </div>
           </div>
           
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl border" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', borderColor: 'rgba(234, 179, 8, 0.2)' }}>
               <div>
-                <p className="text-white font-medium">FOMC Interest Rate Decision</p>
-                <p className="text-sm text-gray-400">En 3 días - Alto Impacto</p>
+                <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>FOMC Interest Rate Decision</p>
+                <p className="text-sm" style={{ color: 'rgba(234, 179, 8, 0.8)' }}>En 3 días - Alto Impacto</p>
               </div>
-              <div className="text-right">
-                <p className="text-white font-medium">USD</p>
-                <p className="text-sm text-gray-400">Bullish</p>
+              <div className="text-right mt-2 sm:mt-0">
+                <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>USD</p>
+                <p className="text-sm" style={{ color: 'rgba(234, 179, 8, 0.8)' }}>Bullish</p>
               </div>
             </div>
             
-            <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl border" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', borderColor: 'rgba(234, 179, 8, 0.2)' }}>
               <div>
-                <p className="text-white font-medium">Non-Farm Payrolls</p>
-                <p className="text-sm text-gray-400">En 7 días - Alto Impacto</p>
+                <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>Non-Farm Payrolls</p>
+                <p className="text-sm" style={{ color: 'rgba(234, 179, 8, 0.8)' }}>En 7 días - Alto Impacto</p>
               </div>
-              <div className="text-right">
-                <p className="text-white font-medium">USD</p>
-                <p className="text-sm text-gray-400">Neutral</p>
+              <div className="text-right mt-2 sm:mt-0">
+                <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>USD</p>
+                <p className="text-sm" style={{ color: 'rgba(234, 179, 8, 0.8)' }}>Neutral</p>
               </div>
             </div>
           </div>
@@ -947,29 +1541,37 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       )}
 
       {getAvailableFeatures().autoTraining && (
-        <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl p-6 border border-indigo-500/20">
-          <div className="flex items-center space-x-3 mb-4">
-            <RefreshCw className="w-6 h-6 text-indigo-400" />
-            <h3 className="text-lg font-semibold text-white">Auto-Training Inteligente</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <p className="text-gray-400">Estado</p>
-              <p className="text-white">✓ Activo</p>
+        <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ 
+          background: 'linear-gradient(to bottom right, rgba(99, 102, 241, 0.1), rgba(147, 51, 234, 0.1), rgba(236, 72, 153, 0.1))',
+          borderColor: 'rgba(99, 102, 241, 0.2)'
+        }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(to right, #6366f1, #a855f7)' }}>
+              <RefreshCw className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-gray-400">Última Actualización</p>
-              <p className="text-white">Hace 2 horas</p>
-            </div>
-            <div>
-              <p className="text-gray-400">Próximo Entrenamiento</p>
-              <p className="text-white">En 6 horas</p>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Auto-Training Inteligente</h3>
+              <p className="text-sm" style={{ color: 'rgba(99, 102, 241, 0.8)' }}>Entrenamiento automático de modelos</p>
             </div>
           </div>
           
-          <div className="mt-4 p-3 bg-indigo-500/10 rounded-lg">
-            <p className="text-sm text-indigo-300">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(99, 102, 241, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(99, 102, 241, 0.8)' }}>Estado</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>✓ Activo</p>
+            </div>
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(99, 102, 241, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(99, 102, 241, 0.8)' }}>Última Actualización</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>Hace 2 horas</p>
+            </div>
+            <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(99, 102, 241, 0.3)' }}>
+              <p className="text-sm font-medium" style={{ color: 'rgba(99, 102, 241, 0.8)' }}>Próximo Entrenamiento</p>
+              <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>En 6 horas</p>
+            </div>
+          </div>
+          
+          <div className="rounded-xl p-4 border" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(99, 102, 241, 0.2)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(99, 102, 241, 0.8)' }}>
               El sistema se entrena automáticamente con nuevos datos de mercado para mantener 
               la precisión óptima de los modelos.
             </p>
@@ -977,7 +1579,9 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         </div>
       )}
 
-
+      {/* Espaciado final para móvil */}
+      <div className="h-4 sm:h-6"></div>
+      </div>
     </div>
   );
 }; 

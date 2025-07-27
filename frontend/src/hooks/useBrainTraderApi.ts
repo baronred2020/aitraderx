@@ -42,7 +42,7 @@ export interface UseBrainTraderApiReturn {
   };
   
   // API functions
-  loadPredictions: (brainType: string, pair?: string, style?: string, limit?: number) => Promise<void>;
+  loadPredictions: (brainType: string, pair?: string, style?: string, limit?: number, planType?: string) => Promise<void>;
   loadSignals: (brainType: string, pair?: string, limit?: number) => Promise<void>;
   loadTrends: (brainType: string, pair?: string, limit?: number) => Promise<void>;
   loadMegaMindPredictions: (pair?: string, style?: string, limit?: number) => Promise<void>;
@@ -136,13 +136,14 @@ export const useBrainTraderApi = (): UseBrainTraderApiReturn => {
     brainType: string,
     pair: string = 'EURUSD',
     style: string = 'day_trading',
-    limit: number = 5
+    limit: number = 5,
+    planType: string = 'starter'
   ) => {
     setLoading(prev => ({ ...prev, predictions: true }));
     setErrors(prev => ({ ...prev, predictions: null }));
     
     try {
-      const result = await apiService.getPredictions(brainType, pair, style, limit);
+      const result = await apiService.getPredictions(brainType, pair, style, limit, planType);
       setPredictions(result);
     } catch (error) {
       setErrors(prev => ({ ...prev, predictions: error instanceof Error ? error.message : 'Error loading predictions' }));

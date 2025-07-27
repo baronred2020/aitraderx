@@ -10,6 +10,7 @@ export interface BrainTraderPrediction {
   reasoning: string;
   brain_type: string;
   timestamp: string;
+  expires_at: string;
 }
 
 export interface BrainTraderSignal {
@@ -139,6 +140,44 @@ export interface MonitoringConfig {
 
 // ===== FIN INTERFACES MONITOREO =====
 
+export interface PredictionHistoryItem {
+  id: number;
+  pair: string;
+  direction: string;
+  current_price: number;
+  target_price: number;
+  confidence: number;
+  timeframe: string;
+  reasoning: string;
+  created_at: string;
+  expires_at: string;
+  is_completed: boolean;
+  actual_price_at_expiry?: number;
+  prediction_success?: boolean;
+  success_percentage?: number;
+}
+
+export interface PredictionLimits {
+  can_generate: boolean;
+  remaining_predictions: number;
+  max_predictions_per_day: number;
+  has_active_prediction: boolean;
+  active_prediction_expires?: string;
+  plan_type: string;
+  analysis_type: string;
+  timeframe: string;
+  duration_minutes: number;
+}
+
+export interface UserStats {
+  total_predictions: number;
+  successful_predictions: number;
+  success_rate: number;
+  average_success_percentage: number;
+  best_pair?: string;
+  total_predictions_today: number;
+}
+
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -171,9 +210,10 @@ class ApiService {
     brainType: string,
     pair: string = 'EURUSD',
     style: string = 'day_trading',
-    limit: number = 5
+    limit: number = 5,
+    planType: string = 'starter'
   ): Promise<BrainTraderPrediction[]> {
-    return this.request(`/brain-trader/predictions/${brainType}?pair=${pair}&style=${style}&limit=${limit}`);
+    return this.request(`/brain-trader/predictions/${brainType}?pair=${pair}&style=${style}&limit=${limit}&plan_type=${planType}`);
   }
 
   async getSignals(
@@ -277,6 +317,43 @@ class ApiService {
   }
 
   // ===== FIN AGENTES DE MONITOREO APIs =====
+
+  // ===== PREDICTION-SPECIFIC APIs =====
+
+  async generatePrediction(
+    pair: string,
+    brainType: string = 'brain_max',
+    style: string = 'day_trading'
+  ): Promise<{ success: boolean; prediction?: any; limits?: PredictionLimits; error?: string }> {
+    return this.request('/predictions/generate', {
+      method: 'POST',
+      body: JSON.stringify({ pair, brain_type: brainType, style })
+    });
+  }
+
+  async getPredictionHistory(limit: number = 20): Promise<PredictionHistoryItem[]> {
+    return this.request(`/predictions/history?limit=${limit}`);
+  }
+
+  async getPredictionLimits(style: string = 'day_trading'): Promise<PredictionLimits> {
+    return this.request(`/predictions/limits?style=${style}`);
+  }
+
+  async getActivePrediction(style: string = 'day_trading'): Promise<any> {
+    return this.request(`/predictions/active?style=${style}`);
+  }
+
+  async getUserStats(): Promise<UserStats> {
+    return this.request('/predictions/stats');
+  }
+
+  async completeExpiredPredictions(): Promise<{ success: boolean; message: string; completed: number }> {
+    return this.request('/predictions/complete-expired', {
+      method: 'POST'
+    });
+  }
+
+  // ===== FIN PREDICTION-SPECIFIC APIs =====
 }
 
 export const apiService = new ApiService(); 
