@@ -48,7 +48,7 @@ def test_alpha_vantage_integration():
     
     # Probar datos de Forex de Alpha Vantage
     print("\n   🔍 Obteniendo datos de Forex de Alpha Vantage...")
-    symbols = ['EURUSD=X', 'GBPUSD=X', 'USDJPY=X']
+    symbols = ['EURUSD', 'GBPUSD', 'USDJPY']
     
     for symbol in symbols:
         print(f"\n      Probando {symbol}...")
@@ -89,7 +89,7 @@ def test_alpha_vantage_integration():
     
     # 3. Probar features comprehensivos
     print("\n🔧 3. Probando features comprehensivos...")
-    symbol = 'EURUSD=X'
+            symbol = 'EURUSD'
     features = data_system.create_comprehensive_features(symbol, period='1mo')
     
     if not features.empty:

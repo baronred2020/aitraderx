@@ -465,7 +465,7 @@ def test_fundamental_predictor():
     predictor = FundamentalPredictor()
     
     # Probar con EURUSD
-    symbol = 'EURUSD=X'
+    symbol = 'EURUSD'
     print(f"\n📊 Probando con {symbol}...")
     
     # Entrenar modelo

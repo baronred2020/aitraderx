@@ -46,7 +46,7 @@ def get_real_market_data(symbol, timeframe, periods):
     Obtiene datos reales de cualquier símbolo desde Yahoo Finance
     
     Args:
-        symbol: símbolo del mercado (ej: 'EURUSD=X', 'GBPUSD=X')
+        symbol: símbolo del mercado (ej: 'EURUSD', 'GBPUSD')
         timeframe: '1m', '5m', '15m', '1h', '4h', '1d', '1wk'
         periods: número de períodos o período como '1d', '5d', '1mo', '3mo', '6mo', '1y', '2y'
     """
@@ -116,7 +116,7 @@ def get_real_eurusd_data(timeframe, periods):
     """
     Obtiene datos reales de EURUSD desde Yahoo Finance (compatibilidad)
     """
-    return get_real_market_data('EURUSD=X', timeframe, periods)
+    return get_real_market_data('EURUSD', timeframe, periods)
 
 def debug_data_info(data, strategy_name):
     """Función de debug para verificar los datos"""
@@ -137,7 +137,7 @@ def debug_data_info(data, strategy_name):
     else:
         print(f"   ✅ Sin datos faltantes")
 
-def create_strategy_datasets_real(symbol='EURUSD=X'):
+def create_strategy_datasets_real(symbol='EURUSD'):
     """Crea datasets específicos para cada estrategia con datos reales"""
     print(f"📊 Generando datasets con datos reales de Yahoo Finance para {symbol}...")
     
@@ -965,14 +965,14 @@ def generate_market_data(symbol, timeframe, periods):
     
     # Ajustar precios según el símbolo
     symbol_configs = {
-        'EURUSD=X': {'base_price': 1.0850, 'pip_value': 0.0001},
-        'GBPUSD=X': {'base_price': 1.2650, 'pip_value': 0.0001},
-        'USDJPY=X': {'base_price': 150.00, 'pip_value': 0.01},
-        'AUDUSD=X': {'base_price': 0.6650, 'pip_value': 0.0001},
-        'USDCAD=X': {'base_price': 1.3650, 'pip_value': 0.0001}
+        'EURUSD': {'base_price': 1.0850, 'pip_value': 0.0001},
+        'GBPUSD': {'base_price': 1.2650, 'pip_value': 0.0001},
+        'USDJPY': {'base_price': 150.00, 'pip_value': 0.01},
+        'AUDUSD': {'base_price': 0.6650, 'pip_value': 0.0001},
+        'USDCAD': {'base_price': 1.3650, 'pip_value': 0.0001}
     }
     
-    config = symbol_configs.get(symbol, symbol_configs['EURUSD=X'])
+    config = symbol_configs.get(symbol, symbol_configs['EURUSD'])
     
     # Ajustar precios al rango del símbolo
     price_ratio = config['base_price'] / 1.0850  # Ratio respecto a EURUSD
@@ -992,23 +992,23 @@ class UniversalMultiStrategyAI:
     - Position Trading (1D, 1W)
     """
     
-    def __init__(self, symbol='EURUSD=X'):
+    def __init__(self, symbol='EURUSD'):
         self.symbol = symbol
         
         # Configuraciones específicas por símbolo
         symbol_configs = {
-            'EURUSD=X': {'pip_value': 0.0001, 'volatility_factor': 1.2},  # Aumentado para mejor balance
-            'GBPUSD=X': {'pip_value': 0.0001, 'volatility_factor': 1.5},  # Aumentado para mejor rendimiento
-            'USDJPY=X': {'pip_value': 0.01, 'volatility_factor': 1.2},
-            'AUDUSD=X': {'pip_value': 0.0001, 'volatility_factor': 1.6},  # Aumentado para mayor volatilidad
-            'USDCAD=X': {'pip_value': 0.0001, 'volatility_factor': 1.8}  # Aumentado para mejor rendimiento
+            'EURUSD': {'pip_value': 0.0001, 'volatility_factor': 1.2},  # Aumentado para mejor balance
+            'GBPUSD': {'pip_value': 0.0001, 'volatility_factor': 1.5},  # Aumentado para mejor rendimiento
+            'USDJPY': {'pip_value': 0.01, 'volatility_factor': 1.2},
+            'AUDUSD': {'pip_value': 0.0001, 'volatility_factor': 1.6},  # Aumentado para mayor volatilidad
+            'USDCAD': {'pip_value': 0.0001, 'volatility_factor': 1.8}  # Aumentado para mejor rendimiento
         }
         
         self.symbol_config = symbol_configs.get(symbol, {'pip_value': 0.0001, 'volatility_factor': 1.0})
         self.pip_value = self.symbol_config['pip_value']
         
         # Ajustar thresholds de confianza según el símbolo
-        if symbol == 'USDJPY=X':
+        if symbol == 'USDJPY':
             # Thresholds mucho más bajos para USD/JPY debido al pip value más alto
             confidence_thresholds = {
                 'scalping': 30,
@@ -1016,7 +1016,7 @@ class UniversalMultiStrategyAI:
                 'swing_trading': 20,
                 'position_trading': 15
             }
-        elif symbol == 'AUDUSD=X':
+        elif symbol == 'AUDUSD':
             # Thresholds optimizados para AUDUSD (más sensible)
             confidence_thresholds = {
                 'scalping': 50,
@@ -1024,7 +1024,7 @@ class UniversalMultiStrategyAI:
                 'swing_trading': 40,
                 'position_trading': 35
             }
-        elif symbol == 'USDCAD=X':
+        elif symbol == 'USDCAD':
             # Thresholds optimizados para USDCAD (más sensible)
             confidence_thresholds = {
                 'scalping': 70,
@@ -1032,7 +1032,7 @@ class UniversalMultiStrategyAI:
                 'swing_trading': 20,
                 'position_trading': 50
             }
-        elif symbol == 'EURUSD=X':
+        elif symbol == 'EURUSD':
             # Thresholds optimizados para EURUSD (mejor balance)
             confidence_thresholds = {
                 'scalping': 60,
@@ -1040,7 +1040,7 @@ class UniversalMultiStrategyAI:
                 'swing_trading': 50,
                 'position_trading': 75
             }
-        elif symbol == 'GBPUSD=X':
+        elif symbol == 'GBPUSD':
             # Thresholds optimizados para GBPUSD (mejor balance)
             confidence_thresholds = {
                 'scalping': 20,  # Reducido para más señales
@@ -1615,9 +1615,9 @@ class UniversalMultiStrategyAI:
         
         # Threshold basado en target pips - ajustado para diferentes pares
         # Para USD/JPY necesitamos un threshold más bajo debido al pip value más alto
-        if self.symbol == 'USDJPY=X':
+        if self.symbol == 'USDJPY':
             pip_threshold = strategy_config['target_pips'] * self.pip_value * 0.001  # Mucho más sensible
-        elif self.symbol == 'GBPUSD=X':
+        elif self.symbol == 'GBPUSD':
             # Threshold específico por estrategia para GBPUSD
             if strategy_name == 'swing_trading':
                 pip_threshold = strategy_config['target_pips'] * self.pip_value * 0.005  # Más sensible para swing
@@ -1894,7 +1894,7 @@ def analyze_strategy_performance(all_results):
             avg_accuracy = np.mean(accuracies)
             print(f"📊 Precisión promedio: {avg_accuracy:.1f}% | Error promedio: {avg_pip_error:.1f} pips")
 
-def main_universal_trading(symbol='EURUSD=X'):
+def main_universal_trading(symbol='EURUSD'):
     """Función principal para entrenar cualquier símbolo"""
     print(f"🚀 SISTEMA UNIVERSAL MULTI-ESTRATEGIA CON DATOS REALES")
     print("="*60)
@@ -2021,7 +2021,7 @@ def main_universal_trading(symbol='EURUSD=X'):
 
 def main_eurusd_multi_strategy():
     """Función principal para entrenar todas las estrategias EURUSD (compatibilidad)"""
-    return main_universal_trading('EURUSD=X')
+    return main_universal_trading('EURUSD')
 
 def quick_strategy_test(strategy_name='day_trading'):
     """Prueba rápida de una estrategia específica"""
@@ -2170,10 +2170,10 @@ if __name__ == "__main__":
         print("\n" + "=" * 60)
         print("💡 PARA ENTRENAR OTROS PARES:")
         print("=" * 60)
-        print("python models/Modelo_AI_Ultra.py GBPUSD=X")
-        print("python models/Modelo_AI_Ultra.py USDJPY=X")
-        print("python models/Modelo_AI_Ultra.py AUDUSD=X")
-        print("python models/Modelo_AI_Ultra.py USDCAD=X")
+        print("python models/Modelo_AI_Ultra.py GBPUSD")
+        print("python models/Modelo_AI_Ultra.py USDJPY")
+        print("python models/Modelo_AI_Ultra.py AUDUSD")
+        print("python models/Modelo_AI_Ultra.py USDCAD")
         print("\nO usar los scripts específicos:")
         print("python train_gbpusd_simple.py")
         print("python train_usdjpy.py")

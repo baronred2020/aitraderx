@@ -45,17 +45,29 @@ const Wallet: React.FC = () => {
     <div className="trading-card p-3 sm:p-4 mb-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-base font-semibold text-white">💰 Balance virtual:</span>
-        <span className="text-lg font-bold text-green-400">{loading || authLoading ? '...' : `$${balance?.toLocaleString()}`}</span>
+        <span className="text-lg font-bold text-green-400">
+          {loading || authLoading ? '...' : 
+           balance === null ? 'No disponible' : 
+           `$${balance?.toLocaleString()}`}
+        </span>
       </div>
       <button
         onClick={() => { setShowModal(true); setSuccess(''); }}
         className="w-full py-2 mt-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-all text-sm"
-        disabled={loading || authLoading}
+        disabled={loading || authLoading || balance === null}
       >
         Añadir saldo
       </button>
-      {error && <div className="text-xs text-red-400 mt-2">{error}</div>}
-      {success && <div className="text-xs text-green-400 mt-2">{success}</div>}
+      {error && (
+        <div className="text-xs text-red-400 mt-2 p-2 bg-red-900/20 rounded border border-red-500/30">
+          ⚠️ {error}
+        </div>
+      )}
+      {success && (
+        <div className="text-xs text-green-400 mt-2 p-2 bg-green-900/20 rounded border border-green-500/30">
+          ✅ {success}
+        </div>
+      )}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-gray-900 rounded-lg p-6 w-full max-w-xs border border-gray-700">

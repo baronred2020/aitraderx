@@ -1541,51 +1541,787 @@ const MegaMind: React.FC = () => {
           )}
 
           {activeTab === 'fusion' && (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4">⚡ Brain Fusion</h2>
-              <p className="text-gray-400">Fusión de cerebros en tiempo real</p>
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">⚡ Brain Fusion</h2>
+                <p className="text-gray-400 text-lg">
+                  Fusión inteligente de predicciones en tiempo real para maximizar precisión
+                </p>
+              </div>
+
+              {/* Fusion Methods */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Zap className="w-6 h-6 text-yellow-400 mr-2" />
+                    Fusión por Peso
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Combina predicciones basándose en el historial de precisión de cada cerebro
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Brain Max</span>
+                      <span className="text-green-400">35%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Brain Ultra</span>
+                      <span className="text-blue-400">40%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Brain Predictor</span>
+                      <span className="text-purple-400">25%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Activity className="w-6 h-6 text-blue-400 mr-2" />
+                    Fusión Dinámica
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Ajusta pesos en tiempo real según condiciones del mercado
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Volatilidad Alta</span>
+                      <span className="text-red-400">Ultra +20%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tendencia Clara</span>
+                      <span className="text-green-400">Max +15%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Eventos Económicos</span>
+                      <span className="text-purple-400">Predictor +25%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Real-time Fusion */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">🔄 Fusión en Tiempo Real</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                    <div>
+                      <div className="font-medium">EURUSD - Predicción Fusionada</div>
+                      <div className="text-sm text-gray-400">Última actualización: hace 30 segundos</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-green-400">BUY</div>
+                      <div className="text-sm text-gray-400">Confianza: 87.3%</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-gray-700 rounded">
+                      <div className="text-sm text-gray-400">Brain Max</div>
+                      <div className="text-lg font-bold text-green-400">BUY</div>
+                      <div className="text-xs text-gray-400">85% confianza</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-700 rounded">
+                      <div className="text-sm text-gray-400">Brain Ultra</div>
+                      <div className="text-lg font-bold text-green-400">BUY</div>
+                      <div className="text-xs text-gray-400">89% confianza</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-700 rounded">
+                      <div className="text-sm text-gray-400">Brain Predictor</div>
+                      <div className="text-lg font-bold text-yellow-400">HOLD</div>
+                      <div className="text-xs text-gray-400">78% confianza</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'arena' && (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4">🏆 Brain Arena</h2>
-              <p className="text-gray-400">Competencia entre cerebros</p>
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">🏆 Brain Arena</h2>
+                <p className="text-gray-400 text-lg">
+                  Competencia en tiempo real entre cerebros para determinar el mejor estratega
+                </p>
+              </div>
+
+              {/* Arena Leaderboard */}
+              <div className="bg-gray-800 rounded-lg p-6 mb-8">
+                <h3 className="text-xl font-bold mb-4 flex items-center">
+                  <Trophy className="w-6 h-6 text-yellow-400 mr-2" />
+                  Ranking de Arena
+                </h3>
+                <div className="space-y-3">
+                  {brains.map((brain, index) => (
+                    <div key={brain.id} className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                          index === 0 ? 'bg-yellow-500 text-black' :
+                          index === 1 ? 'bg-gray-400 text-black' :
+                          index === 2 ? 'bg-orange-600 text-white' :
+                          'bg-gray-600 text-white'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium">{brain.name}</div>
+                          <div className="text-sm text-gray-400">Precisión: {brain.accuracy}%</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold">{brain.accuracy}%</div>
+                        <div className="text-sm text-gray-400">
+                          {index === 0 ? '🏆 Campeón' : 
+                           index === 1 ? '🥈 Subcampeón' : 
+                           index === 2 ? '🥉 Tercer lugar' : 'Participante'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Competition Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-lg font-bold mb-4">📊 Estadísticas de Competencia</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Rondas Jugadas</span>
+                      <span className="font-bold">247</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Mejor Racha</span>
+                      <span className="font-bold text-green-400">15 victorias</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Precisión Promedio</span>
+                      <span className="font-bold">89.2%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-lg font-bold mb-4">🎯 Próxima Competencia</h3>
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">EURUSD</div>
+                      <div className="text-sm text-gray-400">Par de competencia</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold">15 minutos</div>
+                      <div className="text-sm text-gray-400">Tiempo restante</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-lg font-bold mb-4">🏅 Logros Desbloqueados</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Star className="w-4 h-4 text-yellow-400" />
+                      <span className="text-sm">Precisión 90%+</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Crown className="w-4 h-4 text-purple-400" />
+                      <span className="text-sm">Campeón 3 veces</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Trophy className="w-4 h-4 text-orange-400" />
+                      <span className="text-sm">Racha de 10+</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'evolution' && (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4">🔄 Brain Evolution</h2>
-              <p className="text-gray-400">Evolución continua</p>
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">🔄 Brain Evolution</h2>
+                <p className="text-gray-400 text-lg">
+                  Evolución continua mediante algoritmos genéticos y auto-optimización
+                </p>
+              </div>
+
+              {/* Evolution Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <RotateCcw className="w-6 h-6 text-green-400 mr-2" />
+                    Estado de Evolución
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Generación Actual</span>
+                        <span className="font-bold">47</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-green-400 h-2 rounded-full" style={{ width: '78%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Mejora Acumulada</span>
+                        <span className="font-bold text-green-400">+12.3%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-blue-400 h-2 rounded-full" style={{ width: '65%' }}></div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Fitness Score</span>
+                        <span className="font-bold text-purple-400">0.892</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-purple-400 h-2 rounded-full" style={{ width: '89%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <TrendingUp className="w-6 h-6 text-blue-400 mr-2" />
+                    Métricas de Evolución
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Mutaciones Exitosas</span>
+                      <span className="font-bold text-green-400">23</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Cruces Realizados</span>
+                      <span className="font-bold text-blue-400">156</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Población Actual</span>
+                      <span className="font-bold text-purple-400">50</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Mejor Individuo</span>
+                      <span className="font-bold text-yellow-400">Gen-47-A</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Evolution History */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">📈 Historial de Evolución</h3>
+                <div className="space-y-3">
+                  {[47, 46, 45, 44, 43].map((gen) => (
+                    <div key={gen} className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                      <div>
+                        <div className="font-medium">Generación {gen}</div>
+                        <div className="text-sm text-gray-400">
+                          {gen === 47 ? 'En progreso' : `Completada hace ${47 - gen} horas`}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-400">
+                          {gen === 47 ? '0.892' : (0.85 + gen * 0.001).toFixed(3)}
+                        </div>
+                        <div className="text-sm text-gray-400">Fitness Score</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'specialization' && (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4">🎯 Brain Specialization</h2>
-              <p className="text-gray-400">Especialización por condiciones</p>
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">🎯 Brain Specialization</h2>
+                <p className="text-gray-400 text-lg">
+                  Especialización inteligente según condiciones del mercado y patrones específicos
+                </p>
+              </div>
+
+              {/* Specialization Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Brain className="w-6 h-6 text-blue-400 mr-2" />
+                    Brain Max
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Especialista en análisis técnico y patrones de mercado
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Análisis Técnico</span>
+                      <span className="text-green-400">95%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Patrones de Mercado</span>
+                      <span className="text-green-400">92%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Indicadores</span>
+                      <span className="text-blue-400">88%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Eventos Económicos</span>
+                      <span className="text-yellow-400">75%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Zap className="w-6 h-6 text-purple-400 mr-2" />
+                    Brain Ultra
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Especialista en multi-estrategias y adaptación dinámica
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Multi-estrategias</span>
+                      <span className="text-green-400">98%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Adaptación Dinámica</span>
+                      <span className="text-green-400">94%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Volatilidad Alta</span>
+                      <span className="text-blue-400">91%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Mercados Laterales</span>
+                      <span className="text-purple-400">89%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Target className="w-6 h-6 text-green-400 mr-2" />
+                    Brain Predictor
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Especialista en forecasting y eventos económicos
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Forecasting</span>
+                      <span className="text-green-400">96%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Eventos Económicos</span>
+                      <span className="text-green-400">93%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Sentimiento</span>
+                      <span className="text-blue-400">90%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Análisis Fundamental</span>
+                      <span className="text-purple-400">87%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Market Conditions */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">📊 Condiciones de Mercado</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-bold mb-3">Condición Actual: Tendencia Alcista</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Cerebro Recomendado</span>
+                        <span className="font-bold text-blue-400">Brain Max</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Razón</span>
+                        <span className="text-gray-400">Patrones técnicos claros</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Confianza</span>
+                        <span className="text-green-400">92%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-bold mb-3">Próximas Condiciones</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Alta Volatilidad</span>
+                        <span className="text-purple-400">Brain Ultra</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Evento Económico</span>
+                        <span className="text-green-400">Brain Predictor</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Mercado Lateral</span>
+                        <span className="text-blue-400">Brain Ultra</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'orchestration' && (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4">🎼 Brain Orchestration</h2>
-              <p className="text-gray-400">Orquestación inteligente</p>
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">🎼 Brain Orchestration</h2>
+                <p className="text-gray-400 text-lg">
+                  Orquestación inteligente que selecciona el cerebro óptimo según condiciones del mercado
+                </p>
+              </div>
+
+              {/* Orchestration Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Activity className="w-6 h-6 text-green-400 mr-2" />
+                    Estado de Orquestación
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Modo Actual</span>
+                        <span className="font-bold text-green-400">Adaptativo</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-green-400 h-2 rounded-full" style={{ width: '85%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Coordinación</span>
+                        <span className="font-bold text-blue-400">92%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-blue-400 h-2 rounded-full" style={{ width: '92%' }}></div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Estrategias Activas</span>
+                        <span className="font-bold text-purple-400">3</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-purple-400 h-2 rounded-full" style={{ width: '100%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <BarChart3 className="w-6 h-6 text-blue-400 mr-2" />
+                    Métricas de Orquestación
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span>Cambios de Estrategia</span>
+                      <span className="font-bold text-green-400">12</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tiempo Promedio de Decisión</span>
+                      <span className="font-bold text-blue-400">2.3s</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Precisión de Selección</span>
+                      <span className="font-bold text-purple-400">94%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Última Actualización</span>
+                      <span className="font-bold text-yellow-400">30s</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Strategies */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">🎯 Estrategias Activas</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-700 rounded">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <div>
+                        <div className="font-medium">Brain Max - Análisis Técnico</div>
+                        <div className="text-sm text-gray-400">EURUSD, GBPUSD, USDJPY</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-green-400">Activa</div>
+                      <div className="text-sm text-gray-400">Precisión: 89%</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-700 rounded">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                      <div>
+                        <div className="font-medium">Brain Ultra - Multi-estrategia</div>
+                        <div className="text-sm text-gray-400">AUDUSD, USDCAD</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-blue-400">Activa</div>
+                      <div className="text-sm text-gray-400">Precisión: 92%</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-700 rounded">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                      <div>
+                        <div className="font-medium">Brain Predictor - Forecasting</div>
+                        <div className="text-sm text-gray-400">Eventos económicos</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-purple-400">Activa</div>
+                      <div className="text-sm text-gray-400">Precisión: 87%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'gamification' && (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4">🎮 Brain Gamification</h2>
-              <p className="text-gray-400">Gamificación de cerebros</p>
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">🎮 Brain Gamification</h2>
+                <p className="text-gray-400 text-lg">
+                  Sistema de niveles, logros y torneos para motivar el rendimiento de los cerebros
+                </p>
+              </div>
+
+              {/* Brain Levels */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {brains.map((brain) => (
+                  <div key={brain.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div className="text-center mb-4">
+                      <div className="text-2xl font-bold text-purple-400">Nivel {Math.floor(brain.accuracy / 10)}</div>
+                      <div className="text-sm text-gray-400">{brain.name}</div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Experiencia</span>
+                        <span>{brain.accuracy * 10}/1000 XP</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-purple-400 to-pink-400 h-2 rounded-full"
+                          style={{ width: `${(brain.accuracy * 10) % 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Victorias</span>
+                        <span className="text-green-400">247</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Logros</span>
+                        <span className="text-blue-400">12</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Racha Actual</span>
+                        <span className="text-yellow-400">8</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Achievements */}
+              <div className="bg-gray-800 rounded-lg p-6 mb-8">
+                <h3 className="text-xl font-bold mb-4 flex items-center">
+                  <Trophy className="w-6 h-6 text-yellow-400 mr-2" />
+                  Logros Desbloqueados
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-gray-700 rounded">
+                    <Star className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                    <div className="text-sm font-medium">Precisión 90%+</div>
+                    <div className="text-xs text-gray-400">3 cerebros</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-700 rounded">
+                    <Crown className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <div className="text-sm font-medium">Campeón Arena</div>
+                    <div className="text-xs text-gray-400">5 veces</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-700 rounded">
+                    <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <div className="text-sm font-medium">Evolución Exitosa</div>
+                    <div className="text-xs text-gray-400">Gen 47</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-700 rounded">
+                    <Target className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <div className="text-sm font-medium">Especialización</div>
+                    <div className="text-xs text-gray-400">Completa</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tournament */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">🏆 Torneo Semanal</h3>
+                <div className="space-y-4">
+                  <div className="text-center p-4 bg-gray-700 rounded">
+                    <div className="text-2xl font-bold text-purple-400">Torneo MegaMind</div>
+                    <div className="text-sm text-gray-400">Semana 30 - 2025</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-gray-700 rounded">
+                      <div className="text-lg font-bold text-green-400">1er Lugar</div>
+                      <div className="text-sm text-gray-400">Brain Ultra</div>
+                      <div className="text-xs text-yellow-400">+500 XP</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-700 rounded">
+                      <div className="text-lg font-bold text-blue-400">2do Lugar</div>
+                      <div className="text-sm text-gray-400">Brain Max</div>
+                      <div className="text-xs text-yellow-400">+300 XP</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-700 rounded">
+                      <div className="text-lg font-bold text-purple-400">3er Lugar</div>
+                      <div className="text-sm text-gray-400">Brain Predictor</div>
+                      <div className="text-xs text-yellow-400">+100 XP</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'personalization' && (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4">👑 Brain Personalization</h2>
-              <p className="text-gray-400">Personalización de cerebros</p>
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">👑 Brain Personalization</h2>
+                <p className="text-gray-400 text-lg">
+                  Adaptación de cerebros según perfil de riesgo, estilo de trading y preferencias del usuario
+                </p>
+              </div>
+
+              {/* User Profile */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Users className="w-6 h-6 text-blue-400 mr-2" />
+                    Perfil de Usuario
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Perfil de Riesgo</div>
+                      <div className="font-bold text-green-400">Moderado</div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Estilo de Trading</div>
+                      <div className="font-bold text-blue-400">Day Trading</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Mercados Preferidos</div>
+                      <div className="font-bold text-purple-400">EURUSD, GBPUSD</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Horario de Trading</div>
+                      <div className="font-bold text-yellow-400">9:00 - 17:00 GMT</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-xl font-bold mb-4 flex items-center">
+                    <Settings className="w-6 h-6 text-green-400 mr-2" />
+                    Configuración Personalizada
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Stop Loss</div>
+                      <div className="font-bold text-red-400">2.5%</div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Take Profit</div>
+                      <div className="font-bold text-green-400">5.0%</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Tamaño de Lote</div>
+                      <div className="font-bold text-blue-400">0.1</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm text-gray-400 mb-1">Drawdown Máximo</div>
+                      <div className="font-bold text-orange-400">15%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Personalized Brains */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">🧠 Cerebros Personalizados</h3>
+                <div className="space-y-4">
+                  {brains.map((brain) => (
+                    <div key={brain.id} className="flex items-center justify-between p-4 bg-gray-700 rounded">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                        <div>
+                          <div className="font-medium">{brain.name}</div>
+                          <div className="text-sm text-gray-400">
+                            Adaptado para: {brain.type === 'max' ? 'Análisis técnico' : 
+                                           brain.type === 'ultra' ? 'Multi-estrategia' : 'Forecasting'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-green-400">Personalizado</div>
+                        <div className="text-sm text-gray-400">Precisión: {brain.accuracy + 2}%</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Adaptation Metrics */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-bold mb-4">📊 Métricas de Adaptación</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-gray-700 rounded">
+                    <div className="text-2xl font-bold text-green-400">+15%</div>
+                    <div className="text-sm text-gray-400">Mejora en Precisión</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-700 rounded">
+                    <div className="text-2xl font-bold text-blue-400">-25%</div>
+                    <div className="text-sm text-gray-400">Reducción de Riesgo</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-700 rounded">
+                    <div className="text-2xl font-bold text-purple-400">+30%</div>
+                    <div className="text-sm text-gray-400">Mejora en Rentabilidad</div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

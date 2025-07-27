@@ -256,7 +256,7 @@ class ImprovedLinearEnsemble(nn.Module):
 class RealDataCollector:
     """Recolector de datos reales de mercado"""
     
-    def __init__(self, symbol='EURUSD=X', period='2y', interval='1h'):
+    def __init__(self, symbol='EURUSD', period='2y', interval='1h'):
         self.symbol = symbol
         self.period = period
         self.interval = interval
@@ -690,7 +690,7 @@ class ImprovedEnsembleSystem:
 class ImprovedTradingBrain:
     """Trading Brain mejorado con datos reales"""
     
-    def __init__(self, symbol='EURUSD=X', style='DAY_TRADING'):
+    def __init__(self, symbol='EURUSD', style='DAY_TRADING'):
         self.symbol = symbol
         self.style = style
         
@@ -907,7 +907,7 @@ class ImprovedTradingBrain:
 # FUNCIONES DE UTILIDAD
 # ====================================================================
 
-def improved_demo(symbol='EURUSD=X', style='DAY_TRADING'):
+def improved_demo(symbol='EURUSD', style='DAY_TRADING'):
     """Demo mejorado con datos reales"""
     
     print("⚡ DEMO MEJORADO CON DATOS REALES")
@@ -936,7 +936,7 @@ def main():
     print("=" * 40)
     
     # Configuración
-    symbol = 'EURUSD=X'  # Cambiar aquí
+    symbol = 'EURUSD'  # Cambiar aquí
     style = 'DAY_TRADING'  # Cambiar aquí
     
     # Crear y entrenar sistema

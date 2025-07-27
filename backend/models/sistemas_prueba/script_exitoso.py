@@ -122,36 +122,36 @@ class Config:
         'position_trading': {'seq_len': 120, 'horizon': 24, 'timeframe': '1h', 'period': '1y'}  # OPTIMIZADO
     }
     
-    symbols = ['EURUSD=X', 'USDJPY=X', 'GBPUSD=X', 'AUDUSD=X', 'USDCAD=X']
+    symbols = ['EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD']
     
 
     # Configuraciones específicas por símbolo
     symbol_configs = {
-        'USDJPY=X': {
+        'USDJPY': {
             'reward_scale': 6.0,  # Más conservador
             'risk_tolerance': 0.02,
             'max_position': 0.3,
             'confidence_min': 0.7
         },
-        'EURUSD=X': {
+        'EURUSD': {
             'reward_scale': 8.0,
             'risk_tolerance': 0.03,
             'max_position': 0.4,
             'confidence_min': 0.6
         },
-        'GBPUSD=X': {
+        'GBPUSD': {
             'reward_scale': 8.0,
             'risk_tolerance': 0.03,
             'max_position': 0.4,
             'confidence_min': 0.6
         },
-        'AUDUSD=X': {
+        'AUDUSD': {
             'reward_scale': 7.0,
             'risk_tolerance': 0.025,
             'max_position': 0.35,
             'confidence_min': 0.65
         },
-        'USDCAD=X': {
+        'USDCAD': {
             'reward_scale': 8.0,
             'risk_tolerance': 0.03,
             'max_position': 0.4,
@@ -269,11 +269,11 @@ DYNAMIC_MANAGER = DynamicHyperparamManager()
 # ===== CONFIGURACIÓN DE COSTOS REALES EXTREMOS =====
 # Configuración de costos reales extremos (peor escenario)
 EXTREME_TRADING_COSTS = {
-    'EURUSD=X': {'spread': 0.0030, 'commission': 0.0050, 'slippage': 0.0010},  # 8 pips total
-    'GBPUSD=X': {'spread': 0.0050, 'commission': 0.0050, 'slippage': 0.0015},  # 11.5 pips total
-    'USDJPY=X': {'spread': 0.0040, 'commission': 0.0050, 'slippage': 0.0012},  # 10.2 pips total
-    'AUDUSD=X': {'spread': 0.0060, 'commission': 0.0050, 'slippage': 0.0018},  # 12.8 pips total
-    'USDCAD=X': {'spread': 0.0055, 'commission': 0.0050, 'slippage': 0.0015}   # 12 pips total
+    'EURUSD': {'spread': 0.0030, 'commission': 0.0050, 'slippage': 0.0010},  # 8 pips total
+    'GBPUSD': {'spread': 0.0050, 'commission': 0.0050, 'slippage': 0.0015},  # 11.5 pips total
+    'USDJPY': {'spread': 0.0040, 'commission': 0.0050, 'slippage': 0.0012},  # 10.2 pips total
+    'AUDUSD': {'spread': 0.0060, 'commission': 0.0050, 'slippage': 0.0018},  # 12.8 pips total
+    'USDCAD': {'spread': 0.0055, 'commission': 0.0050, 'slippage': 0.0015}   # 12 pips total
 }
 
 # Profit targets que GARANTIZAN rentabilidad incluso con spreads máximos
@@ -306,7 +306,7 @@ ULTRA_REALISTIC_TARGETS = {
 
 def calculate_minimum_viable_profit(symbol, style, position_size, holding_days=1):
     """Calcular ganancia mínima viable después de TODOS los costos"""
-    costs = EXTREME_TRADING_COSTS.get(symbol, EXTREME_TRADING_COSTS['GBPUSD=X'])
+    costs = EXTREME_TRADING_COSTS.get(symbol, EXTREME_TRADING_COSTS['GBPUSD'])
     targets = ULTRA_REALISTIC_TARGETS[style]
     
     # Costo total por trade
@@ -638,8 +638,8 @@ class DataCollector:
     def _load_kaggle_data(self, symbol: str, config: Dict) -> pd.DataFrame:
         """Cargar desde Kaggle - VERSIÓN OPTIMIZADA PARA KAGGLE"""
         symbol_map = {
-            'EURUSD=X': 'EURUSD', 'USDJPY=X': 'USDJPY', 'GBPUSD=X': 'GBPUSD',
-            'AUDUSD=X': 'AUDUSD', 'USDCAD=X': 'USDCAD'
+            'EURUSD': 'EURUSD', 'USDJPY': 'USDJPY', 'GBPUSD': 'GBPUSD',
+            'AUDUSD': 'AUDUSD', 'USDCAD': 'USDCAD'
         }
         
         timeframe_map = {'1m': '1', '5m': '5', '1h': '60', '4h': '240', '1d': '1440'}
@@ -957,7 +957,7 @@ class DataCollector:
         except Exception as e:
             print(f"❌ Error explorando datasets: {e}")
     
-    def test_kaggle_loading(self, symbol: str = 'EURUSD=X'):
+    def test_kaggle_loading(self, symbol: str = 'EURUSD'):
         """🧪 PROBAR CARGA DE DATOS DE KAGGLE - VERSIÓN MEJORADA"""
         print(f"🧪 PROBANDO CARGA DE DATOS KAGGLE PARA {symbol}")
         print("=" * 50)
@@ -1382,7 +1382,7 @@ class TradingEnvironment(gym.Env):
         
         # Obtener ajustes basados en entrenamiento
         training_adjustments = TRAINING_CONNECTOR.get_trading_adjustments(
-            getattr(self, 'symbol', 'EURUSD=X'),
+            getattr(self, 'symbol', 'EURUSD'),
             getattr(self, 'style', 'scalping')
         )
         
@@ -1623,8 +1623,8 @@ class CompactTrainer:
         
         # Timesteps para cerebro integrado
         base_timesteps = {
-            'GBPUSD=X': 15000, 'USDJPY=X': 12000, 'EURUSD=X': 10000,
-            'AUDUSD=X': 8000, 'USDCAD=X': 6000
+            'GBPUSD': 15000, 'USDJPY': 12000, 'EURUSD': 10000,
+            'AUDUSD': 8000, 'USDCAD': 6000
         }
         
         base_ts = base_timesteps.get(symbol, 10000)
@@ -1649,7 +1649,7 @@ class CompactTrainer:
             elif avg_performance < 0.5:
                 performance_multiplier = 0.8  # Menos épocas si va mal
 
-        symbol_name = symbols[0] if symbols else 'EURUSD=X'
+        symbol_name = symbols[0] if symbols else 'EURUSD'
         base_target = base_epochs.get(symbol_name, 10)  # Ahora por defecto 10 épocas
         
         # Aplicar multiplicador por estilo (todos usan 1.0 = 10 épocas)
@@ -1787,8 +1787,8 @@ class CompactTrainer:
 
         # Timesteps dinámicos
         base_timesteps = {
-            'GBPUSD=X': 28000, 'USDJPY=X': 25000, 'EURUSD=X': 20000,
-            'AUDUSD=X': 18000, 'USDCAD=X': 15000
+            'GBPUSD': 28000, 'USDJPY': 25000, 'EURUSD': 20000,
+            'AUDUSD': 18000, 'USDCAD': 15000
         }
 
         base_ts = base_timesteps.get(symbol, 20000)
@@ -2094,11 +2094,11 @@ def demo_system(demo_type: str = 'predictions'):
         for i in range(5):
             reward = np.random.uniform(-0.5, 2.0)
             balance = 100000 + np.random.uniform(-5000, 15000)
-            DYNAMIC_MANAGER.update_performance(reward, balance, 'EURUSD=X', 'day_trading')
+            DYNAMIC_MANAGER.update_performance(reward, balance, 'EURUSD', 'day_trading')
             time.sleep(0.5)
         
         # Mostrar configuración dinámica
-        config = DYNAMIC_MANAGER.get_dynamic_config('EURUSD=X', 'day_trading', CONFIG.trading_styles['day_trading'])
+        config = DYNAMIC_MANAGER.get_dynamic_config('EURUSD', 'day_trading', CONFIG.trading_styles['day_trading'])
         print(f"\n⚙️ Configuración dinámica actual:")
         print(f"   📊 Position sizing: {config['position_sizing']:.2f}")
         print(f"   🎯 Confidence min: {config['confidence_min']:.2f}")
@@ -2227,9 +2227,9 @@ def show_stats(stats_type: str = 'system_info'):
         # Mostrar señales recientes
         print("\n🎯 SEÑALES RECIENTES:")
         signals = [
-            {'symbol': 'EURUSD=X', 'signal': 'BUY', 'confidence': 0.85, 'price': 1.0876},
-            {'symbol': 'USDJPY=X', 'signal': 'HOLD', 'confidence': 0.62, 'price': 149.25},
-            {'symbol': 'GBPUSD=X', 'signal': 'SELL', 'confidence': 0.78, 'price': 1.2654}
+            {'symbol': 'EURUSD', 'signal': 'BUY', 'confidence': 0.85, 'price': 1.0876},
+            {'symbol': 'USDJPY', 'signal': 'HOLD', 'confidence': 0.62, 'price': 149.25},
+            {'symbol': 'GBPUSD', 'signal': 'SELL', 'confidence': 0.78, 'price': 1.2654}
         ]
         
         for signal in signals:
@@ -2459,7 +2459,7 @@ def main():
     print("🔮 Usa demo_predictions() para predicciones en tiempo real")
 
 # ===== FUNCIONES DE CONVENIENCIA =====
-def train_single_model(symbol: str = 'EURUSD=X', style: str = 'day_trading'):
+def train_single_model(symbol: str = 'EURUSD', style: str = 'day_trading'):
     """Entrenar un solo modelo (ultra-rápido)"""
     print(f"⚡ Entrenamiento rápido: {symbol} - {style}")
     
@@ -2473,7 +2473,7 @@ def train_single_model(symbol: str = 'EURUSD=X', style: str = 'day_trading'):
         print("❌ Falló el entrenamiento")
         return None
 
-def predict_now(symbol: str = 'EURUSD=X'):
+def predict_now(symbol: str = 'EURUSD'):
     """Predicción rápida para un símbolo"""
     system = CompactTradingSystem()
     
@@ -2541,7 +2541,7 @@ def interactive_mode():
                 system.run_full_pipeline(quick_mode=True)
             elif cmd.startswith('predict'):
                 parts = cmd.split()
-                symbol = parts[1] if len(parts) > 1 else 'EURUSD=X'
+                symbol = parts[1] if len(parts) > 1 else 'EURUSD'
                 pred = system.predict_live(symbol)
                 print(f"📊 Predicción: {pred}")
             elif cmd == 'monitor':
@@ -2632,10 +2632,10 @@ def demo_dynamic_system():
         
         for i, reward in enumerate(scenario['rewards']):
             balance = 100000 + (i * 1000)  # Simular balance creciente
-            DYNAMIC_MANAGER.update_performance(reward, balance, "EURUSD=X", "day_trading")
+            DYNAMIC_MANAGER.update_performance(reward, balance, "EURUSD", "day_trading")
             
             # Obtener configuración dinámica
-            dynamic_config = DYNAMIC_MANAGER.get_dynamic_config("EURUSD=X", "day_trading", base_config)
+            dynamic_config = DYNAMIC_MANAGER.get_dynamic_config("EURUSD", "day_trading", base_config)
             
             print(f"  Step {i+1}: Reward={reward:.2f}, Mode={dynamic_config['reward_scale']:.1f}x")
         
@@ -2680,14 +2680,14 @@ main()
 quick_test()
 
 # 3. Entrenar un solo modelo
-model = train_single_model('EURUSD=X', 'day_trading')
+model = train_single_model('EURUSD', 'day_trading')
 
 # 4. Predicción rápida
-prediction = predict_now('USDJPY=X')
+prediction = predict_now('USDJPY')
 print(prediction)
 
 # 5. Predicciones en lote
-predictions = batch_predictions(['EURUSD=X', 'USDJPY=X'])
+predictions = batch_predictions(['EURUSD', 'USDJPY'])
 print(predictions)
 
 # 6. Monitor en tiempo real
@@ -2736,7 +2736,7 @@ def verify_system(system_type: str = 'simple'):
         print("🎯 VERIFICANDO SISTEMA DE ULTRA-PRECISIÓN...")
         
         # Test de costos
-        test_symbol = 'GBPUSD=X'
+        test_symbol = 'GBPUSD'
         test_style = 'scalping'
         min_profit, cost = calculate_minimum_viable_profit(test_symbol, test_style, 0.25)
         
@@ -3229,7 +3229,7 @@ def test_enhanced_predictions():
     
     for style in styles:
         try:
-            prediction = enhanced_system.enhanced_predict(test_data, style, 'EURUSD=X')
+            prediction = enhanced_system.enhanced_predict(test_data, style, 'EURUSD')
             if prediction is not None:
                 print(f"    ✅ {style}: Predicción generada ({prediction:.4f})")
             else:
@@ -3309,11 +3309,11 @@ def test_datacollector_fixes():
     
     # Probar con diferentes símbolos y estilos (incluyendo casos extremos)
     test_cases = [
-        ('EURUSD=X', 'day_trading'),
-        ('GBPUSD=X', 'swing_trading'),
-        ('USDJPY=X', 'scalping'),
-        ('AUDUSD=X', 'position_trading'),  # Caso extremo con 4h timeframe
-        ('USDCAD=X', 'day_trading')
+        ('EURUSD', 'day_trading'),
+        ('GBPUSD', 'swing_trading'),
+        ('USDJPY', 'scalping'),
+        ('AUDUSD', 'position_trading'),  # Caso extremo con 4h timeframe
+        ('USDCAD', 'day_trading')
     ]
     
     success_count = 0
@@ -3380,9 +3380,9 @@ def test_robust_fallbacks():
     
     # Casos extremos que deberían activar fallbacks
     extreme_cases = [
-        ('EURUSD=X', 'position_trading'),  # 4h timeframe, 3y period
-        ('GBPUSD=X', 'swing_trading'),     # 1h timeframe, 1y period
-        ('USDJPY=X', 'scalping'),          # 1m timeframe, 7d period
+        ('EURUSD', 'position_trading'),  # 4h timeframe, 3y period
+        ('GBPUSD', 'swing_trading'),     # 1h timeframe, 1y period
+        ('USDJPY', 'scalping'),          # 1m timeframe, 7d period
     ]
     
     collector = DataCollector()
@@ -3567,7 +3567,7 @@ def setup_kaggle_training():
     
     # Probar carga de datos
     print("\n🧪 PROBANDO CARGA DE DATOS...")
-    collector.test_kaggle_loading('EURUSD=X')
+    collector.test_kaggle_loading('EURUSD')
     
     # Crear sistema de trading
     print("\n🏗️ CREANDO SISTEMA DE TRADING...")
@@ -3576,7 +3576,7 @@ def setup_kaggle_training():
     print("\n✅ CONFIGURACIÓN COMPLETADA")
     print("💡 Usa: system.run_full_pipeline() para entrenar con datos Kaggle")
     print("💡 Usa: collector.explore_kaggle_datasets() para explorar datasets")
-    print("💡 Usa: collector.test_kaggle_loading('EURUSD=X') para probar carga")
+    print("💡 Usa: collector.test_kaggle_loading('EURUSD') para probar carga")
     
     return system, collector
 
@@ -3927,7 +3927,7 @@ def test_storage_system():
     
     print("\n🎯 SISTEMA LISTO PARA TRADING")
     print("💡 Usa: system.run_full_pipeline() para entrenar")
-    print("💡 Usa: system.predict_live('EURUSD=X') para predecir")
+    print("💡 Usa: system.predict_live('EURUSD') para predecir")
     print("💡 Usa: run_enhanced_demo() para ver mejoras")
     print("💡 Usa: test_datacollector_fixes() para probar correcciones")
     print("💡 Usa: test_robust_fallbacks() para probar fallbacks robustos")
@@ -3952,7 +3952,7 @@ def diagnose_nan_issues():
     collector = DataCollector()
     
     # Probar con diferentes símbolos y estilos
-    symbols = ['EURUSD=X', 'USDJPY=X', 'GBPUSD=X']
+    symbols = ['EURUSD', 'USDJPY', 'GBPUSD']
     styles = ['day_trading', 'swing_trading']
     
     for symbol in symbols:
@@ -4084,8 +4084,8 @@ def diagnose_training_styles():
         
         for symbol in symbols:
             symbol_map = {
-                'EURUSD=X': 'EURUSD', 'USDJPY=X': 'USDJPY', 'GBPUSD=X': 'GBPUSD',
-                'AUDUSD=X': 'AUDUSD', 'USDCAD=X': 'USDCAD'
+                'EURUSD': 'EURUSD', 'USDJPY': 'USDJPY', 'GBPUSD': 'GBPUSD',
+                'AUDUSD': 'AUDUSD', 'USDCAD': 'USDCAD'
             }
             
             base_symbol = symbol_map.get(symbol, symbol.split('=')[0])
@@ -4128,7 +4128,7 @@ def diagnose_column_issues():
     collector = DataCollector()
     
     # Probar con diferentes símbolos y estilos
-    symbols = ['EURUSD=X', 'USDJPY=X', 'GBPUSD=X']
+    symbols = ['EURUSD', 'USDJPY', 'GBPUSD']
     styles = ['day_trading', 'swing_trading']
     
     for symbol in symbols:
@@ -4277,7 +4277,7 @@ def test_reward_improvements():
     system = CompactTradingSystem()
     
     # Probar con un símbolo y estilo específico
-    symbol = 'GBPUSD=X'
+    symbol = 'GBPUSD'
     style = 'day_trading'
     
     print(f"\n🎯 Probando: {symbol} - {style}")

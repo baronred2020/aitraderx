@@ -63,7 +63,7 @@ class UniversalSymbolConfigs:
     
     # Configuraciones específicas por símbolo
     SYMBOL_CONFIGS = {
-        'EURUSD=X': {
+        'EURUSD': {
             'pip_value': 0.0001,
             'typical_spread': 1.5,
             'volatility_factor': 1.0,
@@ -71,7 +71,7 @@ class UniversalSymbolConfigs:
             'base_price': 1.0850,
             'min_data_points': 100
         },
-        'GBPUSD=X': {
+        'GBPUSD': {
             'pip_value': 0.0001,
             'typical_spread': 2.5,  # Más volátil
             'volatility_factor': 1.3,
@@ -79,7 +79,7 @@ class UniversalSymbolConfigs:
             'base_price': 1.2650,
             'min_data_points': 120
         },
-        'USDJPY=X': {
+        'USDJPY': {
             'pip_value': 0.01,  # Diferente para JPY
             'typical_spread': 2.0,
             'volatility_factor': 1.2,
@@ -87,7 +87,7 @@ class UniversalSymbolConfigs:
             'base_price': 150.50,
             'min_data_points': 150
         },
-        'AUDUSD=X': {
+        'AUDUSD': {
             'pip_value': 0.0001,
             'typical_spread': 2.0,
             'volatility_factor': 1.1,
@@ -95,7 +95,7 @@ class UniversalSymbolConfigs:
             'base_price': 0.6550,
             'min_data_points': 100
         },
-        'USDCAD=X': {
+        'USDCAD': {
             'pip_value': 0.0001,
             'typical_spread': 2.0,
             'volatility_factor': 1.0,
@@ -138,12 +138,12 @@ class UniversalTradingAI:
     - Manejo robusto de errores
     """
     
-    def __init__(self, symbol: str = 'EURUSD=X'):
+    def __init__(self, symbol: str = 'EURUSD'):
         """
         Inicializar sistema universal para un símbolo específico
         
         Args:
-            symbol: Símbolo forex (ej: 'EURUSD=X', 'GBPUSD=X')
+            symbol: Símbolo forex (ej: 'EURUSD', 'GBPUSD')
         """
         # Validar símbolo
         if not UniversalSymbolConfigs.validate_symbol(symbol):

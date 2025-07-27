@@ -90,11 +90,11 @@ class FundamentalSentimentModel:
                 
                 # Mapear símbolos a términos de búsqueda
                 search_terms = {
-                    'EURUSD=X': 'EUR USD Euro Dollar',
-                    'GBPUSD=X': 'GBP USD Pound Dollar',
-                    'USDJPY=X': 'USD JPY Dollar Yen',
-                    'AUDUSD=X': 'AUD USD Australian Dollar',
-                    'USDCAD=X': 'USD CAD Dollar Canadian'
+                    'EURUSD': 'EUR USD Euro Dollar',
+                    'GBPUSD': 'GBP USD Pound Dollar',
+                    'USDJPY': 'USD JPY Dollar Yen',
+                    'AUDUSD': 'AUD USD Australian Dollar',
+                    'USDCAD': 'USD CAD Dollar Canadian'
                 }
                 
                 search_term = search_terms.get(symbol, symbol.replace('=X', ''))
@@ -297,7 +297,7 @@ def test_fundamental_model():
     model = FundamentalSentimentModel()
     
     # Probar con EURUSD
-    symbol = 'EURUSD=X'
+    symbol = 'EURUSD'
     print(f"\n📊 Probando con {symbol}...")
     
     # Crear features fundamentales

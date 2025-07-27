@@ -493,7 +493,7 @@ def main():
     print("=" * 60)
     
     # Símbolos para probar
-    symbols = ['EURUSD=X', 'GBPUSD=X', 'USDJPY=X']
+    symbols = ['EURUSD', 'GBPUSD', 'USDJPY']
     
     # 1. Entrenar modelos
     print("\n🎯 1. Entrenando modelos...")
@@ -503,7 +503,7 @@ def main():
     
     # 2. Forecast individual
     print("\n🔮 2. Realizando forecast individual...")
-    symbol = 'EURUSD=X'
+    symbol = 'EURUSD'
     forecast = forecasting_system.make_forecast(symbol, horizon_days=7)
     
     if forecast:

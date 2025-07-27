@@ -468,7 +468,7 @@ class ForexForecastingSystem:
             
             # Guardar modelos por símbolo y horizonte
             for model_key, model_data in self.models.items():
-                # Parsear el modelo key (ej: "EURUSD=X_7d")
+                # Parsear el modelo key (ej: "EURUSD_7d")
                 symbol, horizon = model_key.split('_')
                 
                 # Crear directorio del símbolo
@@ -608,7 +608,7 @@ class ForexForecastingSystem:
         Integra predicciones con detección de eventos
         """
         if symbols is None:
-            symbols = ['EURUSD=X', 'GBPUSD=X', 'USDJPY=X', 'AUDUSD=X', 'USDCAD=X']
+            symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD']
         
         logger.info("🧠 Iniciando ciclo de monitoreo inteligente...")
         
@@ -670,7 +670,7 @@ class ForexForecastingSystem:
         Ejecutar el horario de monitoreo inteligente (8 veces al día)
         """
         if symbols is None:
-            symbols = ['EURUSD=X', 'GBPUSD=X', 'USDJPY=X', 'AUDUSD=X', 'USDCAD=X']
+            symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD']
         
         logger.info("🕐 Ejecutando horario de monitoreo inteligente...")
         
@@ -720,7 +720,7 @@ def main():
         'TRADING_ECONOMICS_API_KEY': 'your_trading_economics_api_key_here',
         'ALPHA_VANTAGE_API_KEY': 'WRAU1NL0NSYOJW60'
     }
-    symbols = ['EURUSD=X', 'GBPUSD=X', 'USDJPY=X', 'AUDUSD=X', 'USDCAD=X']
+    symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD']
     forecasting_system = ForexForecastingSystem(api_keys)
 
     if args.train:
@@ -765,7 +765,7 @@ def main():
         forecasting_system.train_forecasting_models(symbol, period='6mo')
     # 2. Forecast individual
     print("\n🔮 2. Realizando forecast individual...")
-    symbol = 'EURUSD=X'
+    symbol = 'EURUSD'
     forecast = forecasting_system.make_forecast(symbol, horizon_days=7)
     if forecast:
         print(f"✅ Forecast para {symbol}:")
