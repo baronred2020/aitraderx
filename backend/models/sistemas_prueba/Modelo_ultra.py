@@ -49,11 +49,11 @@ def fixed_yf_download(symbol, period='1mo', interval='1d', max_retries=5):
     
     # Mapeo de símbolos problemáticos a alternativas
     symbol_alternatives = {
-        'EURUSD=X': ['EURUSD=X', 'EUR=X', 'EURUSD.FOREX'],
-        'USDJPY=X': ['USDJPY=X', 'JPY=X', 'USDJPY.FOREX'], 
-        'GBPUSD=X': ['GBPUSD=X', 'GBP=X', 'GBPUSD.FOREX'],
-        'AUDUSD=X': ['AUDUSD=X', 'AUD=X', 'AUDUSD.FOREX'],
-        'USDCAD=X': ['USDCAD=X', 'CAD=X', 'USDCAD.FOREX']
+        'EURUSD': ['EURUSD', 'EUR=X', 'EURUSD.FOREX'],
+        'USDJPY': ['USDJPY', 'JPY=X', 'USDJPY.FOREX'], 
+        'GBPUSD': ['GBPUSD', 'GBP=X', 'GBPUSD.FOREX'],
+        'AUDUSD': ['AUDUSD', 'AUD=X', 'AUDUSD.FOREX'],
+        'USDCAD': ['USDCAD', 'CAD=X', 'USDCAD.FOREX']
     }
     
     symbols_to_try = symbol_alternatives.get(symbol, [symbol])
@@ -150,11 +150,11 @@ class UltraForexAI_V2:
         
         # Pares FOREX
         self.forex_pairs = {
-            'EURUSD': 'EURUSD=X',
-            'USDJPY': 'USDJPY=X', 
-            'GBPUSD': 'GBPUSD=X',
-            'AUDUSD': 'AUDUSD=X',
-            'USDCAD': 'USDCAD=X'
+            'EURUSD': 'EURUSD',
+            'USDJPY': 'USDJPY', 
+            'GBPUSD': 'GBPUSD',
+            'AUDUSD': 'AUDUSD',
+            'USDCAD': 'USDCAD'
         }
         
         # Configuración del sistema mejorada
@@ -441,11 +441,11 @@ def get_enhanced_data_multi_fixed(self, symbol, trading_style, period=None):
         
         # USAR EL FIX QUE YA FUNCIONA
         symbol_alternatives = {
-            'EURUSD=X': ['EURUSD=X', 'EUR=X', 'EURUSD.FOREX'],
-            'USDJPY=X': ['USDJPY=X', 'JPY=X', 'USDJPY.FOREX'],
-            'GBPUSD=X': ['GBPUSD=X', 'GBP=X', 'GBPUSD.FOREX'],
-            'AUDUSD=X': ['AUDUSD=X', 'AUD=X', 'AUDUSD.FOREX'],
-            'USDCAD=X': ['USDCAD=X', 'CAD=X', 'USDCAD.FOREX']
+            'EURUSD': ['EURUSD', 'EUR=X', 'EURUSD.FOREX'],
+            'USDJPY': ['USDJPY', 'JPY=X', 'USDJPY.FOREX'],
+            'GBPUSD': ['GBPUSD', 'GBP=X', 'GBPUSD.FOREX'],
+            'AUDUSD': ['AUDUSD', 'AUD=X', 'AUDUSD.FOREX'],
+            'USDCAD': ['USDCAD', 'CAD=X', 'USDCAD.FOREX']
         }
 
         # Períodos más conservadores como en el script exitoso
@@ -3611,7 +3611,7 @@ def test_single_symbol(symbol):
 
 def test_all_problematic_symbols():
     """Prueba todos los símbolos que estaban fallando"""
-    symbols = ['EURUSD=X', 'USDJPY=X', 'GBPUSD=X', 'AUDUSD=X', 'USDCAD=X']
+    symbols = ['EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD']
     
     logger.info("🚀 PROBANDO TODOS LOS SÍMBOLOS PROBLEMÁTICOS")
     logger.info("=" * 50)
@@ -3733,7 +3733,7 @@ def test_integration():
         ai_system = UltraForexAI_V2()
         
         # Probar obtención de datos con el método corregido
-        test_data = ai_system.get_enhanced_data_multi('EURUSD=X', 'day_trading')
+        test_data = ai_system.get_enhanced_data_multi('EURUSD', 'day_trading')
         
         if test_data is not None and len(test_data) > 50:
             print(f"✅ INTEGRACIÓN EXITOSA: {len(test_data)} registros obtenidos")
@@ -3776,14 +3776,14 @@ ai_system.start_auto_training_system()
 ai_system.start_drift_monitoring_system()
 
 # Obtener predicción para símbolo específico
-current_data = ai_system.get_enhanced_data_multi('EURUSD=X', 'day_trading')
+current_data = ai_system.get_enhanced_data_multi('EURUSD', 'day_trading')
 if current_data is not None:
     # Consenso multi-estilo
-    consensus = ai_system.get_multi_style_consensus('EURUSD=X', current_data.tail(1))
+    consensus = ai_system.get_multi_style_consensus('EURUSD', current_data.tail(1))
     print(f"Consenso: {consensus['consensus_signal']} (Confianza: {consensus['avg_confidence']:.2%})")
     
     # Predicción específica por estilo
-    day_pred = ai_system.get_ensemble_prediction('EURUSD=X', 'day_trading', current_data.tail(1))
+    day_pred = ai_system.get_ensemble_prediction('EURUSD', 'day_trading', current_data.tail(1))
     if day_pred:
         print(f"Day Trading: {day_pred['signal']} (Confianza: {day_pred['confidence']:.2%})")
 
@@ -3860,13 +3860,13 @@ print("""
 ai_system = UltraForexAI_V2()
 
 # Probar símbolos individuales
-test_single_symbol('EURUSD=X')
+test_single_symbol('EURUSD')
 
 # Probar todos los símbolos problemáticos
 test_all_problematic_symbols()
 
 # Entrenamiento robusto
-forex_symbols = ['EURUSD=X', 'USDJPY=X', 'GBPUSD=X', 'AUDUSD=X', 'USDCAD=X']
+forex_symbols = ['EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD']
 trading_styles = ['day_trading', 'scalping', 'swing_trading', 'position_trading']
 results = train_models_with_fixes(forex_symbols, trading_styles)
 
@@ -3999,7 +3999,7 @@ def run_quick_test():
         ai_system = UltraForexAI_V2()
         
         # Probar con un solo par
-        test_symbol = 'EURUSD=X'
+        test_symbol = 'EURUSD'
         test_style = 'day_trading'
         
         print(f"🎯 Probando: {test_symbol} - {test_style}")
@@ -4293,7 +4293,7 @@ def test_target_creation_with_real_data():
         ai_system = UltraForexAI_V2()
         
         # Probar con un símbolo real
-        test_symbol = 'EURUSD=X'
+        test_symbol = 'EURUSD'
         test_style = 'day_trading'
         
         print(f"📊 Obteniendo datos reales: {test_symbol}")
@@ -4354,7 +4354,7 @@ def test_concept_drift_detection():
         ai_system = UltraForexAI_V2()
         
         # Obtener datos para testing
-        test_symbol = 'EURUSD=X'
+        test_symbol = 'EURUSD'
         test_style = 'day_trading'
         
         print(f"📊 Obteniendo datos para testing: {test_symbol}")
@@ -4456,7 +4456,7 @@ def test_model_save_load():
         ai_system.clean_old_models()
         
         # Probar con un símbolo y estilo
-        test_symbol = 'EURUSD=X'
+        test_symbol = 'EURUSD'
         test_style = 'day_trading'
         
         print(f"🎯 Probando: {test_symbol} - {test_style}")
@@ -4534,7 +4534,7 @@ def test_data_availability():
     ai_system = UltraForexAI_V2()
     
     # Test con EURUSD
-    symbol = 'EURUSD=X'
+    symbol = 'EURUSD'
     trading_style = 'scalping'
     
     try:
@@ -4592,7 +4592,7 @@ def test_stacking_ensemble():
         ai_system.clean_old_models()
         
         # Probar con un símbolo y estilo
-        test_symbol = 'EURUSD=X'
+        test_symbol = 'EURUSD'
         test_style = 'day_trading'
         
         print(f"🎯 Probando: {test_symbol} - {test_style}")

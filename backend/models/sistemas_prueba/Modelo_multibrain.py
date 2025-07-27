@@ -328,12 +328,12 @@ class UniversalDataCollector:
         # Mapeo específico para yfinance
         symbol_map = {
             # Majors
-            'EURUSD': 'EURUSD=X',
-            'GBPUSD': 'GBPUSD=X', 
-            'USDJPY': 'USDJPY=X',
+            'EURUSD': 'EURUSD',
+            'GBPUSD': 'GBPUSD', 
+            'USDJPY': 'USDJPY',
             'USDCHF': 'USDCHF=X',
-            'AUDUSD': 'AUDUSD=X',
-            'USDCAD': 'USDCAD=X',
+            'AUDUSD': 'AUDUSD',
+            'USDCAD': 'USDCAD',
             'NZDUSD': 'NZDUSD=X',
             
             # Minors

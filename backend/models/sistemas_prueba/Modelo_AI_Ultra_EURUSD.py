@@ -52,7 +52,7 @@ def get_real_eurusd_data(timeframe, periods):
     print(f"📊 Descargando datos EURUSD reales: {timeframe} - {periods}")
     
     try:
-        ticker = yf.Ticker("EURUSD=X")
+        ticker = yf.Ticker("EURUSD")
         
         # Si periods es un número, calcular el período apropiado
         if isinstance(periods, int):
@@ -1092,7 +1092,7 @@ def main_eurusd_multi_strategy():
     print("🚀 SISTEMA EURUSD MULTI-ESTRATEGIA CON DATOS REALES")
     print("="*60)
     print("Estrategias: Scalping | Day Trading | Swing Trading | Position Trading")
-    print("Fuente: Yahoo Finance (EURUSD=X)")
+    print("Fuente: Yahoo Finance (EURUSD)")
     print("="*60)
     
     try:

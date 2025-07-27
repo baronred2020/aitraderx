@@ -57,7 +57,7 @@ class HybridCPUConfig:
     """Configuración híbrida: 5 pares + 4 estilos optimizado para CPU"""
     
     # TODOS LOS 5 PARES
-    symbols = ['EURUSD=X', 'USDJPY=X', 'GBPUSD=X', 'AUDUSD=X', 'USDCAD=X']
+    symbols = ['EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD']
     
     # TODOS LOS 4 ESTILOS (optimizados para CPU)
     trading_styles = {
@@ -242,11 +242,11 @@ class HybridDynamicManager:
 
 # ===== COSTOS REALISTAS HÍBRIDOS =====
 HYBRID_TRADING_COSTS = {
-    'EURUSD=X': {'spread': 0.0012, 'commission': 0.0020, 'slippage': 0.0006},  # 3.8 pips (más realista)
-    'GBPUSD=X': {'spread': 0.0020, 'commission': 0.0020, 'slippage': 0.0010},  # 5.0 pips
-    'USDJPY=X': {'spread': 0.0018, 'commission': 0.0020, 'slippage': 0.0008},  # 4.6 pips
-    'AUDUSD=X': {'spread': 0.0025, 'commission': 0.0020, 'slippage': 0.0012},  # 5.7 pips
-    'USDCAD=X': {'spread': 0.0022, 'commission': 0.0020, 'slippage': 0.0010}   # 5.2 pips
+    'EURUSD': {'spread': 0.0012, 'commission': 0.0020, 'slippage': 0.0006},  # 3.8 pips (más realista)
+    'GBPUSD': {'spread': 0.0020, 'commission': 0.0020, 'slippage': 0.0010},  # 5.0 pips
+    'USDJPY': {'spread': 0.0018, 'commission': 0.0020, 'slippage': 0.0008},  # 4.6 pips
+    'AUDUSD': {'spread': 0.0025, 'commission': 0.0020, 'slippage': 0.0012},  # 5.7 pips
+    'USDCAD': {'spread': 0.0022, 'commission': 0.0020, 'slippage': 0.0010}   # 5.2 pips
 }
 
 HYBRID_PROFIT_TARGETS = {
@@ -639,8 +639,8 @@ class HybridDataCollector:
         """Cargar desde Kaggle con manejo de errores"""
         try:
             symbol_map = {
-                'EURUSD=X': 'EURUSD', 'USDJPY=X': 'USDJPY', 'GBPUSD=X': 'GBPUSD',
-                'AUDUSD=X': 'AUDUSD', 'USDCAD=X': 'USDCAD'
+                'EURUSD': 'EURUSD', 'USDJPY': 'USDJPY', 'GBPUSD': 'GBPUSD',
+                'AUDUSD': 'AUDUSD', 'USDCAD': 'USDCAD'
             }
             
             timeframe_map = {'1m': '1', '5m': '5', '1h': '60', '4h': '240', '1d': '1440'}
@@ -2369,7 +2369,7 @@ def quick_hybrid_demo():
     print("=" * 40)
     
     # Entrenar solo 2 pares, 2 estilos para demo
-    CONFIG.symbols = ['EURUSD=X', 'USDJPY=X']
+    CONFIG.symbols = ['EURUSD', 'USDJPY']
     CONFIG.trading_styles = {
         'day_trading': CONFIG.trading_styles['day_trading'],
         'swing_trading': CONFIG.trading_styles['swing_trading']
@@ -2384,7 +2384,7 @@ def quick_hybrid_demo():
         print("\n🔮 PROBANDO PREDICCIONES...")
         
         # Probar predicciones
-        for symbol in ['EURUSD=X', 'USDJPY=X']:
+        for symbol in ['EURUSD', 'USDJPY']:
             for style in ['day_trading', 'swing_trading']:
                 prediction = trainer.predict_live_hybrid(symbol, style)
                 if prediction:
@@ -2605,7 +2605,7 @@ def main_hybrid():
         monitor_hybrid_live(trainer, 3)
         
         print("\n✅ SISTEMA HÍBRIDO COMPLETADO!")
-        print("💡 Usa trainer.predict_live_hybrid('EURUSD=X', 'day_trading') para predicciones")
+        print("💡 Usa trainer.predict_live_hybrid('EURUSD', 'day_trading') para predicciones")
         
         return trainer
     else:
@@ -2639,7 +2639,7 @@ trainer = train_hybrid_system()
 trainer = quick_hybrid_demo()
 
 # 3. Predicción individual
-prediction = trainer.predict_live_hybrid('EURUSD=X', 'day_trading')
+prediction = trainer.predict_live_hybrid('EURUSD', 'day_trading')
 print(prediction)
 
 # 4. Monitor en tiempo real

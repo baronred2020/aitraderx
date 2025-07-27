@@ -106,47 +106,70 @@ async def fetch_price(symbol: str):
         
         ticker = yf.Ticker(yahoo_symbol)
         
-        # Siempre intentar obtener datos históricos primero (últimos 5 días)
-        hist = ticker.history(period="5d")
-        print(f"[Backend] Retrieved {len(hist)} historical records for {symbol}")
-        
         current_price = 0
         change = 0
         change_percent = 0
         volume = 0
         market_status = "open"
+        hist = None
         
-        # Si tenemos datos históricos, usar el último precio disponible
-        if len(hist) >= 1:
-            current_price = float(hist['Close'].iloc[-1])
-            volume = int(hist['Volume'].iloc[-1]) if not pd.isna(hist['Volume'].iloc[-1]) else 0
+        # Estrategia 1: Intentar datos históricos recientes (5 días)
+        try:
+            hist = ticker.history(period="5d")
+            print(f"[Backend] Retrieved {len(hist)} historical records for {symbol}")
             
-            # Calcular cambio si tenemos al menos 2 días
-            if len(hist) >= 2:
-                previous_price = float(hist['Close'].iloc[-2])
-                change = current_price - previous_price
-                change_percent = (change / previous_price) * 100 if previous_price != 0 else 0
+            if len(hist) >= 1:
+                current_price = float(hist['Close'].iloc[-1])
+                volume = int(hist['Volume'].iloc[-1]) if not pd.isna(hist['Volume'].iloc[-1]) else 0
                 
-            print(f"[Backend] Using historical data: price={current_price}, change={change}")
-            
-        # Si no tenemos datos históricos, intentar info del ticker
+                # Calcular cambio si tenemos al menos 2 días
+                if len(hist) >= 2:
+                    previous_price = float(hist['Close'].iloc[-2])
+                    change = current_price - previous_price
+                    change_percent = (change / previous_price) * 100 if previous_price != 0 else 0
+                    
+                print(f"[Backend] Using historical data: price={current_price}, change={change}")
+        except Exception as e:
+            print(f"[Backend] Error getting 5d history: {e}")
+        
+        # Estrategia 2: Si no hay datos históricos, intentar info del ticker
         if current_price == 0:
-            print(f"[Backend] No historical data, trying ticker info...")
-            info = ticker.info
-            current_price = info.get('regularMarketPrice', 0) or info.get('previousClose', 0)
-            volume = info.get('volume', 0) or info.get('averageVolume', 0)
-            
-            if current_price > 0:
-                print(f"[Backend] Using ticker info: price={current_price}")
+            try:
+                print(f"[Backend] No historical data, trying ticker info...")
+                info = ticker.info
+                current_price = info.get('regularMarketPrice', 0) or info.get('previousClose', 0)
+                volume = info.get('volume', 0) or info.get('averageVolume', 0)
                 
-        # Si aún no tenemos precio, intentar con datos más antiguos
+                if current_price > 0:
+                    print(f"[Backend] Using ticker info: price={current_price}")
+            except Exception as e:
+                print(f"[Backend] Error getting ticker info: {e}")
+                
+        # Estrategia 3: Si aún no hay precio, intentar con datos más antiguos
         if current_price == 0:
-            print(f"[Backend] No recent data, trying longer period...")
-            hist_long = ticker.history(period="1mo")
-            if len(hist_long) >= 1:
-                current_price = float(hist_long['Close'].iloc[-1])
-                volume = int(hist_long['Volume'].iloc[-1]) if not pd.isna(hist_long['Volume'].iloc[-1]) else 0
-                print(f"[Backend] Using older data: price={current_price}")
+            try:
+                print(f"[Backend] No recent data, trying longer period...")
+                hist_long = ticker.history(period="1mo")
+                if len(hist_long) >= 1:
+                    current_price = float(hist_long['Close'].iloc[-1])
+                    volume = int(hist_long['Volume'].iloc[-1]) if not pd.isna(hist_long['Volume'].iloc[-1]) else 0
+                    print(f"[Backend] Using older data: price={current_price}")
+            except Exception as e:
+                print(f"[Backend] Error getting 1mo history: {e}")
+                
+        # Estrategia 4: Intentar con diferentes intervalos
+        if current_price == 0:
+            try:
+                print(f"[Backend] Trying different intervals...")
+                for interval in ['1d', '1wk', '1mo']:
+                    hist_alt = ticker.history(period=interval)
+                    if len(hist_alt) >= 1:
+                        current_price = float(hist_alt['Close'].iloc[-1])
+                        volume = int(hist_alt['Volume'].iloc[-1]) if not pd.isna(hist_alt['Volume'].iloc[-1]) else 0
+                        print(f"[Backend] Using {interval} data: price={current_price}")
+                        break
+            except Exception as e:
+                print(f"[Backend] Error trying different intervals: {e}")
                 
         # Verificar si el mercado está abierto
         if not is_market_open(symbol):
@@ -156,17 +179,17 @@ async def fetch_price(symbol: str):
         # Validar que tenemos un precio válido
         if current_price == 0 or pd.isna(current_price):
             print(f"[Backend] Warning: No valid price found for {symbol}, using fallback values")
-            # Valores de fallback para Forex (aproximados)
+            # Valores de fallback actualizados para Forex
             fallback_prices = {
-                "EURUSD": 1.0850,
+                "EURUSD": 1.0925,
                 "GBPUSD": 1.2650,
                 "USDJPY": 148.50,
-                "AUDUSD": 0.6550,
+                "AUDUSD": 0.6650,
                 "USDCAD": 1.3550,
-                "AAPL": 150.00,
-                "MSFT": 300.00,
-                "TSLA": 200.00,
-                "BTCUSD": 45000.00,
+                "AAPL": 175.50,
+                "MSFT": 380.80,
+                "TSLA": 240.50,
+                "BTCUSD": 42000.00,
                 "ETHUSD": 2500.00,
                 "XAUUSD": 2000.00,
                 "OIL": 75.00,
@@ -184,7 +207,7 @@ async def fetch_price(symbol: str):
         low = current_price * 0.999   # Aproximación por defecto
         open_price = current_price - change  # Aproximación
         
-        if len(hist) >= 1:
+        if hist is not None and len(hist) >= 1:
             high = float(hist['High'].iloc[-1])
             low = float(hist['Low'].iloc[-1])
             open_price = float(hist['Open'].iloc[-1])
@@ -289,44 +312,105 @@ async def fetch_candles(symbol: str, interval: str, outputsize: int):
         yahoo_interval = interval_map.get(interval, "15m")
         print(f"[Backend] Using Yahoo interval: {yahoo_interval}")
         
-        # Ajustar periodo compatible con Yahoo Finance
-        if yahoo_interval in ["1m", "5m", "15m", "30m", "1h"]:
-            period = "5d"  # Yahoo solo permite hasta 7 días para intervalos de minutos/horas
-        elif yahoo_interval in ["1d", "1wk", "1mo"]:
-            period = "1y"  # Para diarios o superiores, usar 1 año
-        else:
-            period = "1mo"
-        
-        print(f"[Backend] Using period: {period}")
-        hist = ticker.history(period=period, interval=yahoo_interval)
-        print(f"[Backend] Retrieved {len(hist)} candles")
-        
-        # Convertir a formato compatible con Twelve Data
         values = []
-        for date, row in hist.iterrows():
-            values.append({
-                "datetime": date.strftime('%Y-%m-%d %H:%M:%S'),
-                "open": str(row['Open']),
-                "high": str(row['High']),
-                "low": str(row['Low']),
-                "close": str(row['Close']),
-                "volume": str(row['Volume'])
-            })
+        hist = None
+        
+        # Estrategia 1: Intentar con la configuración original
+        try:
+            # Ajustar periodo compatible con Yahoo Finance
+            if yahoo_interval in ["1m", "5m", "15m", "30m", "1h"]:
+                period = "5d"  # Yahoo solo permite hasta 7 días para intervalos de minutos/horas
+            elif yahoo_interval in ["1d", "1wk", "1mo"]:
+                period = "1y"  # Para diarios o superiores, usar 1 año
+            else:
+                period = "1mo"
+            
+            print(f"[Backend] Trying period: {period}")
+            hist = ticker.history(period=period, interval=yahoo_interval)
+            print(f"[Backend] Retrieved {len(hist)} candles")
+            
+            if len(hist) > 0:
+                # Convertir a formato compatible con Twelve Data
+                for date, row in hist.iterrows():
+                    values.append({
+                        "datetime": date.strftime('%Y-%m-%d %H:%M:%S'),
+                        "open": str(row['Open']),
+                        "high": str(row['High']),
+                        "low": str(row['Low']),
+                        "close": str(row['Close']),
+                        "volume": str(row['Volume'])
+                    })
+        except Exception as e:
+            print(f"[Backend] Error with original config: {e}")
+        
+        # Estrategia 2: Si no hay datos, intentar con diferentes períodos
+        if not values:
+            try:
+                print(f"[Backend] Trying alternative periods...")
+                alternative_periods = ["1mo", "3mo", "6mo", "1y"]
+                
+                for alt_period in alternative_periods:
+                    try:
+                        hist = ticker.history(period=alt_period, interval=yahoo_interval)
+                        if len(hist) > 0:
+                            print(f"[Backend] Success with {alt_period}: {len(hist)} candles")
+                            for date, row in hist.iterrows():
+                                values.append({
+                                    "datetime": date.strftime('%Y-%m-%d %H:%M:%S'),
+                                    "open": str(row['Open']),
+                                    "high": str(row['High']),
+                                    "low": str(row['Low']),
+                                    "close": str(row['Close']),
+                                    "volume": str(row['Volume'])
+                                })
+                            break
+                    except Exception as e:
+                        print(f"[Backend] Error with {alt_period}: {e}")
+                        continue
+            except Exception as e:
+                print(f"[Backend] Error with alternative periods: {e}")
+        
+        # Estrategia 3: Si aún no hay datos, intentar con diferentes intervalos
+        if not values:
+            try:
+                print(f"[Backend] Trying alternative intervals...")
+                alternative_intervals = ["1d", "1wk", "1mo"]
+                
+                for alt_interval in alternative_intervals:
+                    try:
+                        hist = ticker.history(period="1mo", interval=alt_interval)
+                        if len(hist) > 0:
+                            print(f"[Backend] Success with {alt_interval}: {len(hist)} candles")
+                            for date, row in hist.iterrows():
+                                values.append({
+                                    "datetime": date.strftime('%Y-%m-%d %H:%M:%S'),
+                                    "open": str(row['Open']),
+                                    "high": str(row['High']),
+                                    "low": str(row['Low']),
+                                    "close": str(row['Close']),
+                                    "volume": str(row['Volume'])
+                                })
+                            break
+                    except Exception as e:
+                        print(f"[Backend] Error with {alt_interval}: {e}")
+                        continue
+            except Exception as e:
+                print(f"[Backend] Error with alternative intervals: {e}")
         
         # Si no hay datos de Yahoo Finance, generar datos de fallback
         if not values:
             print(f"[Backend] No data from Yahoo Finance for {symbol}, generating fallback data")
-            # Generar datos de fallback basados en precios típicos
+            # Generar datos de fallback basados en precios típicos actualizados
             fallback_prices = {
-                "EURUSD": 1.0850,
+                "EURUSD": 1.0925,
                 "GBPUSD": 1.2650,
                 "USDJPY": 148.50,
-                "AUDUSD": 0.6550,
+                "AUDUSD": 0.6650,
                 "USDCAD": 1.3550,
-                "AAPL": 150.00,
-                "MSFT": 300.00,
-                "TSLA": 200.00,
-                "BTCUSD": 45000.00,
+                "AAPL": 175.50,
+                "MSFT": 380.80,
+                "TSLA": 240.50,
+                "BTCUSD": 42000.00,
                 "ETHUSD": 2500.00,
                 "XAUUSD": 2000.00,
                 "OIL": 75.00,
@@ -340,7 +424,7 @@ async def fetch_candles(symbol: str, interval: str, outputsize: int):
             # Generar 50 velas de ejemplo para los últimos días
             for i in range(50):
                 date = datetime.now() - timedelta(days=50-i)
-                # Simular variación de precio
+                # Simular variación de precio más realista
                 variation = (i % 10 - 5) * 0.001  # Variación de ±0.005
                 open_price = base_price + variation
                 high_price = open_price + 0.002

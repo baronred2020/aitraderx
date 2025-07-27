@@ -569,3 +569,266 @@ WHERE users.username = %s
 2025-07-26 16:16:42,059 - main - INFO - Deteniendo AI Trading System...
 2025-07-26 16:16:54,163 - main - INFO - Iniciando AI Trading System...
 2025-07-26 16:16:54,164 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 16:41:11,255 - main - INFO - Iniciando AI Trading System...
+2025-07-26 16:41:11,256 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 19:31:49,686 - main - INFO - Iniciando AI Trading System...
+2025-07-26 19:31:49,688 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 19:34:02,408 - main - INFO - Iniciando AI Trading System...
+2025-07-26 19:34:02,408 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 20:05:57,227 - main - INFO - Deteniendo AI Trading System...
+2025-07-26 20:23:11,064 - api.mega_mind_routes - ERROR - Error importing MegaMindService: No module named 'services.mega_mind_service'
+2025-07-26 20:23:11,273 - main - INFO - Iniciando AI Trading System...
+2025-07-26 20:23:11,275 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 20:23:36,059 - main - INFO - Deteniendo AI Trading System...
+2025-07-26 20:23:47,303 - api.mega_mind_routes - ERROR - Error importing MegaMindService: No module named 'services.mega_mind_service'
+2025-07-26 20:23:47,418 - main - INFO - Iniciando AI Trading System...
+2025-07-26 20:23:47,419 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 20:24:43,215 - api.mega_mind_routes - ERROR - Error importing MegaMindService: No module named 'services.mega_mind_service'
+2025-07-26 20:24:43,339 - main - INFO - Iniciando AI Trading System...
+2025-07-26 20:24:43,339 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 20:25:49,515 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:25:50,869 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:25:51,732 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:25:53,200 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:25:54,431 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:25:55,145 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:25:56,685 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:25:57,399 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:25:58,424 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:25:59,554 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:00,163 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:26:01,188 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:02,623 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:03,237 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:26:04,466 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:05,285 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:05,899 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:26:06,822 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:07,465 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:08,050 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:26:09,075 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:09,710 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:10,303 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:26:11,225 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:11,903 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:12,557 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:26:13,444 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:13,985 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:26:14,604 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:26:15,629 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:45,484 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:46,065 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:46,672 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:57:47,393 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:47,967 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:48,467 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:57:49,303 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:49,811 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:50,311 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:57:51,048 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:51,751 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:52,224 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:57:52,912 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:53,348 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:53,809 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:57:54,468 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:54,960 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:55,564 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:56,178 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:57:56,824 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:57,423 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:58,088 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:57:58,859 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:59,460 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:57:59,979 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:00,683 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:01,389 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:02,117 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:02,765 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:03,326 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:03,839 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:04,546 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:05,121 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:05,688 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:06,448 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:07,179 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:08,059 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:08,612 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:09,359 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:10,007 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:10,548 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:11,387 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:12,042 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:12,580 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:13,311 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:13,822 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:14,347 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:15,029 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:15,607 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:16,129 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:16,854 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:17,556 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:18,270 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:19,062 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:19,605 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:20,137 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:20,833 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:21,291 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:21,833 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:22,560 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:23,257 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:23,773 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:24,470 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:25,224 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:25,929 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 20:58:26,549 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 20:58:27,421 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:04,535 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:05,336 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:05,914 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:06,696 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:07,263 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:07,848 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:08,619 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:09,266 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:09,877 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:10,594 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:11,069 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:11,626 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:12,362 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:12,990 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:13,649 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:14,380 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:15,051 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:15,579 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:16,389 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:16,998 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:17,490 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:18,019 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:18,813 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:19,477 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:20,128 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:20,856 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:21,387 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:21,874 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:22,701 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:23,328 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:23,867 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:24,630 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:25,175 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:25,819 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:26,429 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:26,888 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:27,378 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:28,164 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:28,620 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:29,118 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:29,853 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:30,396 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:30,893 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:31,561 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:32,100 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:32,632 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:33,411 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:34,092 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:34,682 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:35,437 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:36,166 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:36,668 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:37,410 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:37,971 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:38,497 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:39,323 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:39,761 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:40,329 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:41,141 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:41,653 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:42,376 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:43,205 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:53,946 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:54,559 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:55,130 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:55,911 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:56,352 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:56,867 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:57,508 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:57,977 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:58,504 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:00:59,387 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:00:59,912 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:00,695 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:01,428 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:02,069 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:02,736 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:03,522 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:04,099 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:04,652 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:05,536 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:06,097 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:06,648 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:07,172 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:07,920 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:08,522 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:09,095 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:09,794 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:10,356 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:10,859 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:11,505 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:11,947 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:12,504 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:13,267 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:13,801 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:14,415 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:15,258 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:23,837 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:24,470 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:24,990 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:25,735 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:26,252 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:26,791 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:27,622 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:28,173 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:28,728 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:29,664 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:30,284 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:30,842 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:31,578 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:32,128 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:32,712 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:33,561 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:34,180 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:34,669 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:35,443 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:36,048 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:36,707 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:37,241 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:37,886 - yfinance - ERROR - $AUDUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:38,555 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:39,081 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:39,862 - yfinance - ERROR - $GBPUSD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:40,493 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:41,004 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:41,712 - yfinance - ERROR - $USDCAD: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:42,260 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:42,833 - yfinance - ERROR - HTTP Error 404: 
+2025-07-26 21:01:43,766 - yfinance - ERROR - $USDJPY: possibly delisted; no price data found  (period=1mo) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:01:56,712 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:02:00,104 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:02:01,662 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:03:25,739 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:03:26,368 - yfinance - ERROR - $EURUSD: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+2025-07-26 21:04:42,629 - main - INFO - Deteniendo AI Trading System...
+2025-07-26 21:05:28,148 - api.mega_mind_routes - ERROR - Error importing MegaMindService: No module named 'services.mega_mind_service'
+2025-07-26 21:05:28,378 - main - INFO - Iniciando AI Trading System...
+2025-07-26 21:05:28,392 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 21:05:34,468 - api.mega_mind_routes - ERROR - Error importing MegaMindService: No module named 'services.mega_mind_service'
+2025-07-26 21:05:34,550 - main - INFO - Iniciando AI Trading System...
+2025-07-26 21:05:34,550 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 21:06:11,745 - main - INFO - Deteniendo AI Trading System...
+2025-07-26 21:06:16,024 - api.mega_mind_routes - ERROR - Error importing MegaMindService: No module named 'services.mega_mind_service'
+2025-07-26 21:06:16,121 - main - INFO - Iniciando AI Trading System...
+2025-07-26 21:06:16,121 - main - INFO - AI Trading System iniciado correctamente
+2025-07-26 21:07:26,969 - main - INFO - Deteniendo AI Trading System...
+2025-07-26 21:07:31,066 - api.mega_mind_routes - ERROR - Error importing MegaMindService: No module named 'services.mega_mind_service'
+2025-07-26 21:07:31,135 - main - INFO - Iniciando AI Trading System...
+2025-07-26 21:07:31,136 - main - INFO - AI Trading System iniciado correctamente

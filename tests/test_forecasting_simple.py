@@ -66,7 +66,7 @@ def test_data_system():
         print("✅ Sistema de datos inicializado")
         
         # Probar obtener datos de un par
-        symbol = 'EURUSD=X'
+        symbol = 'EURUSD'
         print(f"Obteniendo datos para {symbol}...")
         
         # Obtener datos basicos
@@ -132,11 +132,11 @@ def main():
     print("\n" + "=" * 60)
     print("✅ TODAS LAS PRUEBAS EXITOSAS!")
     print("El sistema esta listo para entrenar los 5 pares:")
-    print("- EURUSD=X")
-    print("- GBPUSD=X") 
-    print("- USDJPY=X")
-    print("- AUDUSD=X")
-    print("- USDCAD=X")
+    print("- EURUSD")
+    print("- GBPUSD") 
+    print("- USDJPY")
+    print("- AUDUSD")
+    print("- USDCAD")
     print("=" * 60)
 
 if __name__ == "__main__":

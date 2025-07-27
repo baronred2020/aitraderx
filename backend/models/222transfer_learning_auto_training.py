@@ -579,7 +579,7 @@ async def start_transfer_learning_auto_training():
     scheduler = TransferLearningScheduler(transfer_system, check_interval_minutes=5)  # 5 min para demo
     
     # Símbolos Forex
-    symbols = ['EURUSD=X', 'GBPUSD=X', 'USDJPY=X', 'AUDUSD=X', 'USDCAD=X']
+    symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD']
     
     print(f"✅ Sistema configurado:")
     print(f"   • Transfer Learning: {len(transfer_system.knowledge_base)} modelos base")

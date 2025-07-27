@@ -752,11 +752,11 @@ def get_market_data_robust(symbol, period='3mo', interval='1d', max_retries=3):
     """
     # Mapeo de símbolos alternativos optimizado basado en diagnóstico real
     symbol_alternatives = {
-        'EURUSD=X': ['EURUSD=X', 'EUR=X'],  # ✅ Ambos funcionan perfectamente
-        'USDJPY=X': ['USDJPY=X', 'JPY=X'],
-        'GBPUSD=X': ['GBPUSD=X', 'GBP=X'],
-        'AUDUSD=X': ['AUDUSD=X', 'AUD=X'],
-        'USDCAD=X': ['USDCAD=X', 'CAD=X']
+        'EURUSD': ['EURUSD', 'EUR=X'],  # ✅ Ambos funcionan perfectamente
+        'USDJPY': ['USDJPY', 'JPY=X'],
+        'GBPUSD': ['GBPUSD', 'GBP=X'],
+        'AUDUSD': ['AUDUSD', 'AUD=X'],
+        'USDCAD': ['USDCAD', 'CAD=X']
     }
     symbols_to_try = symbol_alternatives.get(symbol, [symbol])
 
@@ -1464,7 +1464,7 @@ class HybridForexAI:
     con la precisión del segundo
     """
 
-    def __init__(self, symbol='EURUSD=X', use_lstm=False):
+    def __init__(self, symbol='EURUSD', use_lstm=False):
         self.symbol = symbol
         self.use_lstm = use_lstm
         
@@ -2515,7 +2515,7 @@ def display_prediction_analysis(ai, trading_style, days_back=30):
         print(f"❌ Error crítico en análisis: {e}")
         return None
 
-def test_data_availability(symbol='EURUSD=X'):
+def test_data_availability(symbol='EURUSD'):
     """Probar disponibilidad de datos para diferentes configuraciones"""
     
     print(f"🧪 PRUEBA DE DISPONIBILIDAD DE DATOS - {symbol}")
@@ -2585,7 +2585,7 @@ def test_data_availability(symbol='EURUSD=X'):
     
     return results
 
-def quick_test(symbol='EURUSD=X', use_lstm=False):
+def quick_test(symbol='EURUSD', use_lstm=False):
     """Prueba rápida del sistema híbrido"""
     
     print(f"🧪 PRUEBA RÁPIDA - {symbol}")
@@ -2636,7 +2636,7 @@ def quick_test(symbol='EURUSD=X', use_lstm=False):
         print(f"❌ Error en prueba: {e}")
         return False
 
-def full_training_pipeline(symbol='EURUSD=X', use_lstm=False):
+def full_training_pipeline(symbol='EURUSD', use_lstm=False):
     """Pipeline completo de entrenamiento"""
     
     print(f"🚀 PIPELINE COMPLETO - {symbol}")
@@ -2701,7 +2701,7 @@ def main():
     print("=" * 80)
     
     # Configuración por defecto
-    symbol = 'EURUSD=X'
+    symbol = 'EURUSD'
     use_lstm = False  # Por defecto desactivado para estabilidad
     
     print(f"\n🎯 ¿Qué quieres hacer?")
@@ -4654,17 +4654,17 @@ if __name__ == "__main__":
 # ===== EJEMPLO DE USO PROGRAMÁTICO =====
 """
 # Uso básico
-ai = HybridForexAI('EURUSD=X', use_lstm=False)
+ai = HybridForexAI('EURUSD', use_lstm=False)
 results = ai.train_all_styles()
 prediction = ai.predict('day_trading')
 consensus = ai.get_multi_style_consensus()
 
 # Con LSTM
-ai_lstm = HybridForexAI('EURUSD=X', use_lstm=True)
+ai_lstm = HybridForexAI('EURUSD', use_lstm=True)
 results_lstm = ai_lstm.train_all_styles()
 
 # Múltiples símbolos
-symbols = ['EURUSD=X', 'GBPUSD=X', 'USDJPY=X']
+symbols = ['EURUSD', 'GBPUSD', 'USDJPY']
 for symbol in symbols:
     ai = HybridForexAI(symbol)
     ai.train_all_styles()

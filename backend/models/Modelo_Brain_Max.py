@@ -146,11 +146,11 @@ def get_market_data_robust(symbol, period='3mo', interval='1d', max_retries=3):
     """
     # Mapeo de símbolos alternativos optimizado basado en diagnóstico real
     symbol_alternatives = {
-        'EURUSD=X': ['EURUSD=X', 'EUR=X'],  # ✅ Ambos funcionan perfectamente
-        'USDJPY=X': ['USDJPY=X', 'JPY=X'],
-        'GBPUSD=X': ['GBPUSD=X', 'GBP=X'],
-        'AUDUSD=X': ['AUDUSD=X', 'AUD=X'],
-        'USDCAD=X': ['USDCAD=X', 'CAD=X']
+        'EURUSD': ['EURUSD', 'EUR=X'],  # ✅ Ambos funcionan perfectamente
+        'USDJPY': ['USDJPY', 'JPY=X'],
+        'GBPUSD': ['GBPUSD', 'GBP=X'],
+        'AUDUSD': ['AUDUSD', 'AUD=X'],
+        'USDCAD': ['USDCAD', 'CAD=X']
     }
     symbols_to_try = symbol_alternatives.get(symbol, [symbol])
 
@@ -470,7 +470,7 @@ class HybridForexAI:
     con la precisión del segundo
     """
 
-    def __init__(self, symbol='EURUSD=X', use_lstm=False):
+    def __init__(self, symbol='EURUSD', use_lstm=False):
         self.symbol = symbol
         self.use_lstm = use_lstm
         
@@ -1256,7 +1256,7 @@ def display_comprehensive_analysis(ai, trading_style):
     
     return analysis
 
-def test_data_availability(symbol='EURUSD=X'):
+def test_data_availability(symbol='EURUSD'):
     """Probar disponibilidad de datos para diferentes configuraciones"""
     
     print(f"🧪 PRUEBA DE DISPONIBILIDAD DE DATOS - {symbol}")
@@ -1326,7 +1326,7 @@ def test_data_availability(symbol='EURUSD=X'):
     
     return results
 
-def full_training_pipeline(symbol='EURUSD=X', use_lstm=False):
+def full_training_pipeline(symbol='EURUSD', use_lstm=False):
     """Pipeline completo de entrenamiento"""
     
     print(f"🚀 PIPELINE COMPLETO - {symbol}")
@@ -1391,7 +1391,7 @@ def main():
     print("=" * 80)
     
     # Configuración por defecto
-    symbol = 'EURUSD=X'
+    symbol = 'EURUSD'
     use_lstm = False  # Por defecto desactivado para estabilidad
     
     print(f"\n🎯 ¿Qué quieres hacer?")
@@ -2572,7 +2572,7 @@ def ultra_optimization_v2_colab():
         # Configuración optimizada para Yahoo Finance
         trading_configs = {
             'EURUSD': {
-                'symbol': 'EURUSD=X',
+                'symbol': 'EURUSD',
                 'styles': {
                     'scalping': {'period': '7d', 'interval': '15m', 'target_horizon': 5, 'pip_threshold': 5},
                     'day_trading': {'period': '1mo', 'interval': '15m', 'target_horizon': 15, 'pip_threshold': 10},
@@ -2581,7 +2581,7 @@ def ultra_optimization_v2_colab():
                 }
             },
             'GBPUSD': {
-                'symbol': 'GBPUSD=X',
+                'symbol': 'GBPUSD',
                 'styles': {
                     'scalping': {'period': '7d', 'interval': '15m', 'target_horizon': 5, 'pip_threshold': 5},
                     'day_trading': {'period': '1mo', 'interval': '15m', 'target_horizon': 15, 'pip_threshold': 10},
@@ -2590,7 +2590,7 @@ def ultra_optimization_v2_colab():
                 }
             },
             'USDJPY': {
-                'symbol': 'USDJPY=X',
+                'symbol': 'USDJPY',
                 'styles': {
                     'scalping': {'period': '7d', 'interval': '15m', 'target_horizon': 5, 'pip_threshold': 5},
                     'day_trading': {'period': '1mo', 'interval': '15m', 'target_horizon': 15, 'pip_threshold': 10},
@@ -2599,7 +2599,7 @@ def ultra_optimization_v2_colab():
                 }
             },
             'AUDUSD': {
-                'symbol': 'AUDUSD=X',
+                'symbol': 'AUDUSD',
                 'styles': {
                     'scalping': {'period': '7d', 'interval': '15m', 'target_horizon': 5, 'pip_threshold': 5},
                     'day_trading': {'period': '1mo', 'interval': '15m', 'target_horizon': 15, 'pip_threshold': 10},
@@ -2608,7 +2608,7 @@ def ultra_optimization_v2_colab():
                 }
             },
             'USDCAD': {
-                'symbol': 'USDCAD=X',
+                'symbol': 'USDCAD',
                 'styles': {
                     'scalping': {'period': '7d', 'interval': '15m', 'target_horizon': 5, 'pip_threshold': 5},
                     'day_trading': {'period': '1mo', 'interval': '15m', 'target_horizon': 15, 'pip_threshold': 10},

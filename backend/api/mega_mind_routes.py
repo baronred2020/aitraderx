@@ -3,11 +3,15 @@ from typing import List, Optional
 from pydantic import BaseModel
 import asyncio
 from datetime import datetime
+import random
 
-# Importar servicios (se crearán después)
-# from ..services.mega_mind_service import MegaMindService
+# Importar servicios
+from ..services.mega_mind_service import MegaMindService
 
 router = APIRouter(prefix="/mega-mind", tags=["MEGA MIND"])
+
+# Instancia del servicio
+mega_mind_service = MegaMindService()
 
 # Modelos Pydantic para las respuestas
 class MegaMindPredictionResponse(BaseModel):
@@ -21,7 +25,7 @@ class MegaMindPredictionResponse(BaseModel):
     fusion_method: str
     collaboration_score: float
     fusion_details: dict
-    timestamp: datetime
+    timestamp: str
 
 class BrainCollaborationResponse(BaseModel):
     pair: str
@@ -30,7 +34,7 @@ class BrainCollaborationResponse(BaseModel):
     brain_synergy: dict
     conflict_resolution: dict
     performance_metrics: dict
-    timestamp: datetime
+    timestamp: str
 
 class BrainArenaResponse(BaseModel):
     pair: str
@@ -38,7 +42,7 @@ class BrainArenaResponse(BaseModel):
     arena_results: dict
     champion: str
     overall_performance: float
-    timestamp: datetime
+    timestamp: str
 
 class BrainEvolutionResponse(BaseModel):
     evolution_phase: str
@@ -46,17 +50,26 @@ class BrainEvolutionResponse(BaseModel):
     improvement_rate: float
     evolution_metrics: dict
     next_evolution_trigger: float
-    timestamp: datetime
+    timestamp: str
 
 class BrainOrchestrationResponse(BaseModel):
     orchestration_mode: str
     coordination_score: float
     orchestration_metrics: dict
     active_strategies: int
-    timestamp: datetime
+    timestamp: str
 
-# Instancia del servicio (se inicializará después)
-# mega_mind_service = MegaMindService()
+class BrainConfigRequest(BaseModel):
+    brain_type: str
+    trading_params: dict
+    market_preferences: dict
+    specializations: dict
+    consensus_weight: float = 0.33
+
+class BrainTrainingRequest(BaseModel):
+    brain_type: str
+    training_data: dict
+    training_params: dict
 
 @router.get("/predictions")
 async def get_mega_mind_predictions(
@@ -77,44 +90,28 @@ async def get_mega_mind_predictions(
         if style not in valid_styles:
             raise HTTPException(status_code=400, detail=f"Style must be one of: {valid_styles}")
         
-        # Simular llamada al servicio
-        # predictions = await mega_mind_service.get_mega_mind_predictions(pair, style, limit)
+        # Obtener predicciones del servicio
+        predictions = await mega_mind_service.get_mega_mind_predictions(pair, style, limit)
         
-        # Datos simulados por ahora
-        import random
-        predictions = []
-        base_price = 1.0925 if pair == 'EURUSD' else 1.2500
-        
-        for i in range(min(limit, 5)):
-            direction = random.choice(['up', 'down', 'sideways'])
-            confidence = random.uniform(90, 98)  # MEGA MIND tiene mayor precisión
-            target_price = base_price + (random.uniform(-0.01, 0.01))
-            
-            # Simular detalles de fusión
-            fusion_details = {
-                'brain_max_confidence': random.uniform(75, 88),
-                'brain_ultra_confidence': random.uniform(80, 92),
-                'brain_predictor_confidence': random.uniform(85, 94),
-                'consensus_level': random.uniform(0.6, 1.0),
-                'collaboration_boost': 1.2
-            }
-            
-            prediction = MegaMindPredictionResponse(
-                pair=pair,
-                direction=direction,
-                confidence=confidence,
-                target_price=target_price,
-                timeframe='Multi-TF',
-                reasoning=f'MEGA MIND fusion: {direction.upper()} consensus',
-                brain_type='mega_mind',
-                fusion_method='weighted_consensus',
-                collaboration_score=random.uniform(0.85, 0.98),
-                fusion_details=fusion_details,
-                timestamp=datetime.now()
+        # Convertir a formato de respuesta
+        response_predictions = []
+        for pred in predictions:
+            response_pred = MegaMindPredictionResponse(
+                pair=pred['pair'],
+                direction=pred['direction'],
+                confidence=pred['confidence'],
+                target_price=pred['target_price'],
+                timeframe=pred['timeframe'],
+                reasoning=pred['reasoning'],
+                brain_type=pred['brain_type'],
+                fusion_method=pred['fusion_method'],
+                collaboration_score=pred['collaboration_score'],
+                fusion_details=pred.get('fusion_details', {}),
+                timestamp=pred['timestamp']
             )
-            predictions.append(prediction)
+            response_predictions.append(response_pred)
         
-        return predictions
+        return response_predictions
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting MEGA MIND predictions: {str(e)}")
@@ -130,34 +127,18 @@ async def get_brain_collaboration(pair: str) -> BrainCollaborationResponse:
         if pair not in valid_pairs:
             raise HTTPException(status_code=400, detail=f"Pair must be one of: {valid_pairs}")
         
-        # Simular llamada al servicio
-        # collaboration = await mega_mind_service.get_brain_collaboration(pair)
+        # Obtener análisis de colaboración
+        collaboration = await mega_mind_service.get_brain_collaboration(pair)
         
-        # Datos simulados
-        import random
-        collaboration = BrainCollaborationResponse(
-            pair=pair,
-            collaboration_score=random.uniform(0.85, 0.98),
-            consensus_level=random.uniform(0.75, 0.95),
-            brain_synergy={
-                'brain_max_contribution': random.uniform(0.20, 0.30),
-                'brain_ultra_contribution': random.uniform(0.30, 0.40),
-                'brain_predictor_contribution': random.uniform(0.35, 0.45)
-            },
-            conflict_resolution={
-                'resolved_conflicts': random.randint(5, 15),
-                'consensus_achieved': random.uniform(0.80, 0.95),
-                'decision_confidence': random.uniform(0.90, 0.98)
-            },
-            performance_metrics={
-                'accuracy_improvement': random.uniform(0.05, 0.15),
-                'risk_reduction': random.uniform(0.10, 0.20),
-                'prediction_stability': random.uniform(0.85, 0.95)
-            },
-            timestamp=datetime.now()
+        return BrainCollaborationResponse(
+            pair=collaboration['pair'],
+            collaboration_score=collaboration['collaboration_score'],
+            consensus_level=collaboration['consensus_level'],
+            brain_synergy=collaboration['brain_synergy'],
+            conflict_resolution=collaboration['conflict_resolution'],
+            performance_metrics=collaboration['performance_metrics'],
+            timestamp=collaboration['timestamp']
         )
-        
-        return collaboration
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting brain collaboration: {str(e)}")
@@ -165,7 +146,7 @@ async def get_brain_collaboration(pair: str) -> BrainCollaborationResponse:
 @router.get("/arena")
 async def get_brain_arena_results(pair: str) -> BrainArenaResponse:
     """
-    Obtener resultados de competencia IA entre cerebros
+    Obtener resultados de la Brain Arena (competencia entre cerebros)
     """
     try:
         # Validar parámetros
@@ -173,40 +154,17 @@ async def get_brain_arena_results(pair: str) -> BrainArenaResponse:
         if pair not in valid_pairs:
             raise HTTPException(status_code=400, detail=f"Pair must be one of: {valid_pairs}")
         
-        # Simular llamada al servicio
-        # arena_results = await mega_mind_service.get_brain_arena_results(pair)
+        # Obtener resultados de arena
+        arena_results = await mega_mind_service.get_brain_arena_results(pair)
         
-        # Datos simulados
-        import random
-        arena_results = BrainArenaResponse(
-            pair=pair,
-            competition_round=random.randint(1, 10),
-            arena_results={
-                'brain_max': {
-                    'wins': random.randint(15, 25),
-                    'losses': random.randint(5, 15),
-                    'win_rate': random.uniform(0.65, 0.85),
-                    'performance_score': random.uniform(0.75, 0.88)
-                },
-                'brain_ultra': {
-                    'wins': random.randint(20, 30),
-                    'losses': random.randint(5, 15),
-                    'win_rate': random.uniform(0.75, 0.90),
-                    'performance_score': random.uniform(0.80, 0.92)
-                },
-                'brain_predictor': {
-                    'wins': random.randint(25, 35),
-                    'losses': random.randint(3, 12),
-                    'win_rate': random.uniform(0.80, 0.94),
-                    'performance_score': random.uniform(0.85, 0.94)
-                }
-            },
-            champion='brain_predictor',
-            overall_performance=random.uniform(0.85, 0.95),
-            timestamp=datetime.now()
+        return BrainArenaResponse(
+            pair=arena_results['pair'],
+            competition_round=arena_results['competition_round'],
+            arena_results=arena_results['arena_results'],
+            champion=arena_results['champion'],
+            overall_performance=arena_results['overall_performance'],
+            timestamp=arena_results['timestamp']
         )
-        
-        return arena_results
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting brain arena results: {str(e)}")
@@ -214,29 +172,20 @@ async def get_brain_arena_results(pair: str) -> BrainArenaResponse:
 @router.get("/evolution")
 async def get_brain_evolution_status() -> BrainEvolutionResponse:
     """
-    Obtener estado de evolución IA
+    Obtener estado de la evolución de cerebros
     """
     try:
-        # Simular llamada al servicio
-        # evolution_status = await mega_mind_service.get_brain_evolution_status()
+        # Obtener estado de evolución
+        evolution_status = await mega_mind_service.get_brain_evolution_status()
         
-        # Datos simulados
-        import random
-        evolution_status = BrainEvolutionResponse(
-            evolution_phase=random.choice(['learning', 'adapting', 'optimizing', 'mastering']),
-            generation=random.randint(1, 50),
-            improvement_rate=random.uniform(0.01, 0.05),
-            evolution_metrics={
-                'accuracy_growth': random.uniform(0.02, 0.08),
-                'adaptation_speed': random.uniform(0.85, 0.98),
-                'learning_efficiency': random.uniform(0.90, 0.99),
-                'innovation_rate': random.uniform(0.03, 0.10)
-            },
-            next_evolution_trigger=random.uniform(0.70, 0.95),
-            timestamp=datetime.now()
+        return BrainEvolutionResponse(
+            evolution_phase=evolution_status['evolution_phase'],
+            generation=evolution_status['generation'],
+            improvement_rate=evolution_status['improvement_rate'],
+            evolution_metrics=evolution_status['evolution_metrics'],
+            next_evolution_trigger=evolution_status['next_evolution_trigger'],
+            timestamp=evolution_status['timestamp']
         )
-        
-        return evolution_status
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting brain evolution status: {str(e)}")
@@ -244,28 +193,19 @@ async def get_brain_evolution_status() -> BrainEvolutionResponse:
 @router.get("/orchestration")
 async def get_brain_orchestration_status() -> BrainOrchestrationResponse:
     """
-    Obtener estado de orquestación IA
+    Obtener estado de la orquestación de cerebros
     """
     try:
-        # Simular llamada al servicio
-        # orchestration_status = await mega_mind_service.get_brain_orchestration_status()
+        # Obtener estado de orquestación
+        orchestration_status = await mega_mind_service.get_brain_orchestration_status()
         
-        # Datos simulados
-        import random
-        orchestration_status = BrainOrchestrationResponse(
-            orchestration_mode=random.choice(['synchronized', 'harmonized', 'optimized', 'master']),
-            coordination_score=random.uniform(0.90, 0.99),
-            orchestration_metrics={
-                'synchronization_level': random.uniform(0.85, 0.98),
-                'harmony_score': random.uniform(0.80, 0.95),
-                'efficiency_rate': random.uniform(0.90, 0.99),
-                'coordination_accuracy': random.uniform(0.88, 0.97)
-            },
-            active_strategies=random.randint(3, 8),
-            timestamp=datetime.now()
+        return BrainOrchestrationResponse(
+            orchestration_mode=orchestration_status['orchestration_mode'],
+            coordination_score=orchestration_status['coordination_score'],
+            orchestration_metrics=orchestration_status['orchestration_metrics'],
+            active_strategies=orchestration_status['active_strategies'],
+            timestamp=orchestration_status['timestamp']
         )
-        
-        return orchestration_status
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting brain orchestration status: {str(e)}")
@@ -276,81 +216,154 @@ async def get_mega_mind_performance() -> dict:
     Obtener métricas de rendimiento de MEGA MIND
     """
     try:
-        import random
+        # Obtener métricas de rendimiento
+        performance = await mega_mind_service.get_mega_mind_performance()
         
-        performance_metrics = {
-            'overall_accuracy': random.uniform(92, 98),
-            'prediction_success_rate': random.uniform(0.85, 0.95),
-            'risk_adjusted_returns': random.uniform(0.12, 0.25),
-            'sharpe_ratio': random.uniform(1.5, 2.5),
-            'max_drawdown': random.uniform(0.05, 0.15),
-            'win_rate': random.uniform(0.75, 0.90),
-            'profit_factor': random.uniform(1.8, 3.2),
-            'average_trade_duration': random.uniform(2, 8),
-            'consecutive_wins': random.randint(5, 15),
-            'consecutive_losses': random.randint(1, 3),
-            'volatility': random.uniform(0.08, 0.18),
-            'calmar_ratio': random.uniform(2.0, 4.0),
-            'sortino_ratio': random.uniform(2.5, 4.5),
-            'information_ratio': random.uniform(1.8, 3.0),
-            'timestamp': datetime.now()
-        }
-        
-        return performance_metrics
+        return performance
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting MEGA MIND performance: {str(e)}")
 
+@router.post("/configure-brain")
+async def configure_brain(config: BrainConfigRequest) -> dict:
+    """
+    Configurar un cerebro específico
+    """
+    try:
+        # Validar tipo de cerebro
+        valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor']
+        if config.brain_type not in valid_brain_types:
+            raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
+        
+        # Configurar cerebro
+        result = await mega_mind_service.configure_brain(
+            config.brain_type,
+            {
+                'trading_params': config.trading_params,
+                'market_preferences': config.market_preferences,
+                'specializations': config.specializations,
+                'consensus_weight': config.consensus_weight
+            }
+        )
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error configuring brain: {str(e)}")
+
+@router.post("/train-brain")
+async def train_brain(training: BrainTrainingRequest) -> dict:
+    """
+    Entrenar un cerebro específico
+    """
+    try:
+        # Validar tipo de cerebro
+        valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor']
+        if training.brain_type not in valid_brain_types:
+            raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
+        
+        # Entrenar cerebro
+        result = await mega_mind_service.train_brain(
+            training.brain_type,
+            {
+                'training_data': training.training_data,
+                'training_params': training.training_params
+            }
+        )
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error training brain: {str(e)}")
+
+@router.get("/brain-states")
+async def get_brain_states() -> dict:
+    """
+    Obtener estados actuales de todos los cerebros
+    """
+    try:
+        return mega_mind_service.brain_states
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting brain states: {str(e)}")
+
+@router.get("/brain-config")
+async def get_brain_config() -> dict:
+    """
+    Obtener configuración actual de cerebros
+    """
+    try:
+        return {
+            'fusion_weights': mega_mind_service.fusion_weights,
+            'collaboration_config': mega_mind_service.collaboration_config,
+            'evolution_config': mega_mind_service.evolution_config,
+            'gamification_config': mega_mind_service.gamification_config
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting brain config: {str(e)}")
+
 @router.get("/health")
 async def mega_mind_health_check() -> dict:
     """
-    Health check para el servicio MEGA MIND
+    Health check para MEGA MIND
     """
-    return {
-        "status": "healthy",
-        "service": "MEGA MIND API",
-        "version": "4.0.0",
-        "components": {
-            "brain_collaboration": "active",
-            "brain_fusion": "active",
-            "brain_arena": "active",
-            "brain_evolution": "active",
-            "brain_orchestration": "active"
-        },
-        "timestamp": datetime.now()
-    }
+    try:
+        # Verificar que todos los componentes estén funcionando
+        health_status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'components': {
+                'brain_collaboration': 'active',
+                'brain_fusion': 'active',
+                'brain_arena': 'active',
+                'brain_evolution': 'active',
+                'brain_orchestration': 'active',
+                'brain_gamification': 'active',
+                'brain_personalization': 'active'
+            },
+            'brain_states': {
+                brain: state['status'] for brain, state in mega_mind_service.brain_states.items()
+            }
+        }
+        
+        return health_status
+        
+    except Exception as e:
+        return {
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }
 
 @router.get("/config")
 async def get_mega_mind_config() -> dict:
     """
-    Obtener configuración de MEGA MIND
+    Obtener configuración completa de MEGA MIND
     """
-    config = {
-        "fusion_weights": {
-            "brain_max": 0.25,
-            "brain_ultra": 0.35,
-            "brain_predictor": 0.40
-        },
-        "collaboration_config": {
-            "consensus_threshold": 0.7,
-            "confidence_boost": 1.2,
-            "risk_reduction": 0.15
-        },
-        "evolution_config": {
-            "learning_rate": 0.001,
-            "adaptation_threshold": 0.8,
-            "innovation_rate": 0.05
-        },
-        "orchestration_config": {
-            "synchronization_interval": 300,
-            "harmony_threshold": 0.85,
-            "coordination_timeout": 60
-        },
-        "performance_thresholds": {
-            "min_accuracy": 0.85,
-            "min_consensus": 0.7,
-            "max_risk": 0.2
+    try:
+        return {
+            'service_config': {
+                'fusion_weights': mega_mind_service.fusion_weights,
+                'collaboration_config': mega_mind_service.collaboration_config,
+                'evolution_config': mega_mind_service.evolution_config,
+                'gamification_config': mega_mind_service.gamification_config
+            },
+            'brain_states': mega_mind_service.brain_states,
+            'available_endpoints': [
+                '/predictions',
+                '/collaboration',
+                '/arena',
+                '/evolution',
+                '/orchestration',
+                '/performance',
+                '/configure-brain',
+                '/train-brain',
+                '/brain-states',
+                '/brain-config',
+                '/health'
+            ]
         }
-    }
-    
-    return config 
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting MEGA MIND config: {str(e)}") 
