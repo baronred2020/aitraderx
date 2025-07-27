@@ -87,6 +87,58 @@ export interface MegaMindPerformance {
   last_optimization: string;
 }
 
+// ===== INTERFACES PARA AGENTES DE MONITOREO =====
+
+export interface MonitoringAlert {
+  id: string;
+  agent_type: 'technical' | 'ai' | 'risk' | 'temporal' | 'fundamental';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  category: string;
+  title: string;
+  description: string;
+  pair?: string;
+  brain_type?: string;
+  timestamp: string;
+  is_read: boolean;
+  action_required: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface MonitoringAgentStatus {
+  agent_type: 'technical' | 'ai' | 'risk' | 'temporal' | 'fundamental';
+  is_active: boolean;
+  last_check: string;
+  alerts_count: number;
+  performance_score: number;
+  status: 'monitoring' | 'idle' | 'error' | 'maintenance';
+}
+
+export interface MonitoringSystemStatus {
+  overall_status: 'healthy' | 'warning' | 'critical';
+  active_agents: number;
+  total_alerts: number;
+  unread_alerts: number;
+  critical_alerts: number;
+  last_update: string;
+  agents_status: MonitoringAgentStatus[];
+}
+
+export interface MonitoringConfig {
+  enabled: boolean;
+  check_interval: number; // segundos
+  alert_retention_days: number;
+  max_alerts_per_agent: number;
+  subscription_limits: {
+    starter: { max_alerts: number; max_agents: number };
+    trader: { max_alerts: number; max_agents: number };
+    expert: { max_alerts: number; max_agents: number };
+    premium: { max_alerts: number; max_agents: number };
+    institutional: { max_alerts: number; max_agents: number };
+  };
+}
+
+// ===== FIN INTERFACES MONITOREO =====
+
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -165,6 +217,66 @@ class ApiService {
   async getHealth(): Promise<{ status: string; service: string; version: string; timestamp: string }> {
     return this.request('/health');
   }
+
+  // ===== AGENTES DE MONITOREO APIs =====
+
+  // Obtener alertas de monitoreo
+  async getMonitoringAlerts(
+    agent_type?: string,
+    severity?: string,
+    limit: number = 50
+  ): Promise<MonitoringAlert[]> {
+    const params = new URLSearchParams();
+    if (agent_type) params.append('agent_type', agent_type);
+    if (severity) params.append('severity', severity);
+    params.append('limit', limit.toString());
+    
+    return this.request(`/brain-trader/monitoring/alerts?${params.toString()}`);
+  }
+
+  // Marcar alerta como leída
+  async markAlertAsRead(alert_id: string): Promise<{ success: boolean }> {
+    return this.request(`/brain-trader/monitoring/alerts/${alert_id}/read`, {
+      method: 'PUT'
+    });
+  }
+
+  // Obtener estado del sistema de monitoreo
+  async getMonitoringSystemStatus(): Promise<MonitoringSystemStatus> {
+    return this.request('/brain-trader/monitoring/status');
+  }
+
+  // Obtener configuración de monitoreo
+  async getMonitoringConfig(): Promise<MonitoringConfig> {
+    return this.request('/brain-trader/monitoring/config');
+  }
+
+  // Actualizar configuración de monitoreo
+  async updateMonitoringConfig(config: Partial<MonitoringConfig>): Promise<MonitoringConfig> {
+    return this.request('/brain-trader/monitoring/config', {
+      method: 'PUT',
+      body: JSON.stringify(config)
+    });
+  }
+
+  // Iniciar monitoreo para un par específico
+  async startMonitoring(pair: string, brain_type?: string): Promise<{ success: boolean; message: string }> {
+    const params = new URLSearchParams({ pair });
+    if (brain_type) params.append('brain_type', brain_type);
+    
+    return this.request(`/brain-trader/monitoring/start?${params.toString()}`, {
+      method: 'POST'
+    });
+  }
+
+  // Detener monitoreo para un par específico
+  async stopMonitoring(pair: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/brain-trader/monitoring/stop?pair=${pair}`, {
+      method: 'POST'
+    });
+  }
+
+  // ===== FIN AGENTES DE MONITOREO APIs =====
 }
 
 export const apiService = new ApiService(); 
