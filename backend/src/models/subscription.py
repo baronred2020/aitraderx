@@ -12,10 +12,10 @@ import uuid
 
 class PlanType(str, Enum):
     """Tipos de planes de suscripción"""
-    FREEMIUM = "freemium"
-    BASIC = "basic"
-    PRO = "pro"
-    ELITE = "elite"
+    STARTER = "starter"
+    TRADER = "trader"
+    EXPERT = "expert"
+    PREMIUM = "premium"
     INSTITUTIONAL = "institutional"
 
 class SubscriptionStatus(str, Enum):
@@ -151,9 +151,9 @@ class SubscriptionUpgrade(BaseModel):
 
 # Configuraciones predefinidas de planes
 DEFAULT_PLANS = {
-    PlanType.FREEMIUM: SubscriptionPlan(
-        name="Freemium",
-        plan_type=PlanType.FREEMIUM,
+    PlanType.STARTER: SubscriptionPlan(
+        name="Starter",
+        plan_type=PlanType.STARTER,
         price=0.0,
         description="Plan gratuito para empezar con trading básico",
         benefits=[
@@ -198,9 +198,9 @@ DEFAULT_PLANS = {
         response_time_hours=72
     ),
     
-    PlanType.BASIC: SubscriptionPlan(
-        name="Básico",
-        plan_type=PlanType.BASIC,
+    PlanType.TRADER: SubscriptionPlan(
+        name="Trader",
+        plan_type=PlanType.TRADER,
         price=29.0,
         description="Plan para traders serios que quieren más herramientas",
         benefits=[
@@ -247,9 +247,9 @@ DEFAULT_PLANS = {
         response_time_hours=48
     ),
     
-    PlanType.PRO: SubscriptionPlan(
-        name="Pro",
-        plan_type=PlanType.PRO,
+    PlanType.EXPERT: SubscriptionPlan(
+        name="Expert",
+        plan_type=PlanType.EXPERT,
         price=99.0,
         description="Plan para traders profesionales y semi-profesionales",
         benefits=[
@@ -299,9 +299,9 @@ DEFAULT_PLANS = {
         response_time_hours=24
     ),
     
-    PlanType.ELITE: SubscriptionPlan(
-        name="Elite",
-        plan_type=PlanType.ELITE,
+    PlanType.PREMIUM: SubscriptionPlan(
+        name="Premium",
+        plan_type=PlanType.PREMIUM,
         price=299.0,
         description="Plan para traders institucionales y fondos",
         benefits=[
@@ -356,7 +356,7 @@ DEFAULT_PLANS = {
     PlanType.INSTITUTIONAL: SubscriptionPlan(
         name="Institutional",
         plan_type=PlanType.INSTITUTIONAL,
-        price=999.0,
+        price=1199.99,
         description="Plan para empresas de trading y fondos institucionales",
         benefits=[
             "AI Tradicional Elite + máxima precisión",

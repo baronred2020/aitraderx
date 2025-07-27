@@ -6,7 +6,7 @@ El sistema de suscripciones implementa un modelo de negocio con 4 niveles de pla
 
 ## 🎯 Planes de Suscripción
 
-### 1. FREEMIUM ($0/mes)
+### 1. STARTER ($0/mes)
 **Objetivo:** Onboarding y conversión
 
 **Capacidades:**
@@ -22,7 +22,7 @@ El sistema de suscripciones implementa un modelo de negocio con 4 niveles de pla
 - 10 predicciones por día
 - 5 backtests por mes
 
-### 2. BÁSICO ($29/mes)
+### 2. TRADER ($29/mes)
 **Objetivo:** Usuarios serios
 
 **Capacidades:**
@@ -39,7 +39,7 @@ El sistema de suscripciones implementa un modelo de negocio con 4 niveles de pla
 - 50 predicciones por día
 - 20 backtests por mes
 
-### 3. PRO ($99/mes)
+### 3. EXPERT ($99/mes)
 **Objetivo:** Traders profesionales
 
 **Capacidades:**
@@ -61,7 +61,7 @@ El sistema de suscripciones implementa un modelo de negocio con 4 niveles de pla
 - 200 predicciones por día
 - 100 backtests por mes
 
-### 4. ELITE ($299/mes)
+### 4. PREMIUM ($299/mes)
 **Objetivo:** Traders institucionales
 
 **Capacidades:**
@@ -83,6 +83,32 @@ El sistema de suscripciones implementa un modelo de negocio con 4 niveles de pla
 - 10000 requests diarios
 - 1000 predicciones por día
 - 500 backtests por mes
+
+### 5. INSTITUTIONAL ($1199.99/mes)
+**Objetivo:** Empresas de trading y fondos institucionales
+
+**Capacidades:**
+- ✅ AI Tradicional Elite + máxima precisión
+- ✅ Reinforcement Learning completo (DQN + PPO)
+- ✅ Ensemble AI avanzado optimizado
+- ✅ MEGA MIND - Fusión de cerebros IA
+- ✅ Predicciones institucionales (60 días)
+- ✅ Backtesting institucional avanzado
+- ✅ Todos los instrumentos (Forex, Stocks, Crypto, Commodities)
+- ✅ Risk Management institucional
+- ✅ Portfolio Optimization avanzado
+- ✅ Auto-Trading con AI completa
+- ✅ Custom Models personalizados
+- ✅ Integración MT4/MT5 completa
+- ✅ API personalizada con alta frecuencia
+- ✅ Soporte dedicado 24/7
+- ✅ Análisis fundamental avanzado
+- ✅ Machine Learning personalizado
+
+**Límites:**
+- 50000 requests diarios
+- 5000 predicciones por día
+- 2000 backtests por mes
 
 ## 🏗️ Arquitectura del Sistema
 

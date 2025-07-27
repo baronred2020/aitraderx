@@ -1,8 +1,8 @@
 {
-  "0e169801-aea5-41b9-97a9-a8d824e90f85": {
-    "plan_id": "0e169801-aea5-41b9-97a9-a8d824e90f85",
-    "name": "Freemium",
-    "plan_type": "freemium",
+  "c2b93ac0-8215-4209-8a7a-863846b5659c": {
+    "plan_id": "c2b93ac0-8215-4209-8a7a-863846b5659c",
+    "name": "Starter",
+    "plan_type": "starter",
     "price": 0.0,
     "currency": "USD",
     "billing_cycle": "monthly",
@@ -48,10 +48,10 @@
     "support_level": "community",
     "response_time_hours": 72
   },
-  "2b83cc4a-62f8-438f-9026-a5b1c174d6fa": {
-    "plan_id": "2b83cc4a-62f8-438f-9026-a5b1c174d6fa",
-    "name": "B\u00e1sico",
-    "plan_type": "basic",
+  "fb93d278-e65d-4190-a618-00de2a3bb738": {
+    "plan_id": "fb93d278-e65d-4190-a618-00de2a3bb738",
+    "name": "Trader",
+    "plan_type": "trader",
     "price": 29.0,
     "currency": "USD",
     "billing_cycle": "monthly",
@@ -99,10 +99,10 @@
     "support_level": "email",
     "response_time_hours": 48
   },
-  "297428ea-6f78-48ef-849e-3f6292d39ba1": {
-    "plan_id": "297428ea-6f78-48ef-849e-3f6292d39ba1",
-    "name": "Pro",
-    "plan_type": "pro",
+  "60c76814-919f-4900-9346-100ef447b915": {
+    "plan_id": "60c76814-919f-4900-9346-100ef447b915",
+    "name": "Expert",
+    "plan_type": "expert",
     "price": 99.0,
     "currency": "USD",
     "billing_cycle": "monthly",
@@ -153,10 +153,10 @@
     "support_level": "email",
     "response_time_hours": 24
   },
-  "2d5e05dd-a4e7-4273-b804-7daa4302b7b3": {
-    "plan_id": "2d5e05dd-a4e7-4273-b804-7daa4302b7b3",
-    "name": "Elite",
-    "plan_type": "elite",
+  "0285579c-b17e-404c-8ed6-4a8004d77efc": {
+    "plan_id": "0285579c-b17e-404c-8ed6-4a8004d77efc",
+    "name": "Premium",
+    "plan_type": "premium",
     "price": 299.0,
     "currency": "USD",
     "billing_cycle": "monthly",
@@ -208,5 +208,64 @@
     "max_portfolios": 100,
     "support_level": "phone",
     "response_time_hours": 4
+  },
+  "9a6eb57c-a70f-4bba-b81b-6a40df0b5ca4": {
+    "plan_id": "9a6eb57c-a70f-4bba-b81b-6a40df0b5ca4",
+    "name": "Institutional",
+    "plan_type": "institutional",
+    "price": 1199.99,
+    "currency": "USD",
+    "billing_cycle": "monthly",
+    "ai_capabilities": {
+      "traditional_ai": true,
+      "reinforcement_learning": true,
+      "ensemble_ai": true,
+      "lstm_predictions": true,
+      "custom_models": true,
+      "auto_training": true
+    },
+    "api_limits": {
+      "daily_requests": 50000,
+      "prediction_days": 60,
+      "backtest_days": 3650,
+      "trading_pairs": 5000,
+      "alerts_limit": 1000,
+      "portfolio_size": 1000
+    },
+    "ui_features": {
+      "advanced_charts": true,
+      "multiple_timeframes": true,
+      "rl_dashboard": true,
+      "ai_monitor": true,
+      "mt4_integration": true,
+      "api_access": true,
+      "custom_reports": true,
+      "priority_support": true
+    },
+    "description": "Plan para empresas de trading y fondos institucionales",
+    "benefits": [
+      "AI Tradicional Elite + m\u00e1xima precisi\u00f3n",
+      "Reinforcement Learning completo (DQN + PPO)",
+      "Ensemble AI avanzado optimizado",
+      "MEGA MIND - Fusi\u00f3n de cerebros IA",
+      "Predicciones institucionales (60 d\u00edas)",
+      "Backtesting institucional avanzado",
+      "Todos los instrumentos (Forex, Stocks, Crypto, Commodities)",
+      "Risk Management institucional",
+      "Portfolio Optimization avanzado",
+      "Auto-Trading con AI completa",
+      "Custom Models personalizados",
+      "Integraci\u00f3n MT4/MT5 completa",
+      "API personalizada con alta frecuencia",
+      "Soporte dedicado 24/7",
+      "An\u00e1lisis fundamental avanzado",
+      "Machine Learning personalizado"
+    ],
+    "max_indicators": 100,
+    "max_predictions_per_day": 5000,
+    "max_backtests_per_month": 2000,
+    "max_portfolios": 1000,
+    "support_level": "dedicated",
+    "response_time_hours": 1
   }
 }

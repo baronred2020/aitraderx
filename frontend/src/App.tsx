@@ -14,6 +14,7 @@ import './index.css';
 import AIMonitorPage from './components/AIMonitor';
 import { BrainTrader } from './components/BrainTrader/BrainTrader';
 import { MegaMind } from './components/MegaMind';
+import Subscriptions from './components/Subscriptions';
 
 // Componentes temporales para las nuevas secciones
 const Portfolio = () => (
@@ -291,6 +292,8 @@ function AppContent() {
           return <Reports />;
         }
         return null;
+      case 'subscriptions':
+        return <Subscriptions />;
       case 'community':
         if (requireAccess('community')) {
           return <Community />;

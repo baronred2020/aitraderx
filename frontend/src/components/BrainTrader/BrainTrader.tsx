@@ -111,16 +111,17 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   // Configuración según suscripción
   const getAvailablePairs = () => {
     if (!subscription || subscription.status !== 'active') {
-      return ['EURUSD']; // Freemium
+      return ['EURUSD']; // Starter
     }
     
     switch (subscription.planType) {
-      case 'freemium':
+      case 'starter':
         return ['EURUSD'];
-      case 'basic':
+      case 'trader':
         return ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD'];
-      case 'pro':
-      case 'elite':
+      case 'expert':
+      case 'premium':
+      case 'institutional':
         return ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'EURGBP', 'GBPJPY', 'EURJPY'];
       default:
         return ['EURUSD'];
@@ -129,15 +130,16 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   const getAvailableStyles = () => {
     if (!subscription || subscription.status !== 'active') {
-      return ['day_trading']; // Freemium
+      return ['day_trading']; // Starter
     }
     
     switch (subscription.planType) {
-      case 'freemium':
+      case 'starter':
         return ['day_trading'];
-      case 'basic':
-      case 'pro':
-      case 'elite':
+      case 'trader':
+      case 'expert':
+      case 'premium':
+      case 'institutional':
         return ['scalping', 'day_trading', 'swing_trading', 'position_trading'];
       default:
         return ['day_trading'];
@@ -146,17 +148,17 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   const getAvailableBrains = () => {
     if (!subscription || subscription.status !== 'active') {
-      return ['brain_max']; // Freemium
+      return ['brain_max']; // Starter
     }
     
     switch (subscription.planType) {
-      case 'freemium':
+      case 'starter':
         return ['brain_max'];
-      case 'basic':
+      case 'trader':
         return ['brain_max'];
-      case 'pro':
+      case 'expert':
         return ['brain_max', 'brain_ultra'];
-      case 'elite':
+      case 'premium':
         return ['brain_max', 'brain_ultra', 'brain_predictor'];
       case 'institutional':
         return ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind'];
@@ -202,7 +204,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     }
 
     switch (subscription.planType) {
-      case 'freemium':
+      case 'starter':
         return {
           brainMax: true,
           brainUltra: false,
@@ -215,7 +217,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           customModels: false,
           apiAccess: false
         };
-      case 'basic':
+      case 'trader':
         return {
           brainMax: true,
           brainUltra: false,
@@ -228,7 +230,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           customModels: false,
           apiAccess: false
         };
-      case 'pro':
+      case 'expert':
         return {
           brainMax: true,
           brainUltra: true,
@@ -241,7 +243,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           customModels: false,
           apiAccess: false
         };
-      case 'elite':
+      case 'premium':
         return {
           brainMax: true,
           brainUltra: true,
@@ -295,7 +297,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     }
 
     switch (subscription.planType) {
-      case 'freemium':
+      case 'starter':
         return {
           maxPredictionsPerDay: 10,
           maxPairs: 1,
@@ -303,7 +305,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           maxBacktests: 5,
           supportLevel: 'community'
         };
-      case 'basic':
+      case 'trader':
         return {
           maxPredictionsPerDay: 50,
           maxPairs: 5,
@@ -311,7 +313,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           maxBacktests: 20,
           supportLevel: 'email'
         };
-      case 'pro':
+      case 'expert':
         return {
           maxPredictionsPerDay: 200,
           maxPairs: 50,
@@ -319,7 +321,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           maxBacktests: 100,
           supportLevel: 'email'
         };
-      case 'elite':
+      case 'premium':
         return {
           maxPredictionsPerDay: 1000,
           maxPairs: 1000,
@@ -762,9 +764,9 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       <div className="bg-gradient-to-r from-blue-500/10 to-teal-500/10 rounded-xl p-6 border border-blue-500/20">
         <div className="flex items-center space-x-3 mb-4">
           {subscription?.planType === 'institutional' && <Crown className="w-6 h-6 text-purple-600" />}
-          {subscription?.planType === 'elite' && <Crown className="w-6 h-6 text-yellow-400" />}
-          {subscription?.planType === 'pro' && <Star className="w-6 h-6 text-purple-400" />}
-          <h3 className="text-lg font-semibold text-white">Plan Actual: {subscription?.planType?.toUpperCase() || 'FREEMIUM'}</h3>
+          {subscription?.planType === 'premium' && <Crown className="w-6 h-6 text-yellow-400" />}
+          {subscription?.planType === 'expert' && <Star className="w-6 h-6 text-purple-400" />}
+          <h3 className="text-lg font-semibold text-white">Plan Actual: {subscription?.planType?.toUpperCase() || 'STARTER'}</h3>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
