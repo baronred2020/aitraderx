@@ -30,6 +30,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import { useBrainTraderApi } from '../../hooks/useBrainTraderApi';
+import { useYahooMarketData } from '../../hooks/useYahooMarketData';
 import { apiService } from '../../services/api';
 import type { PredictionHistoryItem, PredictionLimits, UserStats } from '../../services/api';
 
@@ -84,6 +85,10 @@ interface Trend {
 export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const { subscription } = useAuth();
   const { checkAccess, checkFeature } = useFeatureAccess();
+  
+  // Hook para obtener precios actuales de mercado
+  const { data: marketData, loading: marketLoading, error: marketError } = useYahooMarketData(['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD']);
+  
   const {
     predictions,
     signals,
@@ -364,6 +369,25 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           supportLevel: 'community'
         };
     }
+  };
+
+  // Función para obtener el precio actual del par seleccionado
+  const getCurrentPrice = (pair: string) => {
+    if (!marketData || !marketData[pair]) {
+      return null;
+    }
+    return parseFloat(marketData[pair].price);
+  };
+
+  // Función para obtener el cambio de precio
+  const getPriceChange = (pair: string) => {
+    if (!marketData || !marketData[pair]) {
+      return null;
+    }
+    return {
+      change: parseFloat(marketData[pair].change),
+      changePercent: parseFloat(marketData[pair].changePercent)
+    };
   };
 
   // Cargar datos del modelo
@@ -798,6 +822,140 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                     : 'No puedes generar una nueva predicción en este momento'
                   }
                 </p>
+              )}
+            </div>
+
+            {/* Precio Actual */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6 mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-gray-800">Precio Actual</h4>
+                <div className="flex items-center space-x-2">
+                  {marketLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  ) : (
+                    <div className={`w-3 h-3 rounded-full ${
+                      marketError 
+                        ? marketError.includes('fin de semana') || marketError.includes('cerrado')
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                        : 'bg-green-500'
+                    }`}></div>
+                  )}
+                  <span className="text-sm text-gray-500">
+                    {marketLoading 
+                      ? 'Actualizando...' 
+                      : marketError 
+                        ? marketError.includes('fin de semana') || marketError.includes('cerrado')
+                          ? 'Mercado cerrado'
+                          : 'Error'
+                        : 'En vivo'
+                    }
+                  </span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-700 mb-2">Par Seleccionado</h5>
+                  <div className="flex items-center">
+                    <span className="text-lg font-bold text-gray-800 mr-2">{selectedPair}</span>
+                    <span className="text-sm text-gray-500">({selectedStyle})</span>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-700 mb-2">Precio Actual</h5>
+                  <div className="flex items-center">
+                    <span className="text-2xl font-bold text-gray-800">
+                      ${getCurrentPrice(selectedPair)?.toFixed(4) || '---'}
+                    </span>
+                    {getPriceChange(selectedPair) && (
+                      <span className={`ml-2 text-sm font-semibold ${
+                        getPriceChange(selectedPair)!.changePercent >= 0 
+                          ? 'text-green-600' 
+                          : 'text-red-600'
+                      }`}>
+                        {getPriceChange(selectedPair)!.changePercent >= 0 ? '+' : ''}
+                        {getPriceChange(selectedPair)!.changePercent.toFixed(2)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {currentPrediction && (
+                  <>
+                    <div className="bg-white rounded-lg p-4">
+                      <h5 className="font-semibold text-gray-700 mb-2">Diferencia con Predicción</h5>
+                      <div className="flex items-center">
+                        {(() => {
+                          const currentPrice = getCurrentPrice(selectedPair);
+                          const targetPrice = currentPrediction.target_price;
+                          if (!currentPrice) return <span className="text-gray-500">---</span>;
+                          
+                          const difference = targetPrice - currentPrice;
+                          const differencePercent = (difference / currentPrice) * 100;
+                          
+                          return (
+                            <span className={`text-lg font-bold ${
+                              difference >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {difference >= 0 ? '+' : ''}{difference.toFixed(4)} 
+                              ({differencePercent >= 0 ? '+' : ''}{differencePercent.toFixed(2)}%)
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg p-4">
+                      <h5 className="font-semibold text-gray-700 mb-2">Estado de Predicción</h5>
+                      <div className="flex items-center">
+                        {(() => {
+                          const currentPrice = getCurrentPrice(selectedPair);
+                          const targetPrice = currentPrediction.target_price;
+                          if (!currentPrice) return <span className="text-gray-500">---</span>;
+                          
+                          const isExpired = new Date() > new Date(currentPrediction.expires_at || '');
+                          if (isExpired) {
+                            const isCorrect = (currentPrediction.direction === 'up' && currentPrice > targetPrice) ||
+                                            (currentPrediction.direction === 'down' && currentPrice < targetPrice);
+                            
+                            return (
+                              <span className={`text-sm font-semibold ${
+                                isCorrect ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {isCorrect ? '✅ Correcta' : '❌ Incorrecta'}
+                              </span>
+                            );
+                          } else {
+                            return <span className="text-blue-600 text-sm font-semibold">⏳ En progreso</span>;
+                          }
+                        })()}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {marketError && (
+                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-center">
+                    <AlertTriangle className="w-4 h-4 text-yellow-600 mr-2" />
+                    <div>
+                      <p className="text-yellow-800 text-sm font-medium">
+                        {marketError.includes('fin de semana') 
+                          ? 'Mercado cerrado - datos de fin de semana'
+                          : marketError.includes('cerrado')
+                          ? 'Mercado cerrado - usando datos históricos'
+                          : `Error obteniendo datos de mercado: ${marketError}`
+                        }
+                      </p>
+                      <p className="text-yellow-700 text-xs mt-1">
+                        Los precios mostrados pueden no estar actualizados en tiempo real
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

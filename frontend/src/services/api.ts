@@ -325,10 +325,31 @@ class ApiService {
     brainType: string = 'brain_max',
     style: string = 'day_trading'
   ): Promise<{ success: boolean; prediction?: any; limits?: PredictionLimits; error?: string }> {
-    return this.request('/predictions/generate', {
-      method: 'POST',
-      body: JSON.stringify({ pair, brain_type: brainType, style })
-    });
+    // Usar el endpoint correcto de Brain Trader
+    const response = await this.request<BrainTraderPrediction[]>(`/brain-trader/predictions/${brainType}?pair=${pair}&style=${style}&limit=1&plan_type=starter`);
+    
+    if (response && Array.isArray(response) && response.length > 0) {
+      const prediction = response[0];
+      return {
+        success: true,
+        prediction: prediction,
+        limits: {
+          can_generate: true,
+          remaining_predictions: 9, // Mock para ahora
+          max_predictions_per_day: 10,
+          has_active_prediction: true,
+          plan_type: 'starter',
+          analysis_type: 'rsi_only',
+          timeframe: prediction.timeframe,
+          duration_minutes: 15
+        }
+      };
+    } else {
+      return {
+        success: false,
+        error: 'No se pudo generar la predicción'
+      };
+    }
   }
 
   async getPredictionHistory(limit: number = 20): Promise<PredictionHistoryItem[]> {
