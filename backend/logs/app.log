@@ -1128,3 +1128,583 @@ plan_type
 2025-07-27 16:21:09,833 - api.mega_mind_routes - ERROR - Error getting MEGA MIND predictions: 'MegaMindService' object has no attribute 'get_mega_mind_predictions'
 2025-07-27 16:21:09,840 - api.mega_mind_routes - ERROR - Error getting brain arena results: 'MegaMindService' object has no attribute 'get_brain_arena_results'
 2025-07-27 16:21:09,842 - api.mega_mind_routes - ERROR - Error getting MegaMind performance: 'MegaMindService' object has no attribute 'get_mega_mind_performance'
+2025-07-27 16:53:48,851 - main - INFO - Iniciando AI Trading System...
+2025-07-27 16:53:48,855 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 16:55:34,437 - api.subscription_routes - ERROR - Error obteniendo suscripción: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 16:55:38,828 - api.subscription_routes - ERROR - Error obteniendo suscripción: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 16:55:47,740 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 16:56:01,875 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 16:56:16,146 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 16:58:44,303 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 16:58:50,573 - main - INFO - Iniciando AI Trading System...
+2025-07-27 16:58:50,574 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 16:58:53,416 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 16:58:57,356 - main - INFO - Iniciando AI Trading System...
+2025-07-27 16:58:57,357 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 16:59:02,040 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 16:59:06,186 - main - INFO - Iniciando AI Trading System...
+2025-07-27 16:59:06,187 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 16:59:12,626 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 16:59:16,636 - main - INFO - Iniciando AI Trading System...
+2025-07-27 16:59:16,637 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 16:59:27,831 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 16:59:32,019 - main - INFO - Iniciando AI Trading System...
+2025-07-27 16:59:32,020 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:07:38,805 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:07:38,806 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:07:38,813 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:08:24,753 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:08:24,754 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:08:55,808 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:09:13,062 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:09:13,063 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:10:48,947 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 17:10:52,723 - asyncio - ERROR - Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Users\andre\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\andre\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto
+2025-07-27 17:14:49,268 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 17:18:02,819 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:18:02,820 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:18:54,534 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 17:19:05,611 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 17:19:11,655 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:12,272 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:13,001 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:13,403 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:13,404 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:14,088 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:14,089 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:14,732 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:14,734 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:15,344 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:15,345 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:16,061 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:16,063 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:17,700 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:18,416 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:19,098 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:19,440 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:19,441 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:20,157 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:20,159 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:20,884 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:20,933 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:21,489 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:21,490 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:19:22,002 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:19:22,003 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:21:01,209 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:21:11,370 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:21:11,586 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:21:11,586 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:21:37,565 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:21:44,774 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:21:45,112 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:21:45,112 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:21:59,746 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:33:25,691 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:33:25,926 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:33:25,926 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:36:25,165 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:36:25,397 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:36:25,397 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:36:42,105 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:39:28,309 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:39:28,489 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:39:28,490 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:39:49,893 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 17:39:54,335 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:54,708 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:54,709 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:39:54,710 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:39:55,121 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:55,122 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:39:55,123 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:39:55,529 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:55,530 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:39:55,531 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:39:55,940 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:55,943 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:39:55,945 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:39:56,247 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:56,259 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:39:56,260 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:39:56,656 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:57,680 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:58,807 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:59,220 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:59,225 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:39:59,232 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:39:59,625 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:39:59,627 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:39:59,629 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:40:00,140 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:40:00,141 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:40:00,144 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:40:00,545 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:40:00,547 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:40:00,548 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:40:00,956 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:40:00,958 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 17:40:00,959 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:40:01,294 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:40:02,092 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 17:42:48,696 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:42:55,854 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:42:56,159 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:42:56,161 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:43:08,646 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:43:15,341 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:43:15,570 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:43:15,572 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:43:29,688 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:43:36,054 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:43:36,182 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:43:36,183 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:43:47,612 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:43:54,725 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:43:54,917 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:43:54,917 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:44:10,079 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:44:16,483 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:44:16,624 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:44:16,624 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:44:29,833 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:44:36,637 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:44:36,773 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:44:36,774 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:45:51,976 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:45:53,128 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:45:53,131 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:46:02,289 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 17:46:09,971 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:46:10,074 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:46:10,075 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:47:16,360 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 17:47:20,869 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:21,423 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:21,964 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:22,099 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:22,101 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:22,102 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:22,409 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:22,411 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:22,412 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:22,585 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:22,586 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:22,587 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:22,792 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:22,793 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:22,794 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:22,987 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:22,988 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:22,990 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:23,432 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:23,830 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:24,352 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:24,524 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:24,526 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:24,528 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:24,727 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:24,729 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:24,731 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:24,934 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:24,935 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:24,935 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:25,078 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:25,079 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:25,081 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:47:25,377 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:47:25,380 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:47:25,381 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:48:59,176 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:48:59,383 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 17:48:59,384 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 17:48:59,385 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:00,003 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:00,173 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:00,173 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:00,174 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:02,974 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:03,147 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:03,148 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:03,148 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:05,739 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:05,912 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:05,912 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:05,913 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:08,403 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:08,678 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:08,680 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:08,681 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:58,882 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:59,049 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:59,049 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:59,050 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:59,256 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:59,256 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:59,257 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:59,460 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:59,460 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:59,460 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:59,672 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:59,673 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:59,674 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:50:59,868 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:50:59,869 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 17:50:59,869 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:51:00,077 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:51:01,034 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 17:53:08,249 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 17:53:08,345 - main - INFO - Iniciando AI Trading System...
+2025-07-27 17:53:08,345 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 17:58:10,486 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 17:58:17,366 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:18,066 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:18,433 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:18,434 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:18,435 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:18,734 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:18,737 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:18,739 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:19,110 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:19,112 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:19,115 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:19,530 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:19,551 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:19,572 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:19,933 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:19,935 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:19,937 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:20,336 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:22,671 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:23,282 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:23,613 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:23,632 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:23,634 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:23,921 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:23,923 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:23,924 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:24,329 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:24,331 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:24,335 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:24,742 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:24,759 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:24,783 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:25,175 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:25,180 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:25,186 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 17:58:25,904 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:26,792 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:27,099 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 17:58:27,105 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 17:58:27,106 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:01:49,895 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:01:50,121 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:01:50,122 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:01:50,123 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:01:55,684 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:01:55,890 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:01:55,891 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:01:55,892 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:03:42,080 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:42,261 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:42,263 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:03:42,264 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:03:44,748 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:44,956 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:44,958 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:03:44,959 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:03:47,410 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:47,593 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:47,593 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:03:47,593 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:03:50,176 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:50,367 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:03:50,368 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:03:50,369 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:06:08,620 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:06:08,927 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:06:08,929 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:06:08,930 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:06:13,226 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:06:13,533 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:06:13,534 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:06:13,535 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:11:06,093 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:11:06,364 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:11:06,364 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:11:06,365 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:15:15,564 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:15:26,941 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 18:15:27,109 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:15:27,109 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:16:16,984 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:16:17,137 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:16:17,169 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:16:17,171 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:18:06,790 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:18:13,458 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 18:18:13,559 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:18:13,559 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:21:49,517 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 18:22:08,658 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:10,903 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:12,234 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:12,833 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:12,872 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:12,876 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:13,137 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:13,363 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:13,369 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:13,531 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:13,533 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:13,535 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:13,767 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:13,768 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:13,769 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:13,935 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:13,937 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:13,939 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:14,489 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:15,675 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:16,726 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:16,964 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:16,968 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:16,969 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:17,209 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:17,213 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:17,218 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:17,544 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:17,545 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:17,546 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:17,956 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:17,957 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:17,958 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:18,565 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:18,566 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:18,567 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:22:18,842 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:18,987 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:22:18,988 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:22:18,989 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:23:04,445 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:23:04,747 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1759173
+2025-07-27 18:23:04,750 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1759173
+2025-07-27 18:23:04,768 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:26:11,014 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 18:26:11,320 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 18:26:11,321 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 18:26:11,322 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 18:27:21,871 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:28:49,176 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 18:29:20,602 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:29:20,603 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:29:40,701 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:29:40,702 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:29:40,702 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:30:37,567 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:30:37,568 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:30:37,568 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:30:37,762 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:30:37,763 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:31:19,181 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:31:59,301 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:31:59,303 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:31:59,304 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:31:59,462 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:31:59,463 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:33:56,082 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:34:07,869 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:34:07,869 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:34:07,869 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:34:07,970 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:34:07,970 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:34:12,732 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:34:12,733 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:34:12,733 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:34:12,813 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:34:12,813 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:34:37,940 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1763322
+2025-07-27 18:34:38,076 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1763322
+2025-07-27 18:34:38,076 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1763322
+2025-07-27 18:34:39,798 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded successfully
+2025-07-27 18:34:40,270 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 18:34:40,271 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 18:34:40,875 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 18:34:40,875 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17161
+2025-07-27 18:34:50,984 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:34:56,037 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:34:56,037 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:34:56,037 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:34:56,111 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:34:56,111 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:35:57,253 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 18:35:57,417 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 18:35:57,417 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 18:35:59,346 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded successfully
+2025-07-27 18:35:59,737 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 18:35:59,737 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 18:36:00,517 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 18:36:00,517 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17223
+2025-07-27 18:37:25,217 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 18:37:25,420 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 18:37:25,420 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 18:37:25,421 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 18:37:25,604 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 18:37:25,605 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 18:37:25,969 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 18:37:25,969 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17447
+2025-07-27 18:38:27,867 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:38:41,991 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:38:41,994 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:38:41,994 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:38:42,280 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:38:42,280 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:41:00,491 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:41:07,276 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:41:07,277 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:41:07,277 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:41:07,443 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:41:07,444 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:42:00,955 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:42:06,016 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:42:06,017 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:42:06,017 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:42:06,154 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:42:06,154 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:43:51,875 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:43:58,058 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:43:58,059 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:43:58,059 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:43:58,181 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:43:58,181 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:44:01,929 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:44:06,544 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:44:06,544 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:44:06,544 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:44:06,615 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:44:06,616 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:44:12,306 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:44:17,596 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:44:17,597 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:44:17,597 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:44:17,694 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:44:17,694 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:44:21,799 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:44:26,137 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:44:26,137 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:44:26,138 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:44:26,204 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:44:26,204 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:44:31,606 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:44:39,185 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:44:39,186 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:44:39,188 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:44:39,368 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:44:39,369 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:44:41,213 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:44:45,944 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:44:45,946 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:44:45,947 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:44:46,090 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:44:46,090 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:44:50,076 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:44:54,046 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:44:54,046 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:44:54,047 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:44:54,115 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:44:54,116 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:45:00,498 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:45:06,754 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:45:06,754 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:45:06,755 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:45:06,915 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:45:06,915 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:45:09,619 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:45:15,349 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:45:15,349 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:45:15,349 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:45:15,473 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:45:15,473 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:45:24,687 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:45:30,237 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:45:30,238 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:45:30,238 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:45:30,312 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:45:30,312 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:45:34,861 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:45:40,272 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:45:40,272 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:45:40,272 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:45:40,351 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:45:40,351 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:45:45,303 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:45:49,803 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:45:49,804 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:45:49,804 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:45:49,963 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:45:49,964 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:45:54,860 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:45:59,484 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:45:59,485 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:45:59,486 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:45:59,637 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:45:59,638 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:46:04,302 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:46:08,891 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:46:08,892 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:46:08,892 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:46:09,148 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:46:09,149 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:46:33,028 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:46:44,403 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:46:44,403 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:46:44,403 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:46:44,481 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:46:44,481 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:46:50,628 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:47:00,449 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:47:00,450 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:47:00,450 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:47:00,893 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:47:00,896 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:47:13,059 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:47:20,718 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:47:20,719 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:47:20,719 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:47:21,179 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:47:21,179 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:48:05,074 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 18:48:16,682 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 18:48:16,683 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 18:48:16,683 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 18:48:16,771 - main - INFO - Iniciando AI Trading System...
+2025-07-27 18:48:16,771 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 18:49:02,246 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:49:02,417 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 18:49:02,417 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1760554
+2025-07-27 18:49:06,766 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded successfully
+2025-07-27 18:49:10,151 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 18:49:10,152 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 18:49:10,152 - services.brain_trader_service - ERROR - Error obteniendo predicción Brain Max: object numpy.ndarray can't be used in 'await' expression

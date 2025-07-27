@@ -16,8 +16,13 @@ class ModelLoader:
     de los modelos de IA entrenados.
     """
     
-    def __init__(self, models_path: str = "models/trained_models"):
-        self.models_path = Path(models_path)
+    def __init__(self, models_path: str = None):
+        if models_path is None:
+            # Usar ruta absoluta desde el directorio actual
+            current_dir = Path(__file__).parent.parent
+            self.models_path = current_dir / "models" / "trained_models"
+        else:
+            self.models_path = Path(models_path)
         self.models = {}
         self.scalers = {}
         self.model_info = {}
@@ -39,25 +44,53 @@ class ModelLoader:
                 logger.info(f"Brain Max model {model_key} loaded from cache")
                 return self.models[model_key], self.scalers.get(model_key), self.model_info.get(model_key, {})
             
-            # Construir ruta del modelo
-            model_file = self.models_path / "Brain_Max" / pair / f"{style}_model.pkl"
-            scaler_file = self.models_path / "Brain_Max" / pair / f"{style}_scaler.pkl"
+            # Construir ruta del modelo - usar el primer modelo disponible
+            model_dir = self.models_path / "Brain_Max" / pair / style
             
-            # Verificar si existen los archivos
-            if not model_file.exists():
-                logger.warning(f"Brain Max model file not found: {model_file}")
+            # Buscar archivos de modelo disponibles
+            model_files = list(model_dir.glob("*_model.pkl"))
+            if not model_files:
+                logger.warning(f"No Brain Max model files found in: {model_dir}")
                 return self._create_mock_model("Brain Max", pair, style)
             
-            if not scaler_file.exists():
-                logger.warning(f"Brain Max scaler file not found: {scaler_file}")
-                return self._create_mock_model("Brain Max", pair, style)
+            # Cargar TODOS los modelos disponibles para Brain Max
+            models = {}
+            scalers = {}
             
-            # Cargar modelo y scaler
-            with open(model_file, 'rb') as f:
-                model = pickle.load(f)
+            for model_file in model_files:
+                model_name = model_file.stem.replace('_model', '')
+                
+                # Cargar modelo
+                with open(model_file, 'rb') as f:
+                    models[model_name] = pickle.load(f)
+                
+                # Buscar y cargar scaler correspondiente
+                scaler_file = model_file.parent / f"{model_file.stem.replace('_model', '_scaler')}.pkl"
+                if scaler_file.exists():
+                    with open(scaler_file, 'rb') as f:
+                        scalers[model_name] = pickle.load(f)
+                else:
+                    scalers[model_name] = None
             
-            with open(scaler_file, 'rb') as f:
-                scaler = pickle.load(f)
+            # Crear modelo combinado (ensemble)
+            combined_model = {
+                'name': 'Brain Max Ensemble',
+                'type': 'ensemble',
+                'models': models,
+                'scalers': scalers,
+                'ensemble_strategy': 'weighted_voting',
+                'weights': {
+                    'lgb': 0.3,  # LightGBM - más robusto
+                    'xgb': 0.25,  # XGBoost
+                    'rf': 0.2,    # Random Forest
+                    'et': 0.15,   # Extra Trees
+                    'gb': 0.05,   # Gradient Boosting
+                    'mlp': 0.05   # Neural Network
+                }
+            }
+            
+            # Usar el primer scaler como referencia (o None si no hay)
+            scaler = scalers.get('lgb') if 'lgb' in scalers else (list(scalers.values())[0] if scalers else None)
             
             # Información del modelo
             model_info = {
@@ -71,12 +104,12 @@ class ModelLoader:
             }
             
             # Guardar en cache
-            self.models[model_key] = model
+            self.models[model_key] = combined_model
             self.scalers[model_key] = scaler
             self.model_info[model_key] = model_info
             
             logger.info(f"Brain Max model {model_key} loaded successfully")
-            return model, scaler, model_info
+            return combined_model, scaler, model_info
             
         except Exception as e:
             logger.error(f"Error loading Brain Max model: {str(e)}")
