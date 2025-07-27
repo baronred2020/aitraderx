@@ -10,28 +10,34 @@ interface UpgradeModalProps {
 }
 
 const planInfo = {
-  freemium: {
-    name: 'Freemium',
+  starter: {
+    name: 'Starter',
     price: '$0',
     color: 'text-gray-400',
     icon: null
   },
-  basic: {
-    name: 'Básico',
+  trader: {
+    name: 'Trader',
     price: '$29/mes',
     color: 'text-blue-400',
     icon: Zap
   },
-  pro: {
-    name: 'Pro',
+  expert: {
+    name: 'Expert',
     price: '$99/mes',
     color: 'text-purple-400',
     icon: Brain
   },
-  elite: {
-    name: 'Elite',
+  premium: {
+    name: 'Premium',
     price: '$299/mes',
     color: 'text-yellow-400',
+    icon: Crown
+  },
+  institutional: {
+    name: 'Institutional',
+    price: '$1199.99/mes',
+    color: 'text-purple-600',
     icon: Crown
   }
 };
@@ -113,7 +119,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           <div>
             <h3 className="text-sm font-semibold text-white mb-3">Beneficios del Upgrade:</h3>
             <div className="space-y-2">
-              {requiredPlan === 'basic' && (
+              {requiredPlan === 'trader' && (
                 <>
                   <div className="flex items-center space-x-2 text-sm text-gray-300">
                     <Zap className="w-4 h-4 text-blue-400" />
@@ -129,7 +135,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                   </div>
                 </>
               )}
-              {requiredPlan === 'pro' && (
+              {requiredPlan === 'expert' && (
                 <>
                   <div className="flex items-center space-x-2 text-sm text-gray-300">
                     <Brain className="w-4 h-4 text-purple-400" />
@@ -145,7 +151,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                   </div>
                 </>
               )}
-              {requiredPlan === 'elite' && (
+              {requiredPlan === 'premium' && (
                 <>
                   <div className="flex items-center space-x-2 text-sm text-gray-300">
                     <Crown className="w-4 h-4 text-yellow-400" />
@@ -158,6 +164,22 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                   <div className="flex items-center space-x-2 text-sm text-gray-300">
                     <Shield className="w-4 h-4 text-green-400" />
                     <span>Soporte prioritario 24/7</span>
+                  </div>
+                </>
+              )}
+              {requiredPlan === 'institutional' && (
+                <>
+                  <div className="flex items-center space-x-2 text-sm text-gray-300">
+                    <Crown className="w-4 h-4 text-purple-600" />
+                    <span>MEGA MIND - Fusión de cerebros IA</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-300">
+                    <Brain className="w-4 h-4 text-purple-400" />
+                    <span>Predicciones institucionales (60 días)</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-300">
+                    <Shield className="w-4 h-4 text-green-400" />
+                    <span>Soporte dedicado 24/7</span>
                   </div>
                 </>
               )}

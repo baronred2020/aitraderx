@@ -5,7 +5,7 @@ import { Brain, Eye, EyeOff, Loader2, Check, CreditCard, Shield, Zap, Crown } fr
 interface Plan {
   id: string;
   name: string;
-  plan_type: 'freemium' | 'basic' | 'pro' | 'elite';
+  plan_type: 'starter' | 'trader' | 'expert' | 'premium' | 'institutional';
   price: number;
   currency: string;
   description: string;
@@ -53,7 +53,7 @@ export const Register: React.FC = () => {
   const [success, setSuccess] = useState('');
   
   // Estados para el plan y pago
-  const [selectedPlan, setSelectedPlan] = useState<string>('freemium');
+  const [selectedPlan, setSelectedPlan] = useState<string>('starter');
   const [showPlanSelection, setShowPlanSelection] = useState(false);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<string>('');
@@ -141,7 +141,7 @@ export const Register: React.FC = () => {
     setError('');
     
     try {
-      // Registrar usuario con plan freemium
+      // Registrar usuario con plan starter
       const response = await fetch('http://localhost:8000/api/auth/register', {
         method: 'POST',
         headers: {
@@ -149,13 +149,13 @@ export const Register: React.FC = () => {
         },
         body: JSON.stringify({
           ...formData,
-          plan_type: 'freemium'
+          plan_type: 'starter'
         }),
       });
 
       if (response.ok) {
         const responseData = await response.json();
-        setSuccess('¡Registro exitoso! Tu cuenta freemium ha sido creada.');
+        setSuccess('¡Registro exitoso! Tu cuenta starter ha sido creada.');
         
         // Guardar token en localStorage
         if (responseData.token) {
@@ -485,10 +485,11 @@ export const Register: React.FC = () => {
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold text-white">{plan.name}</h4>
                         <div className="flex items-center space-x-2">
-                          {plan.plan_type === 'freemium' && <Shield className="w-4 h-4 text-green-400" />}
-                          {plan.plan_type === 'basic' && <Zap className="w-4 h-4 text-blue-400" />}
-                          {plan.plan_type === 'pro' && <Crown className="w-4 h-4 text-purple-400" />}
-                          {plan.plan_type === 'elite' && <Crown className="w-4 h-4 text-yellow-400" />}
+                          {plan.plan_type === 'starter' && <Shield className="w-4 h-4 text-green-400" />}
+                          {plan.plan_type === 'trader' && <Zap className="w-4 h-4 text-blue-400" />}
+                          {plan.plan_type === 'expert' && <Crown className="w-4 h-4 text-purple-400" />}
+                          {plan.plan_type === 'premium' && <Crown className="w-4 h-4 text-yellow-400" />}
+                          {plan.plan_type === 'institutional' && <Crown className="w-4 h-4 text-purple-600" />}
                         </div>
                       </div>
                       
@@ -513,7 +514,7 @@ export const Register: React.FC = () => {
               </div>
 
               {/* Métodos de pago */}
-              {selectedPlan !== 'freemium' && (
+              {selectedPlan !== 'starter' && (
                 <div className="glass-effect rounded-2xl p-6 border border-gray-700/50">
                   <h3 className="text-xl font-bold text-white mb-4">Método de Pago</h3>
                   <div className="space-y-3">

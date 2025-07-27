@@ -4,7 +4,7 @@ import { UpgradeModal } from '../components/Common/UpgradeModal';
 
 interface FeatureAccessConfig {
   [key: string]: {
-    requiredPlan: 'freemium' | 'basic' | 'pro' | 'elite';
+    requiredPlan: 'starter' | 'trader' | 'expert' | 'premium';
     feature: string;
   };
 }
@@ -12,39 +12,39 @@ interface FeatureAccessConfig {
 // Configuración de características por sección
 const featureConfig: FeatureAccessConfig = {
   'ai-monitor': {
-    requiredPlan: 'pro',
+    requiredPlan: 'expert',
     feature: 'ai-monitor'
   },
   'rl': {
-    requiredPlan: 'pro',
+    requiredPlan: 'expert',
     feature: 'rl'
   },
   'reports': {
-    requiredPlan: 'pro',
+    requiredPlan: 'expert',
     feature: 'reports'
   },
   'alerts': {
-    requiredPlan: 'basic',
+    requiredPlan: 'trader',
     feature: 'alerts'
   },
   'mt4_integration': {
-    requiredPlan: 'pro',
+    requiredPlan: 'expert',
     feature: 'mt4_integration'
   },
   'api_access': {
-    requiredPlan: 'elite',
+    requiredPlan: 'premium',
     feature: 'api_access'
   },
   'custom_models': {
-    requiredPlan: 'elite',
+    requiredPlan: 'premium',
     feature: 'custom_models'
   },
   'brain-trader': {
-    requiredPlan: 'freemium',
+    requiredPlan: 'starter',
     feature: 'brain_trader_basic'
   },
   'mega-mind': {
-    requiredPlan: 'elite',
+    requiredPlan: 'premium',
     feature: 'mega_mind_institutional'
   }
 };

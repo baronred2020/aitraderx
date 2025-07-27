@@ -19,7 +19,8 @@ import {
   User,
   LogOut,
   Crown,
-  Zap as ZapIcon
+  Zap as ZapIcon,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -68,6 +69,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
     { id: 'rl', name: 'Reinforcement Learning', icon: Zap, badge: 'RL' },
     { id: 'alerts', name: 'Alertas', icon: Bell, badge: '3' },
     { id: 'reports', name: 'Reportes', icon: FileText, badge: null },
+    { id: 'subscriptions', name: 'Suscripciones', icon: CreditCard, badge: null },
     { id: 'community', name: 'Comunidad', icon: Users, badge: null },
     { id: 'help', name: 'Ayuda', icon: HelpCircle, badge: null },
   ];
@@ -158,11 +160,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                 <div className="hidden sm:block text-left">
                   <p className="text-sm font-medium text-white">{user?.username}</p>
                   <div className="flex items-center space-x-1">
-                    {subscription?.planType === 'elite' && <Crown className="w-3 h-3 text-yellow-400" />}
-                    {subscription?.planType === 'pro' && <Brain className="w-3 h-3 text-purple-400" />}
-                    {subscription?.planType === 'basic' && <ZapIcon className="w-3 h-3 text-blue-400" />}
+                    {subscription?.planType === 'premium' && <Crown className="w-3 h-3 text-yellow-400" />}
+                    {subscription?.planType === 'expert' && <Brain className="w-3 h-3 text-purple-400" />}
+                    {subscription?.planType === 'trader' && <ZapIcon className="w-3 h-3 text-blue-400" />}
                     <span className="text-xs text-gray-400 capitalize">
-                      {subscription?.planType || 'freemium'}
+                      {subscription?.planType || 'starter'}
                     </span>
                   </div>
                 </div>
@@ -190,11 +192,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-400">Plan Actual:</span>
                         <div className="flex items-center space-x-1">
-                          {subscription?.planType === 'elite' && <Crown className="w-3 h-3 text-yellow-400" />}
-                          {subscription?.planType === 'pro' && <Brain className="w-3 h-3 text-purple-400" />}
-                          {subscription?.planType === 'basic' && <ZapIcon className="w-3 h-3 text-blue-400" />}
+                          {subscription?.planType === 'premium' && <Crown className="w-3 h-3 text-yellow-400" />}
+                          {subscription?.planType === 'expert' && <Brain className="w-3 h-3 text-purple-400" />}
+                          {subscription?.planType === 'trader' && <ZapIcon className="w-3 h-3 text-blue-400" />}
                           <span className="text-sm font-medium text-white capitalize">
-                            {subscription?.planType || 'freemium'}
+                            {subscription?.planType || 'starter'}
                           </span>
                         </div>
                       </div>

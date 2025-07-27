@@ -10,7 +10,7 @@ export interface User {
 
 export interface Subscription {
   id: string;
-  planType: 'freemium' | 'basic' | 'pro' | 'elite' | 'institutional';
+  planType: 'starter' | 'trader' | 'expert' | 'premium' | 'institutional';
   status: 'active' | 'expired' | 'cancelled' | 'trial';
   startDate: string;
   endDate: string;
@@ -49,11 +49,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Mapeo de características por plan - mover fuera del componente o memoizar
   const planFeatures = useMemo(() => ({
-    freemium: {
+    starter: {
       features: ['basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis', 'brain_trader_basic'],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'brain-trader']
     },
-    basic: {
+    trader: {
       features: [
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'brain-trader']
     },
-    pro: {
+    expert: {
       features: [
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
@@ -70,12 +70,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'brain-trader']
     },
-    elite: {
+    premium: {
       features: [
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
         'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
-        'api_access', 'custom_models', 'priority_support', 'brain_trader_elite'
+        'api_access', 'custom_models', 'priority_support', 'brain_trader_premium'
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community', 'brain-trader']
     },
@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'basic_dashboard', 'basic_trading', 'basic_portfolio', 'basic_analysis',
         'advanced_trading', 'advanced_portfolio', 'advanced_analysis', 'alerts',
         'ai_monitor', 'reinforcement_learning', 'reports', 'mt4_integration',
-        'api_access', 'custom_models', 'priority_support', 'brain_trader_elite',
+        'api_access', 'custom_models', 'priority_support', 'brain_trader_premium',
         'mega_mind', 'institutional_features', 'dedicated_support'
       ],
       sections: ['dashboard', 'trading', 'portfolio', 'analysis', 'alerts', 'ai-monitor', 'rl', 'reports', 'community', 'brain-trader', 'mega-mind']
@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         const defaultSubscription: Subscription = {
           id: '1',
-          planType: 'elite',
+          planType: 'premium',
           status: 'active',
           startDate: new Date().toISOString(),
           endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),

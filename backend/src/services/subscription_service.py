@@ -338,10 +338,11 @@ class SubscriptionService:
         
         # Verificar que es un upgrade válido
         plan_hierarchy = {
-            PlanType.FREEMIUM: 0,
-            PlanType.BASIC: 1,
-            PlanType.PRO: 2,
-            PlanType.ELITE: 3
+            PlanType.STARTER: 0,
+            PlanType.TRADER: 1,
+            PlanType.EXPERT: 2,
+            PlanType.PREMIUM: 3,
+            PlanType.INSTITUTIONAL: 4
         }
         
         current_level = plan_hierarchy.get(current_sub.plan_type, 0)
