@@ -131,6 +131,13 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
+  // Estados para el sistema de señales manuales
+  const [isGeneratingSignal, setIsGeneratingSignal] = useState(false);
+  const [signalQuality, setSignalQuality] = useState<number | null>(null);
+  const [signalMessage, setSignalMessage] = useState<string>('');
+  const [signalIntervals, setSignalIntervals] = useState<any>(null);
+  const [isValidSignalTime, setIsValidSignalTime] = useState(false);
+
   // Configuración según suscripción
   const getAvailablePairs = () => {
     if (!subscription || subscription.status !== 'active') {
@@ -445,6 +452,14 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     loadPredictionData();
   }, [selectedPair, selectedStyle, activeBrain]);
 
+  // Efecto para cargar intervalos de señales
+  useEffect(() => {
+    if (activeTab === 'signals') {
+      console.log('Cargando intervalos de señales...');
+      loadSignalIntervals();
+    }
+  }, [activeTab, selectedStyle, activeBrain]);
+
   // Función para mostrar errores de API
   const hasApiErrors = () => {
     return Object.values(errors).some(error => error !== null);
@@ -544,6 +559,63 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     } finally {
       setIsLoadingStats(false);
     }
+  };
+
+  // Funciones para el sistema de señales manuales
+  const generateSignal = async () => {
+    setIsGeneratingSignal(true);
+    setSignalQuality(null);
+    setSignalMessage('');
+    
+    try {
+      const response = await apiService.generateSignal(
+        activeBrain,
+        selectedPair,
+        selectedStyle
+      );
+      
+      if (response.success) {
+        setSignalQuality(response.quality_score || 0);
+        setSignalMessage(`Señal generada exitosamente (Calidad: ${response.quality_score?.toFixed(1)}%)`);
+        // Actualizar lista de señales
+        await loadSignals(activeBrain, selectedPair);
+      } else {
+        setSignalQuality(0);
+        setSignalMessage(response.message || 'Error generando señal');
+      }
+    } catch (error) {
+      setSignalQuality(0);
+      setSignalMessage('Error generando señal');
+    } finally {
+      setIsGeneratingSignal(false);
+    }
+  };
+
+  const loadSignalIntervals = async () => {
+    try {
+      console.log('Llamando a getSignalIntervals...');
+      const intervals = await apiService.getSignalIntervals(activeBrain, selectedStyle);
+      console.log('Intervalos recibidos:', intervals);
+      setSignalIntervals(intervals);
+      setIsValidSignalTime(intervals.is_valid_time);
+    } catch (error) {
+      console.error('Error loading signal intervals:', error);
+    }
+  };
+
+  const getNextInterval = () => {
+    if (signalIntervals) {
+      return signalIntervals.next_interval;
+    }
+    return '--:--';
+  };
+
+  const isSignalTime = () => {
+    // Para el plan Starter, permitir siempre generar señales para testing
+    if (!subscription || subscription.status !== 'active' || subscription.planType === 'starter') {
+      return true;
+    }
+    return isValidSignalTime;
   };
 
   // Verificar acceso
@@ -1049,6 +1121,85 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
         {activeTab === 'signals' && (
           <div className="space-y-6">
+            {/* Botón de Generación Manual */}
+            <div className="backdrop-blur-sm rounded-2xl border p-4 sm:p-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)', borderColor: 'var(--border-color)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>
+                    Generar Señal Manual
+                  </h3>
+                  <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>
+                    {selectedStyle.replace('_', ' ').toUpperCase()} - {signalIntervals?.timeframe || '15M'} intervalos
+                  </p>
+                </div>
+                
+                <div className="text-right">
+                  <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>
+                    Próximo intervalo: {getNextInterval()}
+                  </p>
+                  <p className={`text-xs ${isSignalTime() ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {isSignalTime() ? '✅ Momento válido' : '⏰ Esperando intervalo'}
+                  </p>
+                </div>
+              </div>
+              
+              <button
+                onClick={generateSignal}
+                disabled={isGeneratingSignal || !isSignalTime()}
+                className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
+                  isSignalTime() && !isGeneratingSignal
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {isGeneratingSignal ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Generando señal...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    Generar Señal
+                  </div>
+                )}
+              </button>
+              
+              {/* Mensaje de Calidad */}
+              {signalQuality !== null && (
+                <div className={`mt-3 p-3 rounded-lg ${
+                  signalQuality >= 70 
+                    ? 'bg-green-500/20 border border-green-500/30' 
+                    : 'bg-red-500/20 border border-red-500/30'
+                }`}>
+                  <p className={`text-sm font-medium ${
+                    signalQuality >= 70 ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {signalMessage}
+                  </p>
+                  {signalQuality > 0 && signalQuality < 70 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Se requiere calidad mínima del 70% para mostrar la señal
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Información de Intervalos */}
+              {signalIntervals && (
+                <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
+                  <p className="text-xs text-gray-400 mb-2">Próximos intervalos:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {signalIntervals.upcoming_intervals?.slice(0, 4).map((interval: string, index: number) => (
+                      <span key={index} className="px-2 py-1 rounded text-xs" style={{ backgroundColor: 'rgba(100, 116, 139, 0.2)' }}>
+                        {interval}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Contenido de Señales */}
             {signals.length > 0 ? (
               <div className="space-y-3">
@@ -1106,7 +1257,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                   No hay señales disponibles
                 </h4>
                 <p className="text-gray-500">
-                  Las señales aparecerán aquí cuando estén disponibles
+                  Use el botón "Generar Señal" en los intervalos de {signalIntervals?.timeframe || '15'} minutos
                 </p>
               </div>
             )}

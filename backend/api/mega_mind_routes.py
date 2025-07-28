@@ -6,7 +6,10 @@ from datetime import datetime
 import random
 
 # Importar servicios
-from ..services.mega_mind_service import MegaMindService
+try:
+    from services.mega_mind_service import MegaMindService
+except ImportError:
+    from src.services.mega_mind_service import MegaMindService
 
 router = APIRouter(prefix="/mega-mind", tags=["MEGA MIND"])
 

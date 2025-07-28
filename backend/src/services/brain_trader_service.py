@@ -1116,3 +1116,335 @@ class BrainTraderService:
         except Exception as e:
             logger.error(f"Error obteniendo tendencias: {e}")
             raise 
+
+    def _get_time_intervals(self, style: str) -> List[datetime]:
+        """Obtener intervalos de tiempo para el estilo especificado"""
+        intervals = []
+        current_time = datetime.now()
+        
+        # Redondear al intervalo más cercano
+        if style == 'day_trading':
+            # Para day trading: intervalos de 15 minutos
+            # 00:00, 00:15, 00:30, 00:45, 01:00, 01:15, etc.
+            minutes = current_time.minute
+            seconds = current_time.second
+            microseconds = current_time.microsecond
+            
+            # Redondear hacia abajo al intervalo de 15 minutos más cercano
+            rounded_minutes = (minutes // 15) * 15
+            current_interval = current_time.replace(
+                minute=rounded_minutes, 
+                second=0, 
+                microsecond=0
+            )
+            
+            # Generar próximos 5 intervalos
+            for i in range(5):
+                interval_time = current_interval + timedelta(minutes=15 * i)
+                intervals.append(interval_time)
+        elif style == 'scalping':
+            # Para scalping: intervalos de 5 minutos
+            minutes = current_time.minute
+            rounded_minutes = (minutes // 5) * 5
+            current_interval = current_time.replace(
+                minute=rounded_minutes, 
+                second=0, 
+                microsecond=0
+            )
+            
+            for i in range(5):
+                interval_time = current_interval + timedelta(minutes=5 * i)
+                intervals.append(interval_time)
+        elif style == 'swing_trading':
+            # Para swing trading: intervalos de 1 hora
+            current_interval = current_time.replace(
+                minute=0, 
+                second=0, 
+                microsecond=0
+            )
+            
+            for i in range(5):
+                interval_time = current_interval + timedelta(hours=i)
+                intervals.append(interval_time)
+        elif style == 'position_trading':
+            # Para position trading: intervalos de 4 horas
+            current_interval = current_time.replace(
+                minute=0, 
+                second=0, 
+                microsecond=0
+            )
+            
+            for i in range(5):
+                interval_time = current_interval + timedelta(hours=4 * i)
+                intervals.append(interval_time)
+        else:
+            # Default: intervalos de 15 minutos
+            minutes = current_time.minute
+            rounded_minutes = (minutes // 15) * 15
+            current_interval = current_time.replace(
+                minute=rounded_minutes, 
+                second=0, 
+                microsecond=0
+            )
+            
+            for i in range(5):
+                interval_time = current_interval + timedelta(minutes=15 * i)
+                intervals.append(interval_time)
+        
+        return intervals
+
+    def _is_valid_signal_time(self, style: str) -> bool:
+        """Verificar si es un momento válido para generar señal"""
+        current_time = datetime.now()
+        
+        if style == 'day_trading':
+            # Verificar si estamos en un intervalo de 15 minutos
+            minutes = current_time.minute
+            seconds = current_time.second
+            
+            # Tolerancia de 2 minutos para generar señal
+            tolerance_minutes = 2
+            is_valid = (minutes % 15) <= tolerance_minutes and seconds <= 30
+            
+            return is_valid
+        elif style == 'scalping':
+            # Para scalping: tolerancia de 1 minuto
+            minutes = current_time.minute
+            seconds = current_time.second
+            tolerance_minutes = 1
+            is_valid = (minutes % 5) <= tolerance_minutes and seconds <= 30
+            return is_valid
+        elif style == 'swing_trading':
+            # Para swing: tolerancia de 5 minutos
+            minutes = current_time.minute
+            seconds = current_time.second
+            tolerance_minutes = 5
+            is_valid = minutes <= tolerance_minutes and seconds <= 30
+            return is_valid
+        elif style == 'position_trading':
+            # Para position: tolerancia de 15 minutos
+            minutes = current_time.minute
+            seconds = current_time.second
+            tolerance_minutes = 15
+            is_valid = minutes <= tolerance_minutes and seconds <= 30
+            return is_valid
+        
+        return True  # Para otros estilos, siempre válido
+
+    def _get_next_valid_interval(self, style: str) -> datetime:
+        """Obtener el próximo intervalo válido para generar señal"""
+        current_time = datetime.now()
+        
+        if style == 'day_trading':
+            minutes = current_time.minute
+            seconds = current_time.second
+            
+            # Calcular próximo intervalo de 15 minutos
+            next_minutes = ((minutes // 15) + 1) * 15
+            if next_minutes >= 60:
+                next_minutes = 0
+                next_hour = current_time.hour + 1
+                if next_hour >= 24:
+                    next_hour = 0
+                next_time = current_time.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+            else:
+                next_time = current_time.replace(minute=next_minutes, second=0, microsecond=0)
+            
+            return next_time
+        elif style == 'scalping':
+            minutes = current_time.minute
+            next_minutes = ((minutes // 5) + 1) * 5
+            if next_minutes >= 60:
+                next_minutes = 0
+                next_hour = current_time.hour + 1
+                if next_hour >= 24:
+                    next_hour = 0
+                next_time = current_time.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+            else:
+                next_time = current_time.replace(minute=next_minutes, second=0, microsecond=0)
+            
+            return next_time
+        elif style == 'swing_trading':
+            # Próxima hora
+            next_hour = current_time.hour + 1
+            if next_hour >= 24:
+                next_hour = 0
+            next_time = current_time.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+            return next_time
+        elif style == 'position_trading':
+            # Próximas 4 horas
+            next_hour = current_time.hour + 4
+            if next_hour >= 24:
+                next_hour = next_hour % 24
+            next_time = current_time.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+            return next_time
+        else:
+            # Default: próximo intervalo de 15 minutos
+            minutes = current_time.minute
+            next_minutes = ((minutes // 15) + 1) * 15
+            if next_minutes >= 60:
+                next_minutes = 0
+                next_hour = current_time.hour + 1
+                if next_hour >= 24:
+                    next_hour = 0
+                next_time = current_time.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+            else:
+                next_time = current_time.replace(minute=next_minutes, second=0, microsecond=0)
+            
+            return next_time
+
+    async def generate_quality_signal(self, brain_type: str, pair: str, style: str) -> Dict[str, Any]:
+        """Generar una señal de calidad con análisis técnico real"""
+        try:
+            # Obtener precio actual real
+            current_price = await self.get_real_price(pair)
+            
+            # Obtener datos históricos para análisis técnico
+            if technical_analysis_service:
+                data = await technical_analysis_service.get_historical_data(pair, "30d")
+                if not data.empty:
+                    indicators = await technical_analysis_service.calculate_technical_indicators(data)
+                    
+                    # Análisis técnico completo
+                    signal_type, strength, confidence, reasoning = self._analyze_full_technical(
+                        indicators, current_price
+                    )
+                    
+                    # Calcular calidad de la señal
+                    quality_score = self._calculate_signal_quality(
+                        signal_type, strength, confidence, indicators
+                    )
+                    
+                    # Calcular niveles de entrada, stop loss y take profit
+                    entry_price = current_price
+                    stop_loss = self._calculate_stop_loss(signal_type, current_price, indicators)
+                    take_profit = self._calculate_take_profit(signal_type, current_price, indicators)
+                    
+                    signal = SignalResponse(
+                        pair=pair,
+                        type=signal_type,
+                        strength=strength,
+                        confidence=confidence,
+                        entry_price=entry_price,
+                        stop_loss=stop_loss,
+                        take_profit=take_profit,
+                        brain_type=brain_type,
+                        timestamp=datetime.now().isoformat()
+                    )
+                    
+                    return {
+                        "signal": signal,
+                        "quality_score": quality_score,
+                        "reasoning": reasoning,
+                        "indicators_used": list(indicators.keys())
+                    }
+            
+            # Fallback si no hay análisis técnico
+            return {
+                "signal": None,
+                "quality_score": 30.0,  # Baja calidad
+                "reasoning": "Análisis técnico no disponible",
+                "indicators_used": []
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating quality signal: {e}")
+            return {
+                "signal": None,
+                "quality_score": 0.0,
+                "reasoning": f"Error: {str(e)}",
+                "indicators_used": []
+            }
+
+    def _calculate_signal_quality(self, signal_type: str, strength: str, confidence: float, indicators: Dict) -> float:
+        """Calcular score de calidad de la señal (0-100)"""
+        quality_score = 0.0
+        
+        # Base score por confianza
+        quality_score += confidence * 0.4  # 40% del score
+        
+        # Score por fuerza de la señal
+        strength_scores = {
+            'strong': 30,
+            'medium': 20,
+            'weak': 10
+        }
+        quality_score += strength_scores.get(strength, 10)
+        
+        # Score por número de indicadores confirmando
+        confirming_indicators = 0
+        if signal_type == 'buy':
+            if indicators.get('rsi', 50) < 30:
+                confirming_indicators += 1
+            if indicators.get('macd', 0) > indicators.get('macd_signal', 0):
+                confirming_indicators += 1
+            if indicators.get('sma_20', 0) > indicators.get('sma_50', 0):
+                confirming_indicators += 1
+        elif signal_type == 'sell':
+            if indicators.get('rsi', 50) > 70:
+                confirming_indicators += 1
+            if indicators.get('macd', 0) < indicators.get('macd_signal', 0):
+                confirming_indicators += 1
+            if indicators.get('sma_20', 0) < indicators.get('sma_50', 0):
+                confirming_indicators += 1
+        
+        quality_score += confirming_indicators * 10  # 10 puntos por indicador confirmando
+        
+        # Score por ADX (fuerza de tendencia)
+        adx = indicators.get('adx', 25)
+        if adx > 25:
+            quality_score += 10  # Tendencia fuerte
+        
+        return min(quality_score, 100.0)  # Máximo 100
+
+    def _calculate_stop_loss(self, signal_type: str, current_price: float, indicators: Dict) -> float:
+        """Calcular stop loss basado en análisis técnico"""
+        try:
+            if signal_type == 'buy':
+                # Para compra: stop loss por debajo del soporte
+                bb_lower = indicators.get('bb_lower', current_price * 0.995)
+                sma_20 = indicators.get('sma_20', current_price * 0.995)
+                stop_loss = min(bb_lower, sma_20) * 0.999  # Pequeño margen
+            elif signal_type == 'sell':
+                # Para venta: stop loss por encima de la resistencia
+                bb_upper = indicators.get('bb_upper', current_price * 1.005)
+                sma_20 = indicators.get('sma_20', current_price * 1.005)
+                stop_loss = max(bb_upper, sma_20) * 1.001  # Pequeño margen
+            else:
+                stop_loss = current_price
+            
+            return stop_loss
+        except:
+            # Fallback simple
+            if signal_type == 'buy':
+                return current_price * 0.995
+            elif signal_type == 'sell':
+                return current_price * 1.005
+            else:
+                return current_price
+
+    def _calculate_take_profit(self, signal_type: str, current_price: float, indicators: Dict) -> float:
+        """Calcular take profit basado en análisis técnico"""
+        try:
+            if signal_type == 'buy':
+                # Para compra: take profit por encima de la resistencia
+                bb_upper = indicators.get('bb_upper', current_price * 1.005)
+                sma_20 = indicators.get('sma_20', current_price * 1.005)
+                take_profit = max(bb_upper, sma_20) * 1.002  # Pequeño margen
+            elif signal_type == 'sell':
+                # Para venta: take profit por debajo del soporte
+                bb_lower = indicators.get('bb_lower', current_price * 0.995)
+                sma_20 = indicators.get('sma_20', current_price * 0.995)
+                take_profit = min(bb_lower, sma_20) * 0.998  # Pequeño margen
+            else:
+                take_profit = current_price
+            
+            return take_profit
+        except:
+            # Fallback simple
+            if signal_type == 'buy':
+                return current_price * 1.015
+            elif signal_type == 'sell':
+                return current_price * 0.985
+            else:
+                return current_price 

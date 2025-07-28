@@ -1,0 +1,24 @@
+2025-07-27 22:52:27,014 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:52:27,014 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:52:27,015 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:58:09,445 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:58:09,445 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:58:09,446 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:58:15,876 - services.mega_mind_service - INFO - MegaMindService initialized with advanced brain collaboration system
+2025-07-27 22:58:16,724 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:58:16,725 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:58:20,506 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 23:00:17,093 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 23:00:17,093 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 23:00:17,093 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 23:00:25,964 - services.mega_mind_service - INFO - MegaMindService initialized with advanced brain collaboration system
+2025-07-27 23:00:26,533 - main - INFO - Iniciando AI Trading System...
+2025-07-27 23:00:26,534 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:00:53,846 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 23:05:52,128 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 23:05:52,131 - api.brain_trader_routes - INFO - BrainTraderService importado correctamente
+2025-07-27 23:05:59,747 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 23:05:59,754 - api.brain_trader_routes - INFO - BrainTraderService importado correctamente
+2025-07-27 23:06:00,223 - main - INFO - Iniciando AI Trading System...
+2025-07-27 23:06:00,224 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:06:23,244 - main - INFO - Deteniendo AI Trading System...
