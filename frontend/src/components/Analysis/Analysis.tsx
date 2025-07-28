@@ -38,33 +38,8 @@ export const Analysis: React.FC = () => {
     { metric: 'Employment', value: '3.7%', impact: 'positive', change: '-0.1%' }
   ];
 
-  // Señales de trading
-  const tradingSignals = [
-    { 
-      type: 'BUY', 
-      pair: 'EURUSD', 
-      price: '1.0854', 
-      strength: 'strong',
-      reason: 'RSI oversold + Support level',
-      time: '2 min ago'
-    },
-    { 
-      type: 'SELL', 
-      pair: 'GBPUSD', 
-      price: '1.2654', 
-      strength: 'medium',
-      reason: 'Resistance level reached',
-      time: '5 min ago'
-    },
-    { 
-      type: 'HOLD', 
-      pair: 'USDJPY', 
-      price: '148.23', 
-      strength: 'weak',
-      reason: 'Mixed signals',
-      time: '8 min ago'
-    }
-  ];
+  // Señales de trading - ELIMINADAS LAS SEÑALES MOCK
+  const tradingSignals: any[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {

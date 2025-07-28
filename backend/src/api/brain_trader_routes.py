@@ -123,7 +123,6 @@ except ImportError as e:
         async def generate_quality_signal(self, brain_type: str, pair: str, style: str) -> Dict[str, Any]:
             """Generar una señal de calidad para el par y estilo especificados"""
             from datetime import datetime
-            import random
             
             # Verificar si es un momento válido para generar señal
             if not self._is_valid_signal_time(style):
@@ -133,40 +132,12 @@ except ImportError as e:
                     "current_time": datetime.now().isoformat()
                 }
             
-            # Generar señal mock
-            signal_types = ["BUY", "SELL", "HOLD"]
-            signal_type = random.choice(signal_types)
-            current_price = 1.0850 + random.uniform(-0.01, 0.01)
-            
-            # Calcular calidad de señal (mock)
-            quality_score = random.uniform(60, 95)
-            
-            if quality_score < 70:
-                return {
-                    "message": "Señal generada pero no cumple con el umbral de calidad mínimo (70%)",
-                    "signal_quality": round(quality_score, 2),
-                    "signal_type": signal_type,
-                    "current_price": round(current_price, 4),
-                    "threshold": 70
-                }
-            
-            # Calcular stop loss y take profit
-            if signal_type == "BUY":
-                stop_loss = current_price - 0.005
-                take_profit = current_price + 0.010
-            elif signal_type == "SELL":
-                stop_loss = current_price + 0.005
-                take_profit = current_price - 0.010
-            else:  # HOLD
-                stop_loss = current_price - 0.002
-                take_profit = current_price + 0.002
-            
+            # Retornar mensaje de que no hay señales disponibles en modo mock
             return {
-                "signal_type": signal_type,
-                "signal_quality": round(quality_score, 2),
-                "current_price": round(current_price, 4),
-                "stop_loss": round(stop_loss, 4),
-                "take_profit": round(take_profit, 4),
+                "message": "No hay señales disponibles en modo desarrollo",
+                "signal_quality": 0,
+                "signal_type": "HOLD",
+                "current_price": 0,
                 "pair": pair,
                 "style": style,
                 "brain_type": brain_type,
@@ -269,16 +240,29 @@ async def get_predictions(
 @router.get("/signals/{brain_type}")
 async def get_signals(
     brain_type: str,
-    pair: str = "EURUSD",
-    limit: int = 5
+    pair: str,
+    limit: int = 10
 ) -> List[SignalResponse]:
-    """Obtiene señales del cerebro especificado"""
+    """
+    Obtener señales de trading
+    """
     try:
-        signals = await brain_trader_service.get_signals(brain_type, pair, limit)
-        return signals
+        # Validaciones similares
+        valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind']
+        if brain_type not in valid_brain_types:
+            raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
+        
+        # Intentar obtener señales reales del servicio
+        try:
+            signals = await brain_trader_service.get_signals(brain_type, pair, limit)
+            return signals
+        except Exception as e:
+            logger.error(f"Error getting real signals: {e}")
+            # Retornar lista vacía en lugar de señales mock
+            return []
+        
     except Exception as e:
-        logger.error(f"Error getting signals: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error getting signals: {str(e)}")
 
 @router.get("/trends/{brain_type}")
 async def get_trends(
@@ -347,12 +331,17 @@ async def generate_signal(
         
         # Verificar si la señal no cumple el umbral de calidad
         if "message" in signal_result and "signal_quality" in signal_result:
+            # Extraer datos del objeto signal si existe
+            signal = signal_result.get("signal")
+            signal_type = signal.type if signal else "unknown"
+            current_price = signal.entry_price if signal else 0.0
+            
             return {
                 "success": False,
                 "message": signal_result["message"],
                 "signal_quality": signal_result["signal_quality"],
-                "signal_type": signal_result.get("signal_type"),
-                "current_price": signal_result.get("current_price"),
+                "signal_type": signal_type,
+                "current_price": current_price,
                 "threshold": signal_result.get("threshold", 70),
                 "style": style,
                 "timeframe": brain_trader_service.get_timeframe_for_style(style)
@@ -360,26 +349,40 @@ async def generate_signal(
         
         # Señal exitosa
         if "signal_quality" in signal_result and signal_result["signal_quality"] >= 70:
-            return {
-                "success": True,
-                "signal_type": signal_result["signal_type"],
-                "signal_quality": signal_result["signal_quality"],
-                "current_price": signal_result["current_price"],
-                "stop_loss": signal_result["stop_loss"],
-                "take_profit": signal_result["take_profit"],
-                "pair": signal_result["pair"],
-                "style": signal_result["style"],
-                "brain_type": signal_result["brain_type"],
-                "timestamp": signal_result["timestamp"],
-                "timeframe": signal_result["timeframe"],
-                "generated_at": datetime.now().isoformat(),
-                "next_interval": brain_trader_service._get_next_valid_interval(style).strftime('%H:%M')
-            }
+            # Extraer datos del objeto signal
+            signal = signal_result.get("signal")
+            if signal:
+                return {
+                    "success": True,
+                    "signal_type": signal.type,
+                    "signal_quality": signal_result["signal_quality"],
+                    "current_price": signal.entry_price,
+                    "stop_loss": signal.stop_loss,
+                    "take_profit": signal.take_profit,
+                    "pair": signal.pair,
+                    "style": style,
+                    "brain_type": signal.brain_type,
+                    "timestamp": signal.timestamp,
+                    "timeframe": brain_trader_service.get_timeframe_for_style(style),
+                    "generated_at": datetime.now().isoformat(),
+                    "next_interval": brain_trader_service._get_next_valid_interval(style).strftime('%H:%M')
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "Error: No se pudo generar la señal",
+                    "signal_quality": signal_result.get("signal_quality", 0),
+                    "next_interval": brain_trader_service._get_next_valid_interval(style).strftime('%H:%M'),
+                    "style": style,
+                    "timeframe": brain_trader_service.get_timeframe_for_style(style)
+                }
         else:
+            # Obtener el score real de la señal
+            actual_quality = signal_result.get("signal_quality", 0)
             return {
                 "success": False,
-                "message": f"Señal de baja calidad (Score: {signal_result.get('signal_quality', 0):.1f}%). Intente en el próximo intervalo.",
-                "signal_quality": signal_result.get("signal_quality", 0),
+                "message": f"Señal de baja calidad (Score: {actual_quality:.1f}%). Intente en el próximo intervalo.",
+                "signal_quality": actual_quality,
                 "next_interval": brain_trader_service._get_next_valid_interval(style).strftime('%H:%M'),
                 "style": style,
                 "timeframe": brain_trader_service.get_timeframe_for_style(style)
@@ -447,4 +450,30 @@ async def health_check():
         "status": "healthy",
         "service": "brain_trader",
         "timestamp": datetime.now().isoformat()
-    } 
+    }
+
+@router.post("/signals/{brain_type}/test-generate")
+async def test_generate_signal(
+    brain_type: str,
+    pair: str = "EURUSD",
+    style: str = "day_trading"
+) -> Dict[str, Any]:
+    """Endpoint de prueba para generar señal sin validación de tiempo"""
+    try:
+        logger.info(f"Generando señal de prueba para {pair} con {brain_type}")
+        
+        # Generar señal sin validación de tiempo
+        signal_result = await brain_trader_service.generate_quality_signal(brain_type, pair, style)
+        
+        logger.info(f"Resultado de señal de prueba: {signal_result}")
+        
+        return {
+            "success": True,
+            "test_mode": True,
+            "signal_result": signal_result,
+            "message": "Señal generada en modo de prueba"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error en señal de prueba: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) 
