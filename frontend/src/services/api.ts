@@ -391,9 +391,8 @@ class ApiService {
     style?: string;
     timeframe?: string;
   }> {
-    return this.request(`/brain-trader/signals/${brainType}/generate`, {
-      method: 'POST',
-      body: JSON.stringify({ pair, style })
+    return this.request(`/brain-trader/signals/${brainType}/generate?pair=${pair}&style=${style}`, {
+      method: 'POST'
     });
   }
 

@@ -10,6 +10,13 @@ Sistema de trading con inteligencia artificial que incluye:
 - Dashboard web en tiempo real
 """
 
+import sys
+import os
+
+# Agregar el directorio src al path para importaciones
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.dirname(__file__))
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -45,18 +52,33 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Importar configuración de entorno
-import env_config
+try:
+    from . import env_config
+except ImportError:
+    import env_config
 
 # Importar sistema de suscripciones y autenticación
-from api.subscription_routes import subscription_router
-from api.auth_routes import auth_router
-from services.subscription_service import SubscriptionService
-from api import market_data_routes
-from api.wallet_routes import router as wallet_router
-from api.mega_mind_routes import router as mega_mind_router
-from api.monitoring_routes import router as monitoring_router
-from api.brain_trader_routes import router as brain_trader_router
-from api.prediction_routes import router as prediction_router
+try:
+    from .api.subscription_routes import subscription_router
+    from .api.auth_routes import auth_router
+    from .services.subscription_service import SubscriptionService
+    from .api import market_data_routes
+    from .api.wallet_routes import router as wallet_router
+    from .api.mega_mind_routes import router as mega_mind_router
+    from .api.monitoring_routes import router as monitoring_router
+    from .api.brain_trader_routes import router as brain_trader_router
+    from .api.prediction_routes import router as prediction_router
+except ImportError:
+    # Fallback para importaciones absolutas
+    from api.subscription_routes import subscription_router
+    from api.auth_routes import auth_router
+    from services.subscription_service import SubscriptionService
+    from api import market_data_routes
+    from api.wallet_routes import router as wallet_router
+    from api.mega_mind_routes import router as mega_mind_router
+    from api.monitoring_routes import router as monitoring_router
+    from api.brain_trader_routes import router as brain_trader_router
+    from api.prediction_routes import router as prediction_router
 
 # Variables globales
 app_state = {}
@@ -868,36 +890,6 @@ async def get_predictions(brain_type: str, pair: str = "EURUSD", style: str = "d
         predictions.append(prediction)
     
     return predictions
-
-@app.get("/api/v1/brain-trader/signals/{brain_type}")
-async def get_signals(brain_type: str, pair: str = "EURUSD", limit: int = 5):
-    valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind']
-    if brain_type not in valid_brain_types:
-        raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
-    
-    signals = []
-    base_price = 1.0925 if pair == 'EURUSD' else 1.2500
-    
-    for i in range(min(limit, 5)):
-        signal_type = random.choice(['buy', 'sell', 'hold'])
-        strength = random.choice(['strong', 'medium', 'weak'])
-        confidence = random.uniform(60, 90)
-        entry_price = base_price + (random.uniform(-0.005, 0.005))
-        
-        signal = SignalResponse(
-            pair=pair,
-            type=signal_type,
-            strength=strength,
-            confidence=confidence,
-            entry_price=entry_price,
-            stop_loss=entry_price - 0.005,
-            take_profit=entry_price + 0.015,
-            brain_type=brain_type,
-            timestamp=datetime.now().isoformat()
-        )
-        signals.append(signal)
-    
-    return signals
 
 @app.get("/api/v1/brain-trader/trends/{brain_type}")
 async def get_trends(brain_type: str, pair: str = "EURUSD", limit: int = 3):

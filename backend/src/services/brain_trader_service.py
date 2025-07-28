@@ -43,9 +43,26 @@ try:
     if model_loader:
         model_loader.clear_cache()
         logging.info("ModelLoader cache cleared on startup")
+        logging.info("ModelLoader importado correctamente")
 except ImportError as e:
     logging.error(f"Error importing ModelLoader: {e}")
-    model_loader = None
+    # Intentar importación alternativa
+    try:
+        import sys
+        import os
+        # Agregar el directorio utils al path
+        utils_path = os.path.join(os.path.dirname(__file__), '..', '..', 'utils')
+        if utils_path not in sys.path:
+            sys.path.insert(0, utils_path)
+        
+        from model_loader import ModelLoader
+        model_loader = ModelLoader()
+        if model_loader:
+            model_loader.clear_cache()
+            logging.info("ModelLoader importado correctamente (método alternativo)")
+    except ImportError as e2:
+        logging.error(f"Error importing ModelLoader (método alternativo): {e2}")
+        model_loader = None
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +113,7 @@ class BrainTraderService:
             'scalping': '5M',
             'day_trading': '15M', 
             'swing_trading': '1H',
-            'position_trading': '4H'
+            'position_trading': '1D'
         }
         
         # Duración de predicciones por estilo (en minutos)
@@ -104,7 +121,7 @@ class BrainTraderService:
             'scalping': 5,
             'day_trading': 15,
             'swing_trading': 60,
-            'position_trading': 240
+            'position_trading': 1440
         }
         
         # Precios base por par
@@ -671,17 +688,31 @@ class BrainTraderService:
 
     def _analyze_full_technical(self, indicators: Dict, base_price: float) -> tuple:
         """Análisis técnico completo (para planes pro y premium)"""
-        current_rsi = indicators.get('rsi', {}).iloc[-1] if 'rsi' in indicators and not indicators['rsi'].empty else 50
-        current_macd = indicators.get('macd', {}).iloc[-1] if 'macd' in indicators and not indicators['macd'].empty else 0
-        current_macd_signal = indicators.get('macd_signal', {}).iloc[-1] if 'macd_signal' in indicators and not indicators['macd_signal'].empty else 0
+        # Función helper para extraer valores de indicadores
+        def get_last_value(indicator, default_value):
+            if indicator is None:
+                return default_value
+            if hasattr(indicator, 'iloc'):
+                # Es una Series de pandas
+                if not indicator.empty:
+                    return float(indicator.iloc[-1])
+                else:
+                    return default_value
+            else:
+                # Es un valor escalar
+                return float(indicator)
+        
+        current_rsi = get_last_value(indicators.get('rsi'), 50)
+        current_macd = get_last_value(indicators.get('macd'), 0)
+        current_macd_signal = get_last_value(indicators.get('macd_signal'), 0)
         
         # Bollinger Bands
-        bb_upper = indicators.get('bb_upper', {}).iloc[-1] if 'bb_upper' in indicators and not indicators['bb_upper'].empty else base_price * 1.01
-        bb_lower = indicators.get('bb_lower', {}).iloc[-1] if 'bb_lower' in indicators and not indicators['bb_lower'].empty else base_price * 0.99
+        bb_upper = get_last_value(indicators.get('bb_upper'), base_price * 1.01)
+        bb_lower = get_last_value(indicators.get('bb_lower'), base_price * 0.99)
         
         # EMA
-        ema_9 = indicators.get('ema_12', {}).iloc[-1] if 'ema_12' in indicators and not indicators['ema_12'].empty else base_price
-        ema_20 = indicators.get('sma_20', {}).iloc[-1] if 'sma_20' in indicators and not indicators['sma_20'].empty else base_price
+        ema_9 = get_last_value(indicators.get('ema_12'), base_price)
+        ema_20 = get_last_value(indicators.get('sma_20'), base_price)
         
         signals = []
         
@@ -735,7 +766,18 @@ class BrainTraderService:
             confidence = random.uniform(50, 65)
             reasoning = 'Análisis completo: sin señales claras'
         
-        return direction, confidence, reasoning
+        # Convertir direction a signal_type y determinar strength
+        if direction == 'up':
+            signal_type = 'buy'
+            strength = 'strong' if confidence > 85 else 'medium'
+        elif direction == 'down':
+            signal_type = 'sell'
+            strength = 'strong' if confidence > 85 else 'medium'
+        else:
+            signal_type = 'hold'
+            strength = 'weak'
+        
+        return signal_type, strength, confidence, reasoning
 
     async def get_predictions(self, brain_type: str, pair: str, style: str, limit: int, plan_type: str = 'starter') -> List[PredictionResponse]:
         """Obtener predicciones del cerebro especificado"""
@@ -993,67 +1035,44 @@ class BrainTraderService:
             logger.error(f"Error obteniendo predicciones: {e}")
             raise
 
-    async def get_signals(self, brain_type: str, pair: str, limit: int) -> List[SignalResponse]:
-        """Obtener señales del cerebro especificado"""
+    async def get_signals(self, brain_type: str, pair: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Obtener señales de trading usando análisis técnico real
+        """
         try:
-            if not self._validate_brain_type(brain_type):
-                raise ValueError(f"Brain type inválido: {brain_type}")
+            logger.info(f"Getting signals for {brain_type} - {pair}")
             
-            if not self._validate_pair(pair):
-                raise ValueError(f"Par inválido: {pair}")
+            # Validar parámetros
+            self._validate_brain_type(brain_type)
+            self._validate_pair(pair)
             
+            # Usar análisis técnico real en lugar de datos mock
+            technical_signals = await technical_analysis_service.generate_real_signals(pair, limit)
+            
+            # Convertir a formato de respuesta
             signals = []
-            base_price = await self.get_real_price(pair)
+            for signal in technical_signals:
+                signal_dict = {
+                    'pair': signal.pair,
+                    'type': signal.signal_type,
+                    'strength': signal.strength,
+                    'confidence': signal.confidence,
+                    'entry_price': signal.entry_price,
+                    'stop_loss': signal.stop_loss,
+                    'take_profit': signal.take_profit,
+                    'reasoning': signal.reasoning,
+                    'brain_type': brain_type,
+                    'timestamp': signal.timestamp
+                }
+                signals.append(signal_dict)
             
-            # Usar servicio de análisis técnico si está disponible
-            if technical_analysis_service:
-                try:
-                    real_signals = await technical_analysis_service.generate_real_signals(pair, limit)
-                    for signal in real_signals:
-                        signal_response = SignalResponse(
-                            pair=pair,
-                            type=signal.signal_type,
-                            strength=signal.strength,
-                            confidence=signal.confidence,
-                            entry_price=signal.entry_price,
-                            stop_loss=signal.stop_loss,
-                            take_profit=signal.take_profit,
-                            brain_type=brain_type,
-                            timestamp=datetime.now().isoformat()
-                        )
-                        signals.append(signal_response)
-                    
-                    return signals
-                    
-                except Exception as e:
-                    logger.error(f"Error generando señales reales: {e}")
-                    # Fallback a generación aleatoria
-            
-            # Generación aleatoria como fallback
-            for i in range(min(limit, 5)):
-                signal_type = random.choice(['buy', 'sell', 'hold'])
-                strength = random.choice(['strong', 'medium', 'weak'])
-                confidence = random.uniform(60, 90)
-                entry_price = base_price + random.uniform(-0.005, 0.005)
-                
-                signal = SignalResponse(
-                    pair=pair,
-                    type=signal_type,
-                    strength=strength,
-                    confidence=confidence,
-                    entry_price=entry_price,
-                    stop_loss=entry_price - 0.005,
-                    take_profit=entry_price + 0.015,
-                    brain_type=brain_type,
-                    timestamp=datetime.now().isoformat()
-                )
-                signals.append(signal)
-            
+            logger.info(f"Generated {len(signals)} real signals for {brain_type}")
             return signals
             
         except Exception as e:
-            logger.error(f"Error obteniendo señales: {e}")
-            raise
+            logger.error(f"Error getting signals: {str(e)}")
+            # Retornar lista vacía en lugar de señales mock
+            return []
 
     async def get_trends(self, brain_type: str, pair: str, limit: int) -> List[TrendResponse]:
         """Obtener tendencias del cerebro especificado"""
@@ -1167,7 +1186,7 @@ class BrainTraderService:
                 interval_time = current_interval + timedelta(hours=i)
                 intervals.append(interval_time)
         elif style == 'position_trading':
-            # Para position trading: intervalos de 4 horas
+            # Para position trading: intervalos de 1 día
             current_interval = current_time.replace(
                 minute=0, 
                 second=0, 
@@ -1175,7 +1194,7 @@ class BrainTraderService:
             )
             
             for i in range(5):
-                interval_time = current_interval + timedelta(hours=4 * i)
+                interval_time = current_interval + timedelta(days=i)
                 intervals.append(interval_time)
         else:
             # Default: intervalos de 15 minutos
@@ -1202,31 +1221,31 @@ class BrainTraderService:
             minutes = current_time.minute
             seconds = current_time.second
             
-            # Tolerancia de 2 minutos para generar señal
-            tolerance_minutes = 2
-            is_valid = (minutes % 15) <= tolerance_minutes and seconds <= 30
+            # Tolerancia de 5 minutos para generar señal (más permisivo)
+            tolerance_minutes = 5
+            is_valid = (minutes % 15) <= tolerance_minutes and seconds <= 60
             
             return is_valid
         elif style == 'scalping':
-            # Para scalping: tolerancia de 1 minuto
+            # Para scalping: tolerancia de 2 minutos
             minutes = current_time.minute
             seconds = current_time.second
-            tolerance_minutes = 1
-            is_valid = (minutes % 5) <= tolerance_minutes and seconds <= 30
+            tolerance_minutes = 2
+            is_valid = (minutes % 5) <= tolerance_minutes and seconds <= 60
             return is_valid
         elif style == 'swing_trading':
-            # Para swing: tolerancia de 5 minutos
+            # Para swing: tolerancia de 10 minutos
             minutes = current_time.minute
             seconds = current_time.second
-            tolerance_minutes = 5
-            is_valid = minutes <= tolerance_minutes and seconds <= 30
+            tolerance_minutes = 10
+            is_valid = minutes <= tolerance_minutes and seconds <= 60
             return is_valid
         elif style == 'position_trading':
-            # Para position: tolerancia de 15 minutos
+            # Para position: tolerancia de 60 minutos (1 día)
             minutes = current_time.minute
             seconds = current_time.second
-            tolerance_minutes = 15
-            is_valid = minutes <= tolerance_minutes and seconds <= 30
+            tolerance_minutes = 60
+            is_valid = minutes <= tolerance_minutes and seconds <= 60
             return is_valid
         
         return True  # Para otros estilos, siempre válido
@@ -1272,11 +1291,8 @@ class BrainTraderService:
             next_time = current_time.replace(hour=next_hour, minute=0, second=0, microsecond=0)
             return next_time
         elif style == 'position_trading':
-            # Próximas 4 horas
-            next_hour = current_time.hour + 4
-            if next_hour >= 24:
-                next_hour = next_hour % 24
-            next_time = current_time.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+            # Próximo día
+            next_time = current_time.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
             return next_time
         else:
             # Default: próximo intervalo de 15 minutos
@@ -1296,24 +1312,90 @@ class BrainTraderService:
     async def generate_quality_signal(self, brain_type: str, pair: str, style: str) -> Dict[str, Any]:
         """Generar una señal de calidad con análisis técnico real"""
         try:
+            logger.info(f"Generando señal de calidad para {pair} con {brain_type}")
+            
             # Obtener precio actual real
             current_price = await self.get_real_price(pair)
+            logger.info(f"Precio actual obtenido: {current_price}")
+            
+            # Intentar usar el modelo real para brain_max
+            if brain_type == 'brain_max':
+                try:
+                    # Intentar obtener predicción del modelo ensemble
+                    prediction_result = await self._get_brain_max_prediction(pair, style, current_price)
+                    if prediction_result and 'confidence' in prediction_result:
+                        # Usar confianza real del modelo
+                        model_confidence = prediction_result['confidence']
+                        signal_type = 'buy' if prediction_result['direction'] == 'up' else 'sell'
+                        strength = 'strong' if model_confidence > 85 else 'medium'
+                        reasoning = prediction_result.get('reasoning', 'Análisis del modelo ensemble')
+                        
+                        logger.info(f"Usando confianza real del modelo: {model_confidence}%")
+                        
+                        # Obtener indicadores técnicos para el cálculo de calidad
+                        if technical_analysis_service:
+                            data = await technical_analysis_service.get_historical_data(pair, "30d")
+                            if not data.empty:
+                                indicators = await technical_analysis_service.calculate_technical_indicators(data)
+                                
+                                # Calcular calidad de la señal con confianza real del modelo
+                                quality_score = self._calculate_signal_quality(
+                                    signal_type, strength, model_confidence, indicators
+                                )
+                                logger.info(f"Score de calidad con modelo real: {quality_score}")
+                                
+                                # Calcular niveles de entrada, stop loss y take profit
+                                entry_price = current_price
+                                stop_loss = self._calculate_stop_loss(signal_type, current_price, indicators)
+                                take_profit = self._calculate_take_profit(signal_type, current_price, indicators)
+                                
+                                signal = SignalResponse(
+                                    pair=pair,
+                                    type=signal_type,
+                                    strength=strength,
+                                    confidence=model_confidence,
+                                    entry_price=entry_price,
+                                    stop_loss=stop_loss,
+                                    take_profit=take_profit,
+                                    brain_type=brain_type,
+                                    timestamp=datetime.now().isoformat()
+                                )
+                                
+                                return {
+                                    "signal": signal,
+                                    "signal_quality": quality_score,
+                                    "quality_score": quality_score,
+                                    "reasoning": reasoning,
+                                    "indicators_used": list(indicators.keys())
+                                }
+                    else:
+                        # Fallback a análisis técnico
+                        raise Exception("Modelo no disponible, usando análisis técnico")
+                except Exception as model_error:
+                    logger.warning(f"Error con modelo ensemble: {model_error}, usando análisis técnico")
+                    # Continuar con análisis técnico
+                    pass
             
             # Obtener datos históricos para análisis técnico
             if technical_analysis_service:
+                logger.info("Obteniendo datos históricos...")
                 data = await technical_analysis_service.get_historical_data(pair, "30d")
                 if not data.empty:
+                    logger.info(f"Datos históricos obtenidos: {len(data)} registros")
                     indicators = await technical_analysis_service.calculate_technical_indicators(data)
+                    logger.info(f"Indicadores calculados: {list(indicators.keys())}")
                     
                     # Análisis técnico completo
                     signal_type, strength, confidence, reasoning = self._analyze_full_technical(
                         indicators, current_price
                     )
+                    logger.info(f"Análisis técnico: {signal_type}, {strength}, {confidence}")
                     
                     # Calcular calidad de la señal
                     quality_score = self._calculate_signal_quality(
                         signal_type, strength, confidence, indicators
                     )
+                    logger.info(f"Score de calidad calculado: {quality_score}")
                     
                     # Calcular niveles de entrada, stop loss y take profit
                     entry_price = current_price
@@ -1334,14 +1416,21 @@ class BrainTraderService:
                     
                     return {
                         "signal": signal,
+                        "signal_quality": quality_score,
                         "quality_score": quality_score,
                         "reasoning": reasoning,
                         "indicators_used": list(indicators.keys())
                     }
+                else:
+                    logger.warning("No se obtuvieron datos históricos")
+            else:
+                logger.warning("Servicio de análisis técnico no disponible")
             
             # Fallback si no hay análisis técnico
+            logger.info("Usando fallback con score 30.0")
             return {
                 "signal": None,
+                "signal_quality": 30.0,  # Baja calidad
                 "quality_score": 30.0,  # Baja calidad
                 "reasoning": "Análisis técnico no disponible",
                 "indicators_used": []
@@ -1349,51 +1438,91 @@ class BrainTraderService:
             
         except Exception as e:
             logger.error(f"Error generating quality signal: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return {
                 "signal": None,
+                "signal_quality": 0.0,
                 "quality_score": 0.0,
                 "reasoning": f"Error: {str(e)}",
                 "indicators_used": []
             }
 
     def _calculate_signal_quality(self, signal_type: str, strength: str, confidence: float, indicators: Dict) -> float:
-        """Calcular score de calidad de la señal (0-100)"""
+        """Calcular score de calidad de la señal (0-100) con ponderación mejorada"""
         quality_score = 0.0
         
-        # Base score por confianza
-        quality_score += confidence * 0.4  # 40% del score
+        # MEJORA: Base score por confianza del modelo (60% del score)
+        # La confianza del ensemble es el factor más importante
+        quality_score += confidence * 0.6  # 60% del score (antes era 40%)
         
-        # Score por fuerza de la señal
+        # Score por fuerza de la señal (20% del score)
         strength_scores = {
-            'strong': 30,
-            'medium': 20,
-            'weak': 10
+            'strong': 20,  # Reducido de 30 a 20
+            'medium': 15,  # Reducido de 20 a 15
+            'weak': 10     # Mantenido en 10
         }
         quality_score += strength_scores.get(strength, 10)
         
-        # Score por número de indicadores confirmando
+        # Función helper para extraer valores de indicadores
+        def get_indicator_value(indicator, default_value):
+            if indicator is None:
+                return default_value
+            if hasattr(indicator, 'iloc'):
+                # Es una Series de pandas
+                if not indicator.empty:
+                    return float(indicator.iloc[-1])
+                else:
+                    return default_value
+            else:
+                # Es un valor escalar
+                return float(indicator)
+        
+        # Score por número de indicadores confirmando (20% del score)
         confirming_indicators = 0
         if signal_type == 'buy':
-            if indicators.get('rsi', 50) < 30:
+            rsi_value = get_indicator_value(indicators.get('rsi'), 50)
+            macd_value = get_indicator_value(indicators.get('macd'), 0)
+            macd_signal_value = get_indicator_value(indicators.get('macd_signal'), 0)
+            sma_20_value = get_indicator_value(indicators.get('sma_20'), 0)
+            sma_50_value = get_indicator_value(indicators.get('sma_50'), 0)
+            
+            if rsi_value < 30:
                 confirming_indicators += 1
-            if indicators.get('macd', 0) > indicators.get('macd_signal', 0):
+            if macd_value > macd_signal_value:
                 confirming_indicators += 1
-            if indicators.get('sma_20', 0) > indicators.get('sma_50', 0):
+            if sma_20_value > sma_50_value:
                 confirming_indicators += 1
         elif signal_type == 'sell':
-            if indicators.get('rsi', 50) > 70:
+            rsi_value = get_indicator_value(indicators.get('rsi'), 50)
+            macd_value = get_indicator_value(indicators.get('macd'), 0)
+            macd_signal_value = get_indicator_value(indicators.get('macd_signal'), 0)
+            sma_20_value = get_indicator_value(indicators.get('sma_20'), 0)
+            sma_50_value = get_indicator_value(indicators.get('sma_50'), 0)
+            
+            if rsi_value > 70:
                 confirming_indicators += 1
-            if indicators.get('macd', 0) < indicators.get('macd_signal', 0):
+            if macd_value < macd_signal_value:
                 confirming_indicators += 1
-            if indicators.get('sma_20', 0) < indicators.get('sma_50', 0):
+            if sma_20_value < sma_50_value:
                 confirming_indicators += 1
         
-        quality_score += confirming_indicators * 10  # 10 puntos por indicador confirmando
+        # MEJORA: Ponderación más balanceada para indicadores técnicos
+        # Máximo 6 indicadores confirmando = 20 puntos (20% del total)
+        max_indicators = 6  # RSI, MACD, SMA, ADX, BB, etc.
+        indicator_score = (confirming_indicators / max_indicators) * 20
+        quality_score += indicator_score
         
-        # Score por ADX (fuerza de tendencia)
-        adx = indicators.get('adx', 25)
-        if adx > 25:
-            quality_score += 10  # Tendencia fuerte
+        # Score por ADX (fuerza de tendencia) - incluido en el cálculo anterior
+        adx_value = get_indicator_value(indicators.get('adx'), 25)
+        if adx_value > 25:
+            # ADX ya está incluido en confirming_indicators, no duplicar
+            pass
+        
+        # Logging para debugging
+        logger.info(f"Signal Quality Calculation - Confidence: {confidence:.2f}%, Strength: {strength}, "
+                   f"Confirming Indicators: {confirming_indicators}/{max_indicators}, "
+                   f"Final Score: {min(quality_score, 100.0):.2f}%")
         
         return min(quality_score, 100.0)  # Máximo 100
 

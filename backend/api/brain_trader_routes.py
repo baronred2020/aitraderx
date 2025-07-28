@@ -124,30 +124,8 @@ async def get_signals(
         if brain_type not in valid_brain_types:
             raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
         
-        # Simular señales
-        import random
-        signals = []
-        for i in range(min(limit, 5)):
-            signal_type = random.choice(['buy', 'sell', 'hold'])
-            strength = random.choice(['strong', 'medium', 'weak'])
-            confidence = random.uniform(60, 90)
-            base_price = 1.0925 if pair == 'EURUSD' else 1.2500
-            entry_price = base_price + (random.uniform(-0.005, 0.005))
-            
-            signal = SignalResponse(
-                pair=pair,
-                type=signal_type,
-                strength=strength,
-                confidence=confidence,
-                entry_price=entry_price,
-                stop_loss=entry_price - 0.005,
-                take_profit=entry_price + 0.015,
-                brain_type=brain_type,
-                timestamp=datetime.now()
-            )
-            signals.append(signal)
-        
-        return signals
+        # Retornar lista vacía en lugar de señales mock
+        return []
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting signals: {str(e)}")
