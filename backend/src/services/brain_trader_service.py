@@ -155,7 +155,7 @@ class BrainTraderService:
                 data = await technical_analysis_service.get_historical_data(pair, "30d")
                 if not data.empty:
                     # Preparar features para el modelo
-                    features = await self._prepare_features_for_model(data, pair, style)
+                    features = self._prepare_features_for_model(data, pair, style)
                     
                     if features is not None and len(features) > 0:
                         # Escalar features si hay scaler
@@ -295,18 +295,8 @@ class BrainTraderService:
     def _prepare_features_for_model(self, data: pd.DataFrame, pair: str, style: str) -> Optional[np.ndarray]:
         """Preparar features para el modelo entrenado (64 features) - Basado en Modelo_Brain_Max.py"""
         try:
-            # Calcular indicadores técnicos avanzados para coincidir con los modelos entrenados
+            # Calcular indicadores técnicos avanzados para coincidir exactamente con Modelo_Brain_Max.py
             features = []
-            
-            # Precio actual y datos básicos
-            current_price = data['Close'].iloc[-1]
-            features.extend([
-                current_price,
-                data['Open'].iloc[-1],
-                data['High'].iloc[-1],
-                data['Low'].iloc[-1],
-                data['Volume'].iloc[-1] if 'Volume' in data.columns else 1000,
-            ])
             
             # RSI (como en Modelo_Brain_Max.py)
             delta = data['Close'].diff()
@@ -325,20 +315,26 @@ class BrainTraderService:
             macd_signal = macd.ewm(span=9).mean()
             macd_hist = macd - macd_signal
             features.extend([
-                float(macd.iloc[-1]) / current_price,
-                float(macd_signal.iloc[-1]) / current_price,
-                float(macd_hist.iloc[-1]) / current_price,
+                float(macd.iloc[-1]) / data['Close'].iloc[-1],
+                float(macd_signal.iloc[-1]) / data['Close'].iloc[-1],
+                float(macd_hist.iloc[-1]) / data['Close'].iloc[-1],
             ])
             
-            # Bollinger Bands (como en Modelo_Brain_Max.py)
+            # Bollinger Bands (como en Modelo_Brain_Max.py) - COMPLETO
             bb_middle = data['Close'].rolling(window=20).mean()
             bb_std = data['Close'].rolling(window=20).std()
             bb_upper = bb_middle + (bb_std * 2)
             bb_lower = bb_middle - (bb_std * 2)
-            bb_position = (current_price - bb_lower.iloc[-1]) / (bb_upper.iloc[-1] - bb_lower.iloc[-1])
-            if np.isinf(bb_position) or np.isnan(bb_position):
-                bb_position = 0.5
-            features.append(float(bb_position))
+            bb_position = (data['Close'] - bb_lower) / (bb_upper - bb_lower)
+            bb_position = bb_position.replace([np.inf, -np.inf], 0.5)
+            bb_position = bb_position.fillna(0.5)
+            
+            features.extend([
+                float(bb_middle.iloc[-1]) / data['Close'].iloc[-1],
+                float(bb_upper.iloc[-1]) / data['Close'].iloc[-1],
+                float(bb_lower.iloc[-1]) / data['Close'].iloc[-1],
+                float(bb_position.iloc[-1]),
+            ])
             
             # Moving Averages (como en Modelo_Brain_Max.py)
             sma_5 = data['Close'].rolling(window=5).mean()
@@ -347,11 +343,11 @@ class BrainTraderService:
             ema_12 = data['Close'].ewm(span=12).mean()
             ema_26 = data['Close'].ewm(span=26).mean()
             features.extend([
-                float(sma_5.iloc[-1]) / current_price - 1,
-                float(sma_20.iloc[-1]) / current_price - 1,
-                float(sma_50.iloc[-1]) / current_price - 1,
-                float(ema_12.iloc[-1]) / current_price - 1,
-                float(ema_26.iloc[-1]) / current_price - 1,
+                float(sma_5.iloc[-1]) / data['Close'].iloc[-1],
+                float(sma_20.iloc[-1]) / data['Close'].iloc[-1],
+                float(sma_50.iloc[-1]) / data['Close'].iloc[-1],
+                float(ema_12.iloc[-1]) / data['Close'].iloc[-1],
+                float(ema_26.iloc[-1]) / data['Close'].iloc[-1],
             ])
             
             # Volatility (como en Modelo_Brain_Max.py)
@@ -362,13 +358,13 @@ class BrainTraderService:
             volatility_ratio = volatility_ratio.replace([np.inf, -np.inf], 1)
             volatility_ratio = volatility_ratio.fillna(1)
             features.extend([
-                float(volatility.iloc[-1]) / current_price,
-                float(volatility_5.iloc[-1]) / current_price,
-                float(volatility_20.iloc[-1]) / current_price,
+                float(volatility.iloc[-1]) / data['Close'].iloc[-1],
+                float(volatility_5.iloc[-1]) / data['Close'].iloc[-1],
+                float(volatility_20.iloc[-1]) / data['Close'].iloc[-1],
                 float(volatility_ratio.iloc[-1]),
             ])
             
-            # Volume indicators (como en Modelo_Brain_Max.py)
+            # Volume indicators (como en Modelo_Brain_Max.py) - COMPLETO
             volume_sma = data['Volume'].rolling(window=20).mean()
             volume_ratio = data['Volume'] / volume_sma
             volume_ratio = volume_ratio.replace([np.inf, -np.inf], 1)
@@ -381,7 +377,10 @@ class BrainTraderService:
             volume_trend = volume_trend.fillna(1)
             
             features.extend([
+                float(volume_sma.iloc[-1]) / 1000,  # Normalizar
                 float(volume_ratio.iloc[-1]),
+                float(volume_sma_5.iloc[-1]) / 1000,  # Normalizar
+                float(volume_sma_20.iloc[-1]) / 1000,  # Normalizar
                 float(volume_trend.iloc[-1]),
             ])
             
@@ -402,7 +401,7 @@ class BrainTraderService:
             momentum_ratio = momentum_ratio.fillna(0)
             
             features.extend([
-                float(momentum.iloc[-1]) / current_price,
+                float(momentum.iloc[-1]) / data['Close'].iloc[-1],
                 float(momentum_5.iloc[-1]),
                 float(momentum_10.iloc[-1]),
                 float(momentum_20.iloc[-1]),
@@ -410,8 +409,10 @@ class BrainTraderService:
                 float(momentum_ratio.iloc[-1]),
             ])
             
-            # Trend strength (como en Modelo_Brain_Max.py)
-            trend_strength = abs(data['Close'] - sma_20) / volatility
+            # Trend strength (como en Modelo_Brain_Max.py) - COMPLETO
+            trend_strength_numerator = abs(data['Close'] - sma_20)
+            trend_strength_denominator = volatility.replace(0, 0.0001)  # Avoid division by zero
+            trend_strength = trend_strength_numerator / trend_strength_denominator
             trend_strength = trend_strength.replace([np.inf, -np.inf], 0)
             trend_strength = trend_strength.fillna(0)
             
@@ -421,16 +422,23 @@ class BrainTraderService:
             
             features.extend([
                 float(trend_strength.iloc[-1]),
+                float(trend_5.iloc[-1]) / data['Close'].iloc[-1],
+                float(trend_20.iloc[-1]) / data['Close'].iloc[-1],
                 float(trend_direction[-1]),  # numpy array, no iloc
             ])
             
-            # Support and resistance (como en Modelo_Brain_Max.py)
+            # Support and resistance (como en Modelo_Brain_Max.py) - COMPLETO
             support_level = data['Low'].rolling(window=20).min()
             resistance_level = data['High'].rolling(window=20).max()
-            price_position = (current_price - support_level.iloc[-1]) / (resistance_level.iloc[-1] - support_level.iloc[-1])
-            if np.isinf(price_position) or np.isnan(price_position):
-                price_position = 0.5
-            features.append(float(price_position))
+            price_position = (data['Close'] - support_level) / (resistance_level - support_level)
+            price_position = price_position.replace([np.inf, -np.inf], 0.5)
+            price_position = price_position.fillna(0.5)
+            
+            features.extend([
+                float(support_level.iloc[-1]) / data['Close'].iloc[-1],
+                float(resistance_level.iloc[-1]) / data['Close'].iloc[-1],
+                float(price_position.iloc[-1]),
+            ])
             
             # Fibonacci levels (como en Modelo_Brain_Max.py)
             high_20 = data['High'].rolling(window=20).max()
@@ -443,10 +451,10 @@ class BrainTraderService:
             fib_61 = high_20 - 0.618 * range_20
             
             features.extend([
-                float((current_price - fib_23.iloc[-1]) / current_price),
-                float((current_price - fib_38.iloc[-1]) / current_price),
-                float((current_price - fib_50.iloc[-1]) / current_price),
-                float((current_price - fib_61.iloc[-1]) / current_price),
+                float(fib_23.iloc[-1]) / data['Close'].iloc[-1],
+                float(fib_38.iloc[-1]) / data['Close'].iloc[-1],
+                float(fib_50.iloc[-1]) / data['Close'].iloc[-1],
+                float(fib_61.iloc[-1]) / data['Close'].iloc[-1],
             ])
             
             # Time features (como en Modelo_Brain_Max.py)
@@ -481,11 +489,11 @@ class BrainTraderService:
             # Advanced volatility features (como en Modelo_Brain_Max.py)
             atr = data['High'] - data['Low']
             atr_sma = atr.rolling(14).mean()
-            volatility_normalized = volatility / current_price
+            volatility_normalized = volatility / data['Close']
             
             features.extend([
-                float(atr.iloc[-1]) / current_price,
-                float(atr_sma.iloc[-1]) / current_price,
+                float(atr.iloc[-1]) / data['Close'].iloc[-1],
+                float(atr_sma.iloc[-1]) / data['Close'].iloc[-1],
                 float(volatility_normalized.iloc[-1]),
             ])
             
@@ -502,7 +510,14 @@ class BrainTraderService:
             
             # Advanced trend features (como en Modelo_Brain_Max.py)
             adx = 50 + np.random.normal(0, 10)  # Simulado como en el original
-            cci = (data['Close'] - sma_20) / (0.015 * volatility)
+            
+            # CCI calculation with division by zero protection
+            cci_numerator = data['Close'] - sma_20
+            cci_denominator = 0.015 * volatility
+            cci_denominator = cci_denominator.replace(0, 0.0001)  # Avoid division by zero
+            cci = cci_numerator / cci_denominator
+            cci = cci.replace([np.inf, -np.inf], 0)
+            cci = cci.fillna(0)
             
             features.extend([
                 float(adx) / 100,  # Normalizar ADX
