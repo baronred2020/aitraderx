@@ -374,6 +374,45 @@ class ApiService {
     });
   }
 
+  // Generate manual signal
+  async generateSignal(
+    brainType: string,
+    pair: string = 'EURUSD',
+    style: string = 'day_trading'
+  ): Promise<{
+    success: boolean;
+    signal?: BrainTraderSignal;
+    quality_score?: number;
+    reasoning?: string;
+    message?: string;
+    next_interval?: string;
+    indicators_used?: string[];
+    generated_at?: string;
+    style?: string;
+    timeframe?: string;
+  }> {
+    return this.request(`/brain-trader/signals/${brainType}/generate`, {
+      method: 'POST',
+      body: JSON.stringify({ pair, style })
+    });
+  }
+
+  // Get signal intervals information
+  async getSignalIntervals(
+    brainType: string,
+    style: string = 'day_trading'
+  ): Promise<{
+    style: string;
+    timeframe: string;
+    current_time: string;
+    is_valid_time: boolean;
+    next_interval: string;
+    upcoming_intervals: string[];
+    duration_minutes: number;
+  }> {
+    return this.request(`/brain-trader/signals/${brainType}/intervals?style=${style}`);
+  }
+
   // ===== FIN PREDICTION-SPECIFIC APIs =====
 }
 

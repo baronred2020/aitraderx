@@ -50,6 +50,8 @@ export interface UseBrainTraderApiReturn {
   loadMegaMindArena: (pair?: string) => Promise<void>;
   loadMegaMindPerformance: () => Promise<void>;
   loadAvailableBrains: () => Promise<void>;
+  generateManualSignal: (brainType: string, pair?: string, style?: string) => Promise<any>;
+  getSignalIntervals: (brainType: string, style?: string) => Promise<any>;
   
   // Utility functions
   clearErrors: () => void;
@@ -254,6 +256,40 @@ export const useBrainTraderApi = (): UseBrainTraderApiReturn => {
     }
   }, []);
 
+  // Generate manual signal
+  const generateManualSignal = useCallback(async (
+    brainType: string,
+    pair: string = 'EURUSD',
+    style: string = 'day_trading'
+  ) => {
+    setLoading(prev => ({ ...prev, signals: true }));
+    setErrors(prev => ({ ...prev, signals: null }));
+    
+    try {
+      const result = await apiService.generateSignal(brainType, pair, style);
+      return result;
+    } catch (error) {
+      setErrors(prev => ({ ...prev, signals: error instanceof Error ? error.message : 'Error generating signal' }));
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, signals: false }));
+    }
+  }, []);
+
+  // Get signal intervals
+  const getSignalIntervals = useCallback(async (
+    brainType: string,
+    style: string = 'day_trading'
+  ) => {
+    try {
+      const result = await apiService.getSignalIntervals(brainType, style);
+      return result;
+    } catch (error) {
+      console.error('Error getting signal intervals:', error);
+      throw error;
+    }
+  }, []);
+
   // Refresh all data for a specific brain
   const refreshAll = useCallback(async (
     brainType: string,
@@ -284,14 +320,18 @@ export const useBrainTraderApi = (): UseBrainTraderApiReturn => {
   }, [loadAvailableBrains]);
 
   return {
-    // Data
+    // Brain Trader Data
     predictions,
     signals,
     trends,
+    
+    // Mega Mind Data
     megaMindPredictions,
     megaMindCollaboration,
     megaMindArena,
     megaMindPerformance,
+    
+    // Available brains
     availableBrains,
     defaultBrain,
     
@@ -310,6 +350,8 @@ export const useBrainTraderApi = (): UseBrainTraderApiReturn => {
     loadMegaMindArena,
     loadMegaMindPerformance,
     loadAvailableBrains,
+    generateManualSignal,
+    getSignalIntervals,
     
     // Utility functions
     clearErrors,

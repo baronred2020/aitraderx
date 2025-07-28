@@ -2139,3 +2139,813 @@ ConnectionResetError: [WinError 10054] Se ha forzado la interrupción de una con
 2025-07-27 19:31:58,777 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
 2025-07-27 19:32:01,088 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
 2025-07-27 19:32:01,090 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17174
+2025-07-27 21:38:45,886 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 21:38:45,888 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 21:38:45,889 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 21:38:46,142 - main - INFO - Iniciando AI Trading System...
+2025-07-27 21:38:46,142 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 21:40:18,856 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 21:40:23,503 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:24,324 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:24,502 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:24,502 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:27,729 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded successfully
+2025-07-27 21:40:28,103 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:28,104 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:29,760 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:29,761 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17419
+2025-07-27 21:40:30,163 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:30,165 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:30,166 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:30,415 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:30,416 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:30,977 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:30,978 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17155
+2025-07-27 21:40:31,391 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:31,393 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:31,395 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:31,613 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:31,614 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:32,254 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:32,256 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16969
+2025-07-27 21:40:32,620 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:32,622 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:32,624 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:32,939 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:32,940 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:33,475 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:33,476 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17281
+2025-07-27 21:40:34,978 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:34,980 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:34,981 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:35,745 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:35,748 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:36,284 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:36,285 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17169
+2025-07-27 21:40:41,736 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:42,119 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:42,638 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:42,833 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:42,834 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:42,835 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:43,087 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:43,088 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:43,794 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:43,795 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17067
+2025-07-27 21:40:44,316 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:44,317 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:44,318 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:44,629 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:44,630 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:45,343 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:45,345 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17123
+2025-07-27 21:40:45,602 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:45,603 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:45,604 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:45,862 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:45,864 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:46,584 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:46,585 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17286
+2025-07-27 21:40:46,956 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:46,958 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:46,958 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:47,299 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:47,300 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:48,011 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:48,012 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17366
+2025-07-27 21:40:48,394 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:48,395 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:48,397 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:48,640 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:48,641 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:49,541 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:49,542 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16988
+2025-07-27 21:40:49,820 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:50,438 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:50,622 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:40:50,623 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:40:50,624 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:40:50,864 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:40:50,865 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:40:51,363 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:40:51,363 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17015
+2025-07-27 21:42:13,488 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1753644
+2025-07-27 21:42:13,795 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1753644
+2025-07-27 21:42:13,796 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1753644
+2025-07-27 21:42:13,798 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:42:14,134 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:42:14,135 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:42:14,909 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:42:14,910 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17298
+2025-07-27 21:42:16,966 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1753644
+2025-07-27 21:42:17,143 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1753644
+2025-07-27 21:42:17,145 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1753644
+2025-07-27 21:42:17,148 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:42:17,437 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:42:17,440 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:42:18,279 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:42:18,281 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17006
+2025-07-27 21:43:55,170 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:43:55,888 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:43:56,067 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:43:56,068 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:43:56,069 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:43:56,307 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:43:56,308 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:43:57,097 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:43:57,098 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17427
+2025-07-27 21:43:57,422 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:43:57,423 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:43:57,424 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:43:57,655 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:43:57,657 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:43:58,280 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:43:58,281 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17053
+2025-07-27 21:43:58,538 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:43:58,539 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:43:58,539 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:43:58,785 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:43:58,786 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:43:59,528 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:43:59,530 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17231
+2025-07-27 21:43:59,880 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:43:59,881 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:43:59,883 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:00,151 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:00,151 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:00,653 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:00,653 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17015
+2025-07-27 21:44:00,885 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:00,886 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:44:00,887 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:01,079 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:01,081 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:01,619 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:01,620 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17142
+2025-07-27 21:44:01,940 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:03,770 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:03,948 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:03,954 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:44:03,954 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:04,194 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:04,195 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:04,727 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:04,728 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17104
+2025-07-27 21:44:04,993 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:04,994 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:44:04,995 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:05,150 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:05,152 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:05,715 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:05,716 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17267
+2025-07-27 21:44:06,140 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:06,142 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:44:06,143 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:06,482 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:06,482 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:06,868 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:06,870 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17040
+2025-07-27 21:44:07,253 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:07,255 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:44:07,257 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:07,489 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:07,490 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:08,286 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:08,288 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17272
+2025-07-27 21:44:08,893 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 21:44:08,894 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 21:44:08,895 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:09,111 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:09,112 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:09,790 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:09,790 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17375
+2025-07-27 21:44:10,130 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:44:10,709 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:44:36,346 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:44:36,642 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:44:36,666 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:44:36,669 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:37,006 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:37,007 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:37,675 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:37,676 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17139
+2025-07-27 21:44:58,147 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:44:58,362 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:44:58,363 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:44:58,364 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:44:58,627 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:44:58,628 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:44:59,264 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:44:59,265 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17222
+2025-07-27 21:45:19,558 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:19,855 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:19,858 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:19,860 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:20,178 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:20,179 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:21,042 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:21,044 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17207
+2025-07-27 21:45:21,418 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:21,420 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:21,421 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:21,735 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:21,737 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:22,436 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:22,437 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17113
+2025-07-27 21:45:22,733 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:22,734 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:22,736 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:22,979 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:23,005 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:23,691 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:23,691 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16996
+2025-07-27 21:45:24,057 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:24,058 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:24,058 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:24,275 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:24,276 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:24,765 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:24,766 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17136
+2025-07-27 21:45:25,181 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:25,182 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:25,183 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:25,420 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:25,421 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:26,102 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:26,103 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17399
+2025-07-27 21:45:26,719 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:30,302 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:32,143 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:32,345 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:32,347 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:32,348 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:32,581 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:32,583 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:33,407 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:33,409 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17101
+2025-07-27 21:45:33,782 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:33,783 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:33,785 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:34,006 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:34,007 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:34,773 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:34,774 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17172
+2025-07-27 21:45:35,117 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:35,119 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:35,120 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:35,344 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:35,345 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:36,004 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:36,005 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17000
+2025-07-27 21:45:36,446 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:36,447 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:36,448 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:36,720 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:36,721 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:37,486 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:37,487 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17314
+2025-07-27 21:45:37,778 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:37,779 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 21:45:37,780 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 21:45:38,054 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 21:45:38,056 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 21:45:38,692 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 21:45:38,692 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17367
+2025-07-27 21:45:39,209 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 21:45:39,728 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 22:16:09,529 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:16:30,125 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:16:30,126 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:16:30,127 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:16:30,492 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:16:30,493 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:16:34,070 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:16:50,386 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:16:50,387 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:16:50,389 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:16:50,939 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:16:50,940 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:17:26,536 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:27,169 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:27,466 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:27,502 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:32,775 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded successfully
+2025-07-27 22:17:33,283 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:33,349 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:35,382 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:35,394 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17381
+2025-07-27 22:17:35,760 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:35,761 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:35,761 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:35,961 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:35,962 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:38,275 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:38,294 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17372
+2025-07-27 22:17:38,726 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:38,727 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:38,728 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:39,211 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:39,239 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:40,591 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:40,593 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17152
+2025-07-27 22:17:40,982 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:40,983 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:40,984 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:41,205 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:41,207 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:42,056 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:42,057 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17011
+2025-07-27 22:17:42,519 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:42,520 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:42,520 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:42,737 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:42,739 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:43,840 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:43,841 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17168
+2025-07-27 22:17:44,264 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:50,499 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:50,807 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:50,807 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:50,809 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:51,025 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:51,026 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:51,475 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:51,477 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17240
+2025-07-27 22:17:51,831 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:51,831 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:51,832 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:51,966 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:51,967 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:52,338 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:52,338 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17318
+2025-07-27 22:17:52,752 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:52,753 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:52,753 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:52,946 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:52,947 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:53,472 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:53,473 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17100
+2025-07-27 22:17:53,879 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:53,880 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:53,881 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:54,124 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:54,125 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:54,403 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:54,403 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17326
+2025-07-27 22:17:54,699 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:54,700 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:54,701 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:54,923 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:54,924 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:55,207 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:55,207 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16995
+2025-07-27 22:17:55,519 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:56,131 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:56,456 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:56,849 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:57,095 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:57,095 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:57,096 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:57,375 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:57,376 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:57,990 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:57,991 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17282
+2025-07-27 22:17:58,493 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:58,563 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:58,564 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:58,816 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:58,825 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:17:59,445 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:17:59,446 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17120
+2025-07-27 22:17:59,817 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:17:59,818 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:17:59,818 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:17:59,965 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:17:59,965 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:00,422 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:00,422 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17146
+2025-07-27 22:18:00,640 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:00,641 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:00,642 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:00,818 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:00,818 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:01,153 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:01,154 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17044
+2025-07-27 22:18:01,558 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:01,559 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:01,559 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:01,930 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:01,932 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:02,238 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:02,239 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17017
+2025-07-27 22:18:03,811 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:04,226 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:04,427 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:04,428 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:04,429 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:04,624 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:04,625 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:05,258 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:05,259 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17105
+2025-07-27 22:18:05,660 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:05,661 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:05,662 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:05,852 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:05,853 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:06,565 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:06,566 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17233
+2025-07-27 22:18:06,884 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:06,885 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:06,886 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:07,085 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:07,085 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:07,427 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:07,428 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17059
+2025-07-27 22:18:07,773 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:07,774 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:07,775 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:08,032 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:08,033 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:08,773 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:08,774 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17150
+2025-07-27 22:18:09,137 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:09,139 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:09,140 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:09,338 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:09,339 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:10,001 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:10,002 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16999
+2025-07-27 22:18:10,472 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:11,735 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:12,485 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:12,742 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:12,743 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:12,743 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:13,009 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:13,010 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:13,311 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:13,312 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17256
+2025-07-27 22:18:13,746 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:13,747 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:13,748 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:13,949 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:13,950 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:14,511 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:14,511 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17365
+2025-07-27 22:18:14,975 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:14,976 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:14,977 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:15,128 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:15,128 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:15,392 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:15,393 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17118
+2025-07-27 22:18:15,693 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:15,694 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:15,695 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:15,880 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:15,881 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:16,289 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:16,290 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17053
+2025-07-27 22:18:16,714 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:16,714 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 22:18:16,715 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:18:16,907 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:18:16,908 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:18:17,477 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:18:17,478 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17375
+2025-07-27 22:18:19,274 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:19,785 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 22:18:20,028 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:18:28,892 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:18:28,892 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:18:28,893 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:18:29,007 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:18:29,008 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:24:01,155 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 22:24:09,312 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 22:24:09,858 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 22:24:10,411 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 22:24:10,578 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1756407
+2025-07-27 22:24:10,580 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1756407
+2025-07-27 22:24:14,453 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded successfully
+2025-07-27 22:24:14,813 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:14,814 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:16,836 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:16,838 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17314
+2025-07-27 22:24:17,373 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:17,375 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:17,378 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:17,646 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:17,648 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:18,526 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:18,527 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17035
+2025-07-27 22:24:18,911 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:18,912 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:18,915 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:19,295 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:19,297 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:20,117 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:20,118 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17018
+2025-07-27 22:24:20,446 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:20,449 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:20,450 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:20,709 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:20,710 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:21,450 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:21,451 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17158
+2025-07-27 22:24:21,778 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:21,779 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:21,782 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:22,055 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:22,056 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:22,813 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:22,813 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17131
+2025-07-27 22:24:24,338 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:24,806 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:25,223 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:25,420 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:25,422 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:25,423 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:25,694 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:25,695 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:26,562 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:26,563 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16972
+2025-07-27 22:24:26,824 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:26,825 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:26,827 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:27,150 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:27,151 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:27,939 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:27,940 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17395
+2025-07-27 22:24:28,328 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:28,329 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:28,331 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:28,598 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:28,605 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:29,331 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:29,333 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17320
+2025-07-27 22:24:29,624 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:29,625 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:29,625 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:29,844 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:29,845 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:30,575 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:30,576 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16967
+2025-07-27 22:24:30,892 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:24:30,895 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:24:30,896 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:24:31,104 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:24:31,106 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:24:31,798 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:24:31,798 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17201
+2025-07-27 22:30:15,009 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 22:30:28,446 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:28,931 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:29,507 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:29,910 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:29,912 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:29,946 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:30,321 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:30,322 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:31,324 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:31,324 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17231
+2025-07-27 22:30:31,757 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:31,759 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:31,760 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:32,100 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:32,101 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:32,706 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:32,706 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17391
+2025-07-27 22:30:32,946 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:32,946 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:32,947 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:33,215 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:33,217 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:33,813 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:33,814 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17199
+2025-07-27 22:30:34,232 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:34,233 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:34,235 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:34,533 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:34,534 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:35,308 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:35,309 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17132
+2025-07-27 22:30:35,622 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:35,623 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:35,625 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:35,845 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:35,845 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:36,313 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:36,314 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17194
+2025-07-27 22:30:36,772 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:37,354 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:37,772 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:37,968 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:37,970 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:37,971 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:38,258 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:38,259 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:38,951 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:38,952 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17419
+2025-07-27 22:30:39,333 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:39,335 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:39,336 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:39,691 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:39,692 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:40,345 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:40,346 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.16988
+2025-07-27 22:30:40,769 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:40,770 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:40,771 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:41,090 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:41,091 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:41,825 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:41,826 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17159
+2025-07-27 22:30:42,198 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:42,200 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:42,201 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:42,571 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:42,613 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:43,374 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:43,374 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17270
+2025-07-27 22:30:43,733 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1755025
+2025-07-27 22:30:43,734 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1755025
+2025-07-27 22:30:43,735 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 22:30:43,973 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 22:30:43,975 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 22:30:44,672 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 22:30:44,672 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17029
+2025-07-27 22:35:50,052 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:36:14,358 - api.brain_trader_routes - ERROR - Error importing BrainTraderService: No module named 'src'
+2025-07-27 22:36:14,655 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:36:14,657 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:36:50,722 - api.brain_trader_routes - ERROR - Error getting signal intervals: hour must be in 0..23
+2025-07-27 22:37:55,400 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:38:04,762 - api.brain_trader_routes - ERROR - Error importing BrainTraderService: No module named 'src'
+2025-07-27 22:38:04,942 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:38:04,942 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:38:04,945 - api.brain_trader_routes - ERROR - Error getting signal intervals: hour must be in 0..23
+2025-07-27 22:38:21,823 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:38:32,897 - api.brain_trader_routes - ERROR - Error importing BrainTraderService: No module named 'src'
+2025-07-27 22:38:33,193 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:38:33,194 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:38:33,198 - api.brain_trader_routes - ERROR - Error getting signal intervals: hour must be in 0..23
+2025-07-27 22:38:58,129 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:39:06,771 - api.brain_trader_routes - ERROR - Error importing BrainTraderService: No module named 'src'
+2025-07-27 22:39:07,138 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:39:07,138 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:39:07,667 - api.brain_trader_routes - ERROR - Error calculating intervals: hour must be in 0..23
+2025-07-27 22:40:10,138 - api.brain_trader_routes - ERROR - Error calculating intervals: hour must be in 0..23
+2025-07-27 22:40:13,508 - api.brain_trader_routes - ERROR - Error calculating intervals: hour must be in 0..23
+2025-07-27 22:40:23,813 - api.brain_trader_routes - ERROR - Error calculating intervals: hour must be in 0..23
+2025-07-27 22:40:40,486 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:40:48,083 - api.brain_trader_routes - ERROR - Error importing BrainTraderService: No module named 'src'
+2025-07-27 22:40:48,160 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:40:48,160 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:45:06,725 - api.brain_trader_routes - ERROR - Error generating signal: 'MockBrainTraderService' object has no attribute 'generate_quality_signal'
+2025-07-27 22:45:08,501 - api.brain_trader_routes - ERROR - Error generating signal: 'MockBrainTraderService' object has no attribute 'generate_quality_signal'
+2025-07-27 22:45:09,588 - api.brain_trader_routes - ERROR - Error generating signal: 'MockBrainTraderService' object has no attribute 'generate_quality_signal'
+2025-07-27 22:45:11,094 - api.brain_trader_routes - ERROR - Error generating signal: 'MockBrainTraderService' object has no attribute 'generate_quality_signal'
+2025-07-27 22:49:48,693 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:49:58,810 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:49:58,811 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:49:58,811 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:49:58,993 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:49:58,993 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:50:02,690 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:50:06,645 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:50:06,646 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:50:06,648 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:50:06,775 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:50:06,775 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:53:05,964 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:53:05,965 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:53:05,965 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:53:06,096 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:53:06,096 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:55:11,967 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:55:16,283 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:55:16,283 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:55:16,284 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:55:16,519 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:55:16,525 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 22:56:24,518 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 22:56:24,975 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 22:56:31,118 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 22:56:31,119 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 22:56:31,119 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 22:56:31,269 - main - INFO - Iniciando AI Trading System...
+2025-07-27 22:56:31,269 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:00:53,928 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 23:00:53,929 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 23:00:53,929 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 23:00:54,207 - main - INFO - Iniciando AI Trading System...
+2025-07-27 23:00:54,208 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:01:02,277 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1760554
+2025-07-27 23:01:02,835 - services.brain_trader_service - ERROR - Error generating quality signal: not enough values to unpack (expected 4, got 3)
+2025-07-27 23:01:16,210 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:01:16,386 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:01:16,388 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 23:01:27,977 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded successfully
+2025-07-27 23:01:28,296 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 23:01:28,297 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 23:01:30,281 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 23:01:30,286 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17439
+2025-07-27 23:01:30,559 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:01:30,560 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 23:01:30,561 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 23:01:30,775 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 23:01:30,775 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 23:01:31,423 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 23:01:31,424 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17430
+2025-07-27 23:01:31,605 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:01:31,606 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 23:01:31,607 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 23:01:31,962 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 23:01:31,965 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 23:01:32,999 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 23:01:33,000 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17325
+2025-07-27 23:01:33,266 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:01:33,267 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 23:01:33,267 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 23:01:33,457 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 23:01:33,458 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 23:01:34,305 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 23:01:34,307 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17081
+2025-07-27 23:01:34,547 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:01:34,548 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.1761938
+2025-07-27 23:01:34,548 - utils.model_loader - INFO - Brain Max model brain_max_EURUSD_day_trading loaded from cache
+2025-07-27 23:01:34,850 - services.brain_trader_service - WARNING - Features contienen NaN o Inf, usando valores de fallback
+2025-07-27 23:01:34,851 - services.brain_trader_service - INFO - Features generados: 64 (esperado: 64)
+2025-07-27 23:01:36,033 - services.brain_trader_service - INFO - Ensemble prediction: UP=0.000, DOWN=1.000, Direction=down
+2025-07-27 23:01:36,034 - services.brain_trader_service - INFO - Brain Max predicción para EURUSD: down (15.8%) @ 1.17034
+2025-07-27 23:01:36,329 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:01:36,716 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:02:12,965 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.1761938
+2025-07-27 23:02:13,168 - services.brain_trader_service - ERROR - Error generating quality signal: not enough values to unpack (expected 4, got 3)
+2025-07-27 23:02:38,398 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 23:02:42,572 - utils.model_loader - INFO - ModelLoader initialized with path: C:\Users\andre\Documents\aitraderx\backend\models\trained_models
+2025-07-27 23:02:42,572 - utils.model_loader - INFO - Model cache cleared
+2025-07-27 23:02:42,573 - root - INFO - ModelLoader cache cleared on startup
+2025-07-27 23:02:42,674 - main - INFO - Iniciando AI Trading System...
+2025-07-27 23:02:42,674 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:04:51,442 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 23:04:55,180 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 23:04:55,182 - api.brain_trader_routes - INFO - BrainTraderService importado correctamente
+2025-07-27 23:04:55,280 - main - INFO - Iniciando AI Trading System...
+2025-07-27 23:04:55,280 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:06:11,755 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 23:06:11,759 - api.brain_trader_routes - INFO - BrainTraderService importado correctamente
+2025-07-27 23:06:11,892 - main - INFO - Iniciando AI Trading System...
+2025-07-27 23:06:11,892 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:07:12,009 - main - INFO - Deteniendo AI Trading System...
+2025-07-27 23:07:15,930 - root - ERROR - Error importing ModelLoader: No module named 'utils.model_loader'
+2025-07-27 23:07:15,932 - api.brain_trader_routes - INFO - BrainTraderService importado correctamente
+2025-07-27 23:07:16,040 - main - INFO - Iniciando AI Trading System...
+2025-07-27 23:07:16,040 - main - INFO - AI Trading System iniciado correctamente
+2025-07-27 23:08:14,734 - api.auth_routes - ERROR - Error en login: (MySQLdb.OperationalError) (2002, "Can't connect to server on 'localhost' (10061)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-07-27 23:08:18,137 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:18,310 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:18,311 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:18,311 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:18,486 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:18,487 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:18,487 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:18,658 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:18,659 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:18,659 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:18,828 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:18,835 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:18,836 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:19,070 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:19,070 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:19,071 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:19,356 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:19,725 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:20,267 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:20,449 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:20,450 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:20,450 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:20,632 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:20,634 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:20,635 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:20,814 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:20,816 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:20,817 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:20,993 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:20,994 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:20,994 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:21,222 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:21,222 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:21,223 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
+2025-07-27 23:08:21,426 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:21,816 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:53,562 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:53,736 - services.brain_trader_service - INFO - Precio real obtenido para EURUSD: 1.175779
+2025-07-27 23:08:53,737 - services.brain_trader_service - INFO - Generando predicción para EURUSD con precio actual: 1.175779
+2025-07-27 23:08:53,738 - services.brain_trader_service - WARNING - ModelLoader no disponible, usando análisis técnico básico
