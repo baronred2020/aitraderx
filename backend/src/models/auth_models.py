@@ -16,7 +16,7 @@ class UserCreate(BaseModel):
     firstName: str
     lastName: str
     phone: Optional[str] = None
-    plan_type: str = "freemium"
+    plan_type: str = "starter"
     payment_method: Optional[str] = None
 
     @validator('username')
