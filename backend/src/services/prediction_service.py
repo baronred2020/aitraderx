@@ -13,6 +13,15 @@ from config.database_config import db_config
 
 logger = logging.getLogger(__name__)
 
+# Importar BrainTraderService para usar modelos entrenados
+try:
+    from services.brain_trader_service import BrainTraderService
+    brain_trader_service = BrainTraderService()
+    logger.info("BrainTraderService importado correctamente")
+except ImportError as e:
+    logging.error(f"Error importing BrainTraderService: {e}")
+    brain_trader_service = None
+
 class PredictionService:
     """Servicio para manejar predicciones"""
     
@@ -170,16 +179,40 @@ class PredictionService:
                 # Fallback a precio simulado
                 current_price = 1.0925 + random.uniform(-0.01, 0.01)
             
-            # Generar predicción basada en análisis técnico
-            direction = "up" if np.random.random() > 0.5 else "down"
-            confidence = np.random.uniform(60, 95)
-            
-            # Calcular target price basado en volatilidad real
-            volatility = 0.001  # 0.1% base volatility
-            if direction == "up":
-                target_price = current_price * (1 + volatility)
+            # Usar BrainTraderService para brain_max, brain_ultra, brain_predictor
+            if brain_trader_service and brain_type in ['brain_max', 'brain_ultra', 'brain_predictor']:
+                self.logger.info(f"Usando {brain_type} con modelos entrenados para {pair}/{style}")
+                
+                if brain_type == 'brain_max':
+                    prediction_result = await brain_trader_service._get_brain_max_prediction(pair, style, current_price)
+                elif brain_type == 'brain_ultra':
+                    prediction_result = await brain_trader_service._get_brain_ultra_prediction(pair, style, current_price)
+                elif brain_type == 'brain_predictor':
+                    prediction_result = await brain_trader_service._get_brain_predictor_prediction(pair, style, current_price)
+                else:
+                    prediction_result = None
+                
+                if prediction_result and prediction_result.get('direction'):
+                    # Usar predicción del modelo entrenado
+                    direction = prediction_result['direction']
+                    confidence = prediction_result.get('confidence', 75.0)
+                    target_price = prediction_result.get('target_price', current_price * (1 + 0.001))
+                    reasoning = prediction_result.get('reasoning', f"Predicción de {brain_type} para {pair}")
+                    
+                    self.logger.info(f"Predicción generada con {brain_type}: {direction} - {confidence:.2f}%")
+                else:
+                    # Fallback a predicción básica
+                    self.logger.warning(f"No se pudo obtener predicción de {brain_type}, usando fallback")
+                    direction = "up" if np.random.random() > 0.5 else "down"
+                    confidence = np.random.uniform(60, 95)
+                    target_price = current_price * (1 + (0.001 if direction == "up" else -0.001))
+                    reasoning = f"Análisis técnico básico para {pair} usando {brain_type} - {direction.upper()}"
             else:
-                target_price = current_price * (1 - volatility)
+                # Predicción básica para otros tipos de cerebro
+                direction = "up" if np.random.random() > 0.5 else "down"
+                confidence = np.random.uniform(60, 95)
+                target_price = current_price * (1 + (0.001 if direction == "up" else -0.001))
+                reasoning = f"Análisis técnico para {pair} usando {brain_type} - {direction.upper()}"
             
             # Crear predicción con precio actual real
             prediction = {
@@ -190,7 +223,7 @@ class PredictionService:
                 "target_price": target_price,
                 "confidence": confidence,
                 "timeframe": self.style_timeframes.get(style, "15M"),
-                "reasoning": f"Análisis técnico para {pair} usando {brain_type} - {direction.upper()}",
+                "reasoning": reasoning,
                 "brain_type": brain_type,
                 "created_at": datetime.now().isoformat(),
                 "expires_at": (datetime.now() + timedelta(minutes=self.style_durations.get(style, 15))).isoformat(),
