@@ -109,7 +109,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     loadMegaMindArena,
     loadMegaMindPerformance,
     refreshAll,
-  } = useBrainTraderApi();
+  } = useBrainTraderApi(subscription?.planType || 'starter');
   
   // Estados principales
   const [selectedPair, setSelectedPair] = useState('EURUSD');
@@ -178,12 +178,12 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   const getAvailableBrains = () => {
     if (!subscription || subscription.status !== 'active') {
-      return ['brain_max', 'mega_mind']; // Starter + Mega Mind para testing
+      return ['brain_max']; // Starter solo Brain Max
     }
     
     switch (subscription.planType) {
       case 'starter':
-        return ['brain_max', 'mega_mind'];
+        return ['brain_max']; // Starter solo Brain Max
       case 'trader':
         return ['brain_max', 'mega_mind'];
       case 'expert':
@@ -193,7 +193,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       case 'institutional':
         return ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind'];
       default:
-        return ['brain_max', 'mega_mind'];
+        return ['brain_max'];
     }
   };
 

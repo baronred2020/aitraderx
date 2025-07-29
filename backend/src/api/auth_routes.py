@@ -104,6 +104,7 @@ async def login(login_data: UserLogin):
         # Preparar respuesta con datos básicos
         user_response = {
             "id": user.get('user_id', ''),
+            "user_id": user.get('user_id', ''),  # UUID del usuario para el backend
             "username": user.get('username', ''),
             "email": user.get('email', ''),
             "firstName": user.get('first_name', ''),
