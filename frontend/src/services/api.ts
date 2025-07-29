@@ -149,6 +149,7 @@ export interface PredictionHistoryItem {
   confidence: number;
   timeframe: string;
   reasoning: string;
+  brain_type: string;  // ✅ Agregada propiedad brain_type
   created_at: string;
   expires_at: string;
   is_completed: boolean;
@@ -167,6 +168,7 @@ export interface PredictionLimits {
   analysis_type: string;
   timeframe: string;
   duration_minutes: number;
+  has_unlimited?: boolean;
 }
 
 export interface UserStats {
@@ -180,7 +182,9 @@ export interface UserStats {
 
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Asegurar que el endpoint no comience con /api/v1 para evitar duplicación
+    const cleanEndpoint = endpoint.startsWith('/api/v1') ? endpoint.substring(7) : endpoint;
+    const url = `${API_BASE_URL}${cleanEndpoint}`;
     
     try {
       const response = await fetch(url, {
@@ -325,51 +329,65 @@ class ApiService {
     brainType: string = 'brain_max',
     style: string = 'day_trading'
   ): Promise<{ success: boolean; prediction?: any; limits?: PredictionLimits; error?: string }> {
-    // Usar el endpoint correcto de Brain Trader
-    const response = await this.request<BrainTraderPrediction[]>(`/brain-trader/predictions/${brainType}?pair=${pair}&style=${style}&limit=1&plan_type=starter`);
-    
-    if (response && Array.isArray(response) && response.length > 0) {
-      const prediction = response[0];
-      return {
-        success: true,
-        prediction: prediction,
-        limits: {
-          can_generate: true,
-          remaining_predictions: 9, // Mock para ahora
-          max_predictions_per_day: 10,
-          has_active_prediction: true,
-          plan_type: 'starter',
-          analysis_type: 'rsi_only',
-          timeframe: prediction.timeframe,
-          duration_minutes: 15
-        }
-      };
-    } else {
+    try {
+      const response = await this.request<{
+        success: boolean;
+        prediction: any;
+        limits: PredictionLimits;
+        error?: string;
+      }>('/api/v1/predictions/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+          pair,
+          brain_type: brainType,
+          style
+        })
+      });
+      
+      if (response && response.success) {
+        return {
+          success: true,
+          prediction: response.prediction,
+          limits: response.limits
+        };
+      } else {
+        return {
+          success: false,
+          error: response?.error || 'No se pudo generar la predicción'
+        };
+      }
+    } catch (error) {
       return {
         success: false,
-        error: 'No se pudo generar la predicción'
+        error: error instanceof Error ? error.message : 'Error generando predicción'
       };
     }
   }
 
   async getPredictionHistory(limit: number = 20): Promise<PredictionHistoryItem[]> {
-    return this.request(`/predictions/history?limit=${limit}`);
+    try {
+      const response = await this.request<PredictionHistoryItem[]>(`/api/v1/predictions/history?limit=${limit}`);
+      return response || [];
+    } catch (error) {
+      console.error('Error getting prediction history:', error);
+      return [];
+    }
   }
 
   async getPredictionLimits(style: string = 'day_trading'): Promise<PredictionLimits> {
-    return this.request(`/predictions/limits?style=${style}`);
+    return this.request(`/api/v1/predictions/limits?style=${style}`);
   }
 
   async getActivePrediction(style: string = 'day_trading'): Promise<any> {
-    return this.request(`/predictions/active?style=${style}`);
+    return this.request(`/api/v1/predictions/active?style=${style}`);
   }
 
   async getUserStats(): Promise<UserStats> {
-    return this.request('/predictions/stats');
+    return this.request('/api/v1/predictions/stats');
   }
 
   async completeExpiredPredictions(): Promise<{ success: boolean; message: string; completed: number }> {
-    return this.request('/predictions/complete-expired', {
+    return this.request('/api/v1/predictions/complete-expired', {
       method: 'POST'
     });
   }

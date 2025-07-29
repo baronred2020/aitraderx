@@ -39,7 +39,7 @@ CREATE INDEX idx_user_predictions_is_completed ON user_predictions(is_completed)
 
 -- Insertar algunos límites de prueba
 INSERT INTO user_prediction_limits (user_id, plan_type, max_predictions_per_day) VALUES 
-(1, 'starter', 10),
-(2, 'starter', 10),
-(3, 'starter', 10)
+(1, 'starter', 5),
+(2, 'starter', 5),
+(3, 'starter', 5)
 ON DUPLICATE KEY UPDATE plan_type = VALUES(plan_type); 

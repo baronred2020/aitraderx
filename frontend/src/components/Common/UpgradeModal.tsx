@@ -49,7 +49,22 @@ const featureDescriptions = {
   'alerts': 'Sistema de Alertas',
   'mt4_integration': 'Integración MT4',
   'api_access': 'Acceso a API',
-  'custom_models': 'Modelos Personalizados'
+  'custom_models': 'Modelos Personalizados',
+  'brain_trader_basic': 'Brain Trader Básico',
+  'brain_trader_advanced': 'Brain Trader Avanzado',
+  'brain_trader_pro': 'Brain Trader Pro',
+  'brain_trader_premium': 'Brain Trader Premium',
+  'mega_mind_institutional': 'Mega Mind Institutional',
+  'subscription_management': 'Gestión de Suscripciones',
+  'help_support': 'Ayuda y Soporte',
+  'community_access': 'Acceso a Comunidad',
+  'basic_dashboard': 'Dashboard Básico',
+  'basic_trading': 'Trading Básico',
+  'basic_portfolio': 'Portfolio Básico',
+  'basic_analysis': 'Análisis Básico',
+  'advanced_trading': 'Trading Avanzado',
+  'advanced_portfolio': 'Portfolio Avanzado',
+  'advanced_analysis': 'Análisis Avanzado'
 };
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({
@@ -59,10 +74,17 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   requiredPlan,
   feature
 }) => {
-  if (!isOpen) return null;
+  console.log('🔍 UpgradeModal: Renderizando con props:', { isOpen, currentPlan, requiredPlan, feature });
+  
+  if (!isOpen) {
+    console.log('🔍 UpgradeModal: No está abierto, retornando null');
+    return null;
+  }
 
-  const currentPlanInfo = planInfo[currentPlan as keyof typeof planInfo];
-  const requiredPlanInfo = planInfo[requiredPlan as keyof typeof planInfo];
+  console.log('🔍 UpgradeModal: Modal está abierto, renderizando contenido');
+
+  const currentPlanInfo = planInfo[currentPlan as keyof typeof planInfo] || planInfo.starter;
+  const requiredPlanInfo = planInfo[requiredPlan as keyof typeof planInfo] || planInfo.starter;
   const featureName = featureDescriptions[feature as keyof typeof featureDescriptions] || feature;
 
   return (

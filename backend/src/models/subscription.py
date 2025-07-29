@@ -191,7 +191,7 @@ DEFAULT_PLANS = {
             priority_support=False
         ),
         max_indicators=1,
-        max_predictions_per_day=10,
+        max_predictions_per_day=5,
         max_backtests_per_month=5,
         max_portfolios=1,
         support_level="community",
@@ -240,7 +240,7 @@ DEFAULT_PLANS = {
             priority_support=False
         ),
         max_indicators=3,
-        max_predictions_per_day=50,
+        max_predictions_per_day=20,
         max_backtests_per_month=20,
         max_portfolios=3,
         support_level="email",
@@ -292,7 +292,7 @@ DEFAULT_PLANS = {
             priority_support=False
         ),
         max_indicators=10,
-        max_predictions_per_day=200,
+        max_predictions_per_day=50,
         max_backtests_per_month=100,
         max_portfolios=10,
         support_level="email",
@@ -346,7 +346,7 @@ DEFAULT_PLANS = {
             priority_support=True
         ),
         max_indicators=50,
-        max_predictions_per_day=1000,
+        max_predictions_per_day=100,
         max_backtests_per_month=500,
         max_portfolios=100,
         support_level="phone",

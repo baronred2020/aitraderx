@@ -232,9 +232,19 @@ const Help = () => (
 
 function AppContent() {
   const { user, isLoading } = useAuth();
-  const { requireAccess, showUpgradeModal, upgradeInfo, closeUpgradeModal } = useFeatureAccess();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentRoute, setCurrentRoute] = useState('login');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeInfo, setUpgradeInfo] = useState<{
+    currentPlan: string;
+    requiredPlan: string;
+    feature: string;
+  } | null>(null);
+
+  // Debug: Monitorear cambios en el estado del modal
+  useEffect(() => {
+    console.log('🔍 App: Estado del modal actualizado:', { showUpgradeModal, upgradeInfo });
+  }, [showUpgradeModal, upgradeInfo]);
 
   // Detectar la ruta actual
   useEffect(() => {
@@ -251,70 +261,58 @@ function AppContent() {
     setActiveTab(tab);
   }, []);
 
+  // Handler para mostrar el modal de upgrade
+  const handleShowUpgradeModal = useCallback((info: {
+    currentPlan: string;
+    requiredPlan: string;
+    feature: string;
+  }) => {
+    console.log('🔍 App: handleShowUpgradeModal llamado con:', info);
+    setUpgradeInfo(info);
+    setShowUpgradeModal(true);
+  }, []);
+
+  // Handler para cerrar el modal
+  const handleCloseUpgradeModal = useCallback(() => {
+    console.log('🔍 App: Cerrando modal de upgrade');
+    setShowUpgradeModal(false);
+    setUpgradeInfo(null);
+  }, []);
+
   // Memoizar el contenido para evitar re-renders infinitos
   const content = useMemo(() => {
-    // Verificar acceso antes de renderizar cada sección
+    // Renderizar el componente correspondiente
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
       case 'trading':
-        if (requireAccess('trading')) {
-          return <TradingView />;
-        }
-        return null;
+        return <TradingView />;
       case 'portfolio':
-        if (requireAccess('portfolio')) {
-          return <Portfolio />;
-        }
-        return null;
+        return <Portfolio />;
       case 'analysis':
-        if (requireAccess('analysis')) {
-          return <Analysis />;
-        }
-        return null;
+        return <Analysis />;
       case 'ai-monitor':
-        if (requireAccess('ai-monitor')) {
-          return <MonitorIA />;
-        }
-        return null;
+        return <MonitorIA />;
       case 'rl':
-        if (requireAccess('rl')) {
-          return <RLDashboardComponent />;
-        }
-        return null;
+        return <RLDashboardComponent />;
       case 'alerts':
-        if (requireAccess('alerts')) {
-          return <Alerts />;
-        }
-        return null;
+        return <Alerts />;
       case 'reports':
-        if (requireAccess('reports')) {
-          return <Reports />;
-        }
-        return null;
+        return <Reports />;
       case 'subscriptions':
         return <Subscriptions />;
       case 'community':
-        if (requireAccess('community')) {
-          return <Community />;
-        }
-        return null;
+        return <Community />;
       case 'help':
         return <Help />;
       case 'brain-trader':
-        if (requireAccess('brain-trader')) {
-          return <BrainTrader />;
-        }
-        return null;
+        return <BrainTrader />;
       case 'mega-mind':
-        if (requireAccess('mega-mind')) {
-          return <MegaMind />;
-        }
-        return null;
+        return <MegaMind />;
       default:
         return <Dashboard />;
     }
-  }, [activeTab, requireAccess]);
+  }, [activeTab]);
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -351,17 +349,20 @@ function AppContent() {
 
   return (
     <>
-      <Layout activeTab={activeTab} onTabChange={handleTabChange}>
+      <Layout activeTab={activeTab} onTabChange={handleTabChange} onShowUpgradeModal={handleShowUpgradeModal}>
         {content}
       </Layout>
       {upgradeInfo && (
-        <UpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={closeUpgradeModal}
-          currentPlan={upgradeInfo.currentPlan}
-          requiredPlan={upgradeInfo.requiredPlan}
-          feature={upgradeInfo.feature}
-        />
+        <>
+          {console.log('🔍 App: Renderizando modal con info:', upgradeInfo)}
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={handleCloseUpgradeModal}
+            currentPlan={upgradeInfo.currentPlan}
+            requiredPlan={upgradeInfo.requiredPlan}
+            feature={upgradeInfo.feature}
+          />
+        </>
       )}
     </>
   );

@@ -42,7 +42,7 @@
       "3 alertas b\u00e1sicas"
     ],
     "max_indicators": 1,
-    "max_predictions_per_day": 10,
+    "max_predictions_per_day": 5,
     "max_backtests_per_month": 5,
     "max_portfolios": 1,
     "support_level": "community",

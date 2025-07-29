@@ -16,7 +16,7 @@ def upgrade():
     # Create user_predictions table
     op.create_table('user_predictions',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.String(length=36), nullable=False),  # Cambiar a String para UUID
         sa.Column('pair', sa.String(length=10), nullable=False),
         sa.Column('direction', sa.Enum('up', 'down', 'sideways', name='prediction_direction'), nullable=False),
         sa.Column('current_price', DECIMAL(precision=10, scale=5), nullable=False),
@@ -32,18 +32,18 @@ def upgrade():
         sa.Column('prediction_success', sa.Boolean(), nullable=True),
         sa.Column('success_percentage', DECIMAL(precision=5, scale=2), nullable=True),
         sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE')
+        sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ondelete='CASCADE')  # Corregir foreign key
     )
 
     # Create user_prediction_limits table
     op.create_table('user_prediction_limits',
-        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.String(length=36), nullable=False),  # Cambiar a String para UUID
         sa.Column('plan_type', sa.String(length=20), nullable=False),
         sa.Column('max_predictions_per_day', sa.Integer(), nullable=False),
         sa.Column('predictions_used_today', sa.Integer(), nullable=True, server_default='0'),
         sa.Column('last_reset_date', sa.Date(), nullable=True, server_default=sa.text('CURRENT_DATE')),
         sa.PrimaryKeyConstraint('user_id'),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE')
+        sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ondelete='CASCADE')  # Corregir foreign key
     )
 
     # Create indexes for better performance

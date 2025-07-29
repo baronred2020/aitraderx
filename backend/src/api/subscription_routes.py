@@ -1,158 +1,95 @@
 """
-Rutas de Suscripciones
-======================
-Endpoints para gestión de suscripciones
+Subscription Routes for AI Trading System
 """
-
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+from typing import Dict, Any, Optional
 from datetime import datetime
 import logging
+import jwt
+from config.auth_config import SECRET_KEY, ALGORITHM, get_current_user
 
-from models.subscription import SubscriptionPlan, UserSubscription
-from services.subscription_service import SubscriptionService
+from models.auth_models import User
 from services.user_service import UserService
-from config.auth_config import get_current_user
+from config.database_config import db_config
 
-# Configurar logging
 logger = logging.getLogger(__name__)
 
-# Router para suscripciones
 subscription_router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
 
-# Instancia del servicio
-subscription_service = SubscriptionService()
-user_service = UserService()
-
-@subscription_router.get("/plans")
-async def get_subscription_plans():
-    """Obtiene todos los planes de suscripción disponibles"""
+# Función para obtener usuario actual desde token
+async def get_current_user_from_token(request: Request):
+    """Obtener usuario actual desde token JWT"""
     try:
-        plans = subscription_service.get_all_plans()
-        return plans
-    except Exception as e:
-        logger.error(f"Error obteniendo planes: {e}")
-        raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-@subscription_router.get("/me")
-async def get_current_user_subscription(current_user: dict = Depends(get_current_user)):
-    """Obtiene la suscripción del usuario actual"""
-    try:
-        username = current_user.get("username")
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return None
+        
+        token = auth_header.split(' ')[1]
+        
+        # Decodificar token JWT
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get('sub')
+        
         if not username:
-            raise HTTPException(status_code=401, detail="Usuario no autenticado")
+            return None
         
         # Obtener usuario de la base de datos
+        user_service = UserService()
         user = user_service.get_user_by_username(username)
-        if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
-        # Obtener suscripción del usuario
-        subscription = user_service.get_user_subscription(user.user_id)
-        
-        if not subscription:
-            # Si no tiene suscripción, crear una freemium por defecto
-            subscription = user_service.create_subscription(user.user_id, "freemium")
-        
-        # Preparar respuesta
-        subscription_response = {
-            "id": subscription.subscription_id,
-            "planType": subscription.plan_type,
-            "status": subscription.status,
-            "startDate": subscription.start_date.isoformat(),
-            "endDate": subscription.end_date.isoformat(),
-            "isTrial": subscription.is_trial
-        }
-        
-        return {
-            "subscription": subscription_response,
-            "user": {
-                "id": user.user_id,
-                "username": user.username,
-                "email": user.email,
-                "firstName": user.first_name,
-                "lastName": user.last_name,
-                "role": user.role,
-                "isActive": user.is_active
-            }
-        }
-        
-    except HTTPException:
-        raise
+        return user
     except Exception as e:
-        logger.error(f"Error obteniendo suscripción: {e}")
-        raise HTTPException(status_code=500, detail="Error interno del servidor")
+        logger.error(f"Error decoding token: {e}")
+        return None
 
-@subscription_router.post("/upgrade")
-async def upgrade_subscription(
-    plan_type: str,
-    payment_method: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+@subscription_router.get("/me")
+async def get_user_subscription(
+    request: Request,
+    current_user: User = Depends(get_current_user)
 ):
-    """Actualiza la suscripción del usuario"""
+    """Get current user's subscription"""
     try:
-        username = current_user.get("username")
-        if not username:
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503,
+                detail="Database connection not available"
+            )
+        
+        # Obtener usuario real desde token
+        user = await get_current_user_from_token(request)
+        if not user:
             raise HTTPException(status_code=401, detail="Usuario no autenticado")
         
-        # Obtener usuario
-        user = user_service.get_user_by_username(username)
-        if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        # Obtener información del plan
+        plan_type = user.get('plan_type', 'starter')
         
-        # Cancelar suscripción actual si existe
-        current_subscription = user_service.get_user_subscription(user.user_id)
-        if current_subscription:
-            current_subscription.status = "cancelled"
-            user_service.db.commit()
-        
-        # Crear nueva suscripción
-        new_subscription = user_service.create_subscription(user.user_id, plan_type, payment_method)
-        if not new_subscription:
-            raise HTTPException(status_code=500, detail="Error al crear suscripción")
+        # Crear respuesta de suscripción real
+        subscription_data = {
+            "id": f"sub_{user.get('user_id')}",
+            "planType": plan_type,
+            "status": "active",
+            "startDate": user.get('created_at', datetime.now()).isoformat(),
+            "endDate": (datetime.now().replace(year=datetime.now().year + 1)).isoformat(),
+            "isTrial": plan_type == "starter"
+        }
         
         return {
-            "message": "Suscripción actualizada exitosamente",
-            "subscription": {
-                "id": new_subscription.subscription_id,
-                "planType": new_subscription.plan_type,
-                "status": new_subscription.status,
-                "startDate": new_subscription.start_date.isoformat(),
-                "endDate": new_subscription.end_date.isoformat(),
-                "isTrial": new_subscription.is_trial
+            "subscription": subscription_data,
+            "user": {
+                "id": user.get('user_id'),
+                "username": user.get('username'),
+                "email": user.get('email'),
+                "firstName": user.get('first_name'),
+                "lastName": user.get('last_name'),
+                "role": user.get('role', 'user'),
+                "isActive": user.get('is_active', True)
             }
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error actualizando suscripción: {e}")
-        raise HTTPException(status_code=500, detail="Error interno del servidor")
-
-@subscription_router.get("/usage")
-async def get_usage_metrics(current_user: dict = Depends(get_current_user)):
-    """Obtiene métricas de uso del usuario"""
-    try:
-        username = current_user.get("username")
-        if not username:
-            raise HTTPException(status_code=401, detail="Usuario no autenticado")
-        
-        # Obtener métricas de uso (simulado por ahora)
-        usage_data = {
-            "api_requests_today": 15,
-            "predictions_made_today": 8,
-            "backtests_run_today": 2,
-            "alerts_created": 3,
-            "ai_models_used": ["traditional_ai", "reinforcement_learning"],
-            "rl_episodes_trained": 1250,
-            "custom_models_created": 0,
-            "trades_executed": 5,
-            "portfolio_value": 125430.50,
-            "profit_loss": 1234.75
-        }
-        
-        return usage_data
-        
-    except Exception as e:
-        logger.error(f"Error obteniendo métricas: {e}")
+        logger.error(f"Error getting user subscription: {e}")
         raise HTTPException(status_code=500, detail="Error interno del servidor") 

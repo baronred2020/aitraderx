@@ -1,41 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   BarChart3, 
   Target, 
   PieChart, 
+  TrendingUp, 
   Brain, 
+  Crown, 
   Zap, 
   Bell, 
-  Settings, 
-  Menu, 
-  X,
-  TrendingUp,
-  DollarSign,
-  Activity,
-  Shield,
-  Users,
-  FileText,
+  FileText, 
+  CreditCard, 
+  Users, 
   HelpCircle,
+  Menu,
+  X,
   User,
-  LogOut,
-  Crown,
-  Zap as ZapIcon,
-  CreditCard
+  Activity,
+  Settings,
+  LogOut
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onShowUpgradeModal?: (upgradeInfo: {
+    currentPlan: string;
+    requiredPlan: string;
+    feature: string;
+  }) => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
-  const { user, subscription, logout } = useAuth();
+export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onShowUpgradeModal }) => {
+  const { user, subscription, logout, canAccess, isLoading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [isConnected, setIsConnected] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Debug: Monitorear estado de carga
+  useEffect(() => {
+    console.log('🔍 Layout: Estado de carga - isLoading:', isLoading);
+    console.log('🔍 Layout: Estado de suscripción - subscription:', subscription);
+  }, [isLoading, subscription]);
 
   // Cerrar menú de usuario al hacer click fuera
   React.useEffect(() => {
@@ -80,6 +88,51 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
     { label: 'Precisión IA', value: '78.3%', change: '+1.2%', positive: true },
     { label: 'Sharpe Ratio', value: '1.45', change: '+0.12', positive: true },
   ];
+
+  const handleTabClick = (tabId: string) => {
+    console.log(`🔍 Layout: handleTabClick llamado con tabId: ${tabId}`);
+    
+    // Verificar si el usuario tiene acceso a esta sección
+    const hasAccess = canAccess(tabId);
+    console.log(`🔍 Layout: canAccess(${tabId}) retornó: ${hasAccess}`);
+    
+    if (hasAccess) {
+      console.log(`✅ Layout: Navegando a ${tabId}`);
+      onTabChange(tabId);
+      setSidebarOpen(false);
+    } else {
+      console.log(`🚫 Layout: Acceso denegado a ${tabId}, mostrando modal de upgrade`);
+      
+      // Buscar la configuración de la característica
+      const featureConfig = {
+        'ai-monitor': { requiredPlan: 'expert', feature: 'ai-monitor' },
+        'rl': { requiredPlan: 'expert', feature: 'rl' },
+        'reports': { requiredPlan: 'expert', feature: 'reports' },
+        'alerts': { requiredPlan: 'trader', feature: 'alerts' },
+        'mt4_integration': { requiredPlan: 'expert', feature: 'mt4_integration' },
+        'api_access': { requiredPlan: 'premium', feature: 'api_access' },
+        'custom_models': { requiredPlan: 'premium', feature: 'custom_models' },
+        'brain-trader': { requiredPlan: 'starter', feature: 'brain_trader_basic' },
+        'mega-mind': { requiredPlan: 'premium', feature: 'mega_mind_institutional' },
+        'subscriptions': { requiredPlan: 'starter', feature: 'subscription_management' },
+        'community': { requiredPlan: 'trader', feature: 'community_access' },
+        'help': { requiredPlan: 'starter', feature: 'help_support' },
+        'monitoring_agents': { requiredPlan: 'trader', feature: 'monitoring_agents' },
+        'monitoring_alerts': { requiredPlan: 'trader', feature: 'monitoring_alerts' },
+        'monitoring_config': { requiredPlan: 'expert', feature: 'monitoring_config' }
+      };
+      
+      const config = featureConfig[tabId as keyof typeof featureConfig];
+      if (config && onShowUpgradeModal) {
+        console.log(`🔍 Layout: Configurando modal para ${tabId}:`, config);
+        onShowUpgradeModal({
+          currentPlan: subscription?.planType || 'starter',
+          requiredPlan: config.requiredPlan,
+          feature: config.feature
+        });
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
@@ -162,7 +215,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                   <div className="flex items-center space-x-1">
                     {subscription?.planType === 'premium' && <Crown className="w-3 h-3 text-yellow-400" />}
                     {subscription?.planType === 'expert' && <Brain className="w-3 h-3 text-purple-400" />}
-                    {subscription?.planType === 'trader' && <ZapIcon className="w-3 h-3 text-blue-400" />}
+                    {subscription?.planType === 'trader' && <Zap className="w-3 h-3 text-blue-400" />}
                     <span className="text-xs text-gray-400 capitalize">
                       {subscription?.planType || 'starter'}
                     </span>
@@ -194,7 +247,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                         <div className="flex items-center space-x-1">
                           {subscription?.planType === 'premium' && <Crown className="w-3 h-3 text-yellow-400" />}
                           {subscription?.planType === 'expert' && <Brain className="w-3 h-3 text-purple-400" />}
-                          {subscription?.planType === 'trader' && <ZapIcon className="w-3 h-3 text-blue-400" />}
+                          {subscription?.planType === 'trader' && <Zap className="w-3 h-3 text-blue-400" />}
                           <span className="text-sm font-medium text-white capitalize">
                             {subscription?.planType || 'starter'}
                           </span>
@@ -252,39 +305,59 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
 
             {/* Navegación */}
             <nav className="flex-1 px-4 py-6 space-y-2">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    onTabChange(item.id);
-                    setSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200
-                    ${activeTab === item.id
-                      ? 'bg-gradient-to-r from-blue-600/20 to-teal-600/20 border border-blue-500/30 text-blue-400'
-                      : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
-                    }
-                  `}
-                >
-                  <div className="flex items-center space-x-3">
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.name}</span>
-                  </div>
-                  {item.badge && (
-                    <span className={`
-                      px-2 py-1 text-xs font-semibold rounded-full
-                      ${item.badge === 'LIVE' ? 'bg-red-500/20 text-red-400' :
-                        item.badge === 'AI' ? 'bg-purple-500/20 text-purple-400' :
-                        item.badge === 'RL' ? 'bg-orange-500/20 text-orange-400' :
-                        item.badge === 'INSTITUTIONAL' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 border border-purple-500/30' :
-                        'bg-blue-500/20 text-blue-400'}
-                    `}>
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {isLoading ? (
+                // Mostrar loading mientras se carga la suscripción
+                <div className="space-y-2">
+                  {navigationItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800/30 animate-pulse"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-gray-600 rounded"></div>
+                        <div className="h-4 bg-gray-600 rounded w-20"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Mostrar menú normal cuando la suscripción está cargada
+                navigationItems.map((item) => {
+                  const hasAccess = canAccess(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={`
+                        w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200
+                        ${activeTab === item.id
+                          ? 'bg-gradient-to-r from-blue-600/20 to-teal-600/20 border border-blue-500/30 text-blue-400'
+                          : hasAccess 
+                            ? 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+                            : 'text-gray-500 hover:bg-gray-800/30 hover:text-gray-400'
+                        }
+                      `}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <item.icon className={`w-5 h-5 ${!hasAccess ? 'opacity-50' : ''}`} />
+                        <span className="font-medium">{item.name}</span>
+                      </div>
+                      {item.badge && hasAccess && (
+                        <span className={`
+                          px-2 py-1 text-xs font-semibold rounded-full
+                          ${item.badge === 'LIVE' ? 'bg-red-500/20 text-red-400' :
+                            item.badge === 'AI' ? 'bg-purple-500/20 text-purple-400' :
+                            item.badge === 'RL' ? 'bg-orange-500/20 text-orange-400' :
+                            item.badge === 'INSTITUTIONAL' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 border border-purple-500/30' :
+                            'bg-blue-500/20 text-blue-400'}
+                        `}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
             </nav>
 
             {/* Footer del sidebar */}

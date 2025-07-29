@@ -11,6 +11,22 @@ interface FeatureAccessConfig {
 
 // Configuración de características por sección
 const featureConfig: FeatureAccessConfig = {
+  'dashboard': {
+    requiredPlan: 'starter',
+    feature: 'basic_dashboard'
+  },
+  'trading': {
+    requiredPlan: 'starter',
+    feature: 'basic_trading'
+  },
+  'portfolio': {
+    requiredPlan: 'starter',
+    feature: 'basic_portfolio'
+  },
+  'analysis': {
+    requiredPlan: 'starter',
+    feature: 'basic_analysis'
+  },
   'ai-monitor': {
     requiredPlan: 'expert',
     feature: 'ai-monitor'
@@ -46,6 +62,18 @@ const featureConfig: FeatureAccessConfig = {
   'mega-mind': {
     requiredPlan: 'premium',
     feature: 'mega_mind_institutional'
+  },
+  'subscriptions': {
+    requiredPlan: 'starter',
+    feature: 'subscription_management'
+  },
+  'community': {
+    requiredPlan: 'trader',
+    feature: 'community_access'
+  },
+  'help': {
+    requiredPlan: 'starter',
+    feature: 'help_support'
   },
   'monitoring_agents': {
     requiredPlan: 'trader',
@@ -100,23 +128,41 @@ export const useFeatureAccess = () => {
   }, [subscription, hasFeature, user]);
 
   const requireAccess = useCallback((section: string): boolean => {
+    console.log(`🔍 useFeatureAccess: requireAccess llamado con section: ${section}`);
+    
     const hasAccess = checkAccess(section);
+    
+    // Debug logging
+    console.log(`🔍 Verificando acceso a ${section}:`, {
+      hasAccess,
+      userRole: user?.role,
+      subscriptionStatus: subscription?.status,
+      subscriptionPlan: subscription?.planType,
+      canAccessResult: canAccess(section)
+    });
     
     // No mostrar modal de upgrade al admin
     if (!hasAccess && user?.role !== 'admin') {
+      console.log(`🚫 useFeatureAccess: Acceso denegado a ${section}, buscando configuración...`);
       const config = featureConfig[section];
       if (config) {
+        console.log(`🚫 Acceso denegado a ${section}, mostrando modal de upgrade:`, config);
         setUpgradeInfo({
-          currentPlan: subscription?.planType || 'freemium',
+          currentPlan: subscription?.planType || 'starter',
           requiredPlan: config.requiredPlan,
           feature: config.feature
         });
         setShowUpgradeModal(true);
+        console.log(`✅ useFeatureAccess: Modal configurado para ${section}`);
+      } else {
+        console.log(`❌ useFeatureAccess: No se encontró configuración para ${section}`);
       }
+    } else {
+      console.log(`✅ useFeatureAccess: Acceso permitido a ${section} o es admin`);
     }
     
     return hasAccess;
-  }, [checkAccess, subscription, user]);
+  }, [checkAccess, subscription, user, canAccess]);
 
   const requireFeature = useCallback((feature: string): boolean => {
     const hasFeatureAccess = checkFeature(feature);

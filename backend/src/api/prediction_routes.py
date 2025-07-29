@@ -7,8 +7,11 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import logging
+import numpy as np
 
 from services.prediction_service import PredictionService
+from config.database_config import db_config
+
 # Función temporal para obtener usuario actual
 async def get_current_user(request: Request):
     """Función temporal para obtener usuario actual"""
@@ -36,6 +39,7 @@ class PredictionResponse(BaseModel):
     confidence: float
     timeframe: str
     reasoning: str
+    brain_type: str  # ✅ Agregada propiedad brain_type
     created_at: str
     expires_at: str
     time_remaining: Optional[float] = None
@@ -49,6 +53,7 @@ class PredictionHistoryResponse(BaseModel):
     confidence: float
     timeframe: str
     reasoning: str
+    brain_type: str  # ✅ Agregada propiedad brain_type
     created_at: str
     expires_at: str
     is_completed: bool
@@ -83,24 +88,17 @@ async def get_prediction_limits(
 ):
     """Get user's prediction limits and status"""
     try:
-        # Get database session from request state
-        db_session = request.state.db if hasattr(request.state, 'db') else None
-        
-        if not db_session:
-            # Mock response for testing
-            return LimitsResponse(
-                can_generate=True,
-                remaining_predictions=10,
-                max_predictions_per_day=10,
-                has_active_prediction=False,
-                plan_type="starter",
-                analysis_type="rsi_only",
-                timeframe="15M" if style == "day_trading" else "1H",
-                duration_minutes=15 if style == "day_trading" else 60
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
             )
         
-        prediction_service = PredictionService(db_session)
-        limits_info = prediction_service.can_generate_prediction(current_user.id, style)
+        prediction_service = PredictionService()
+        # Usar el plan_type del usuario actual, por defecto 'starter'
+        plan_type = getattr(current_user, 'plan_type', 'starter')
+        limits_info = await prediction_service.can_generate_prediction(current_user.id, style, plan_type)
         
         return LimitsResponse(**limits_info)
         
@@ -116,68 +114,59 @@ async def generate_prediction(
 ):
     """Generate a new prediction for the user"""
     try:
-        # Get database session from request state
-        db_session = request.state.db if hasattr(request.state, 'db') else None
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
+            )
         
-        if not db_session:
-            # Mock response for testing
-            return JSONResponse(content={
-                'success': True,
-                'prediction': {
-                    'id': 1,
-                    'pair': request_data.pair,
-                    'direction': 'up',
-                    'current_price': 1.0925,
-                    'target_price': 1.0935,
-                    'confidence': 85.5,
-                    'timeframe': '15M' if request_data.style == 'day_trading' else '1H',
-                    'reasoning': f'{request_data.style.replace("_", " ").title()}: RSI indica sobreventa - señal de compra - RSI: 25.3',
-                    'created_at': datetime.now().isoformat(),
-                    'expires_at': (datetime.now() + timedelta(minutes=15)).isoformat(),
-                    'time_remaining': 15.0
-                },
-                'limits': {
-                    'can_generate': True,
-                    'remaining_predictions': 9,
-                    'max_predictions_per_day': 10,
-                    'has_active_prediction': True,
-                    'active_prediction_expires': (datetime.now() + timedelta(minutes=15)).isoformat(),
-                    'plan_type': 'starter',
-                    'analysis_type': 'rsi_only',
-                    'timeframe': '15M' if request_data.style == 'day_trading' else '1H',
-                    'duration_minutes': 15 if request_data.style == 'day_trading' else 60
-                }
-            })
-        
-        prediction_service = PredictionService(db_session)
+        prediction_service = PredictionService()
         
         # Check if user can generate prediction
-        limits_info = prediction_service.can_generate_prediction(current_user.id, request_data.style)
-        if not limits_info['can_generate']:
+        plan_type = getattr(current_user, 'plan_type', 'starter')
+        user_id = getattr(current_user, 'id', 1)
+        
+        # Verificar si puede generar predicción
+        can_generate = await prediction_service.can_generate_prediction(user_id, request_data.style, plan_type)
+        if not can_generate:
             return JSONResponse(
                 status_code=400,
                 content={
                     'success': False,
-                    'error': 'Cannot generate prediction',
-                    'details': limits_info
+                    'error': 'Cannot generate prediction - limit reached',
+                    'details': {
+                        'plan_type': plan_type,
+                        'style': request_data.style
+                    }
                 }
             )
         
-        # Generate prediction
+        # Generar predicción real usando el servicio
         result = await prediction_service.generate_prediction(
-            user_id=current_user.id,
+            user_id=user_id,
             pair=request_data.pair,
             brain_type=request_data.brain_type,
             style=request_data.style
         )
         
-        if not result['success']:
+        if not result:
             return JSONResponse(
-                status_code=400,
-                content=result
+                status_code=500,
+                content={
+                    'success': False,
+                    'error': 'Failed to generate prediction'
+                }
             )
         
-        return JSONResponse(content=result)
+        # Obtener límites actualizados después de generar predicción
+        updated_limits = await prediction_service.can_generate_prediction(user_id, request_data.style, plan_type)
+        
+        return JSONResponse(content={
+            'success': True,
+            'prediction': result,
+            'limits': updated_limits
+        })
         
     except Exception as e:
         logger.error(f"Error generating prediction: {e}")
@@ -191,25 +180,23 @@ async def get_active_prediction(
 ):
     """Get user's active prediction"""
     try:
-        # Get database session from request state
-        db_session = request.state.db if hasattr(request.state, 'db') else None
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
+            )
         
-        if not db_session:
-            return None
-        
-        prediction_service = PredictionService(db_session)
-        active_prediction = prediction_service.get_active_prediction(current_user.id, style)
-        
-        if not active_prediction:
-            return None
-        
-        return PredictionResponse(**active_prediction)
+        prediction_service = PredictionService()
+        # Por ahora, retornar None ya que no hay predicciones activas implementadas
+        # TODO: Implementar lógica de predicciones activas
+        return None
         
     except Exception as e:
         logger.error(f"Error getting active prediction: {e}")
         raise HTTPException(status_code=500, detail="Error getting active prediction")
 
-@router.get("/history", response_model=List[PredictionHistoryResponse])
+@router.get("/history", response_model=List[Dict[str, Any]])
 async def get_prediction_history(
     limit: int = 20,
     request: Request = None,
@@ -217,16 +204,19 @@ async def get_prediction_history(
 ):
     """Get user's prediction history"""
     try:
-        # Get database session from request state
-        db_session = request.state.db if hasattr(request.state, 'db') else None
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
+            )
         
-        if not db_session:
-            return []
+        prediction_service = PredictionService()
+        # Usar el ID correcto del usuario (1 para el usuario de prueba)
+        user_id = getattr(current_user, 'id', 1)
+        history = await prediction_service.get_prediction_history(user_id, limit)
         
-        prediction_service = PredictionService(db_session)
-        predictions = prediction_service.get_user_predictions(current_user.id, limit)
-        
-        return [PredictionHistoryResponse(**prediction) for prediction in predictions]
+        return history
         
     except Exception as e:
         logger.error(f"Error getting prediction history: {e}")
@@ -236,21 +226,17 @@ async def get_prediction_history(
 async def get_user_stats(request: Request, current_user: User = Depends(get_current_user)):
     """Get user's prediction statistics"""
     try:
-        # Get database session from request state
-        db_session = request.state.db if hasattr(request.state, 'db') else None
-        
-        if not db_session:
-            return UserStatsResponse(
-                total_predictions=0,
-                successful_predictions=0,
-                success_rate=0.0,
-                average_success_percentage=0.0,
-                best_pair=None,
-                total_predictions_today=0
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
             )
         
-        prediction_service = PredictionService(db_session)
-        stats = prediction_service.get_user_stats(current_user.id)
+        prediction_service = PredictionService()
+        # Usar el ID correcto del usuario (1 para el usuario de prueba)
+        user_id = getattr(current_user, 'id', 1)
+        stats = await prediction_service.get_user_stats(user_id)
         
         return UserStatsResponse(**stats)
         
@@ -266,7 +252,10 @@ async def complete_expired_predictions(request: Request, current_user: User = De
         db_session = request.state.db if hasattr(request.state, 'db') else None
         
         if not db_session:
-            return {"success": True, "message": "No database connection", "completed": 0}
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
+            )
         
         prediction_service = PredictionService(db_session)
         completed_count = await prediction_service.complete_expired_predictions()
@@ -276,3 +265,47 @@ async def complete_expired_predictions(request: Request, current_user: User = De
     except Exception as e:
         logger.error(f"Error completing expired predictions: {e}")
         raise HTTPException(status_code=500, detail="Error completing expired predictions") 
+
+@router.post("/reset-daily", response_model=Dict[str, Any])
+async def reset_daily_predictions_manual(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Reset daily predictions counter (admin only)"""
+    try:
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
+            )
+        
+        # Verificar si el usuario es administrador
+        # Por ahora, permitir a todos los usuarios para pruebas
+        # TODO: Implementar verificación real de rol de administrador
+        logger.info(f"Usuario solicitando reinicio: {getattr(current_user, 'username', 'unknown')}")
+        
+        # Importar y ejecutar el script de reinicio
+        import sys
+        from pathlib import Path
+        sys.path.append(str(Path(__file__).parent.parent.parent))
+        
+        from reset_daily_predictions import reset_daily_predictions
+        
+        success = reset_daily_predictions()
+        
+        if success:
+            return {
+                "success": True,
+                "message": "Reinicio diario de predicciones ejecutado exitosamente",
+                "timestamp": datetime.now().isoformat()
+            }
+        else:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error ejecutando el reinicio diario"
+            )
+        
+    except Exception as e:
+        logger.error(f"Error in manual reset: {e}")
+        raise HTTPException(status_code=500, detail="Error en reinicio manual") 

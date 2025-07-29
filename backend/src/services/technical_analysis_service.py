@@ -234,28 +234,130 @@ class TechnicalAnalysisService:
             ema_26 = indicators['ema_26'].iloc[-1] if 'ema_26' in indicators and not indicators['ema_26'].empty else current_price
             adx = indicators['adx'].iloc[-1] if 'adx' in indicators and not indicators['adx'].empty else 25
             
-            for i in range(min(limit, 3)):
-                direction, strength, description = self._analyze_trend_direction(
-                    current_price, sma_20, sma_50, ema_12, ema_26, adx
-                )
-                
-                support, resistance = self._calculate_support_resistance(data, indicators)
-                
-                trend = TrendAnalysis(
-                    direction=direction,
-                    strength=strength,
-                    timeframe='4H',
-                    support=support,
-                    resistance=resistance,
-                    description=description
-                )
-                trends.append(trend)
+            # INTEGRAR INFORMACIÓN DEL BRAIN MAX PARA TENDENCIAS MÁS PRECISAS
+            brain_max_trend_info = await self._get_brain_max_trend_analysis(data, indicators)
+            
+            # Generar solo 1 tendencia con análisis mejorado
+            direction, strength, description = self._analyze_trend_direction_enhanced(
+                current_price, sma_20, sma_50, ema_12, ema_26, adx, brain_max_trend_info
+            )
+            
+            support, resistance = self._calculate_support_resistance(data, indicators)
+            
+            trend = TrendAnalysis(
+                direction=direction,
+                strength=strength,
+                timeframe='4H',
+                support=support,
+                resistance=resistance,
+                description=description
+            )
+            trends.append(trend)
             
             return trends
             
         except Exception as e:
             logger.error(f"Error generando tendencias reales: {e}")
             return []
+
+    async def _get_brain_max_trend_analysis(self, data: pd.DataFrame, indicators: Dict[str, Any]) -> Dict[str, Any]:
+        """Obtener análisis de tendencia basado en las features del Brain Max"""
+        try:
+            # Calcular features avanzadas como en Brain Max
+            brain_max_features = {}
+            
+            # RSI
+            delta = data['Close'].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+            rs = gain / loss
+            rs = rs.replace([np.inf, -np.inf], 0)
+            rsi = 100 - (100 / (1 + rs))
+            rsi = rsi.fillna(50)
+            brain_max_features['rsi'] = float(rsi.iloc[-1])
+            
+            # MACD
+            exp1 = data['Close'].ewm(span=12).mean()
+            exp2 = data['Close'].ewm(span=26).mean()
+            macd = exp1 - exp2
+            macd_signal = macd.ewm(span=9).mean()
+            macd_hist = macd - macd_signal
+            brain_max_features['macd'] = float(macd.iloc[-1])
+            brain_max_features['macd_signal'] = float(macd_signal.iloc[-1])
+            brain_max_features['macd_hist'] = float(macd_hist.iloc[-1])
+            
+            # Bollinger Bands
+            bb_middle = data['Close'].rolling(window=20).mean()
+            bb_std = data['Close'].rolling(window=20).std()
+            bb_upper = bb_middle + (bb_std * 2)
+            bb_lower = bb_middle - (bb_std * 2)
+            bb_position = (data['Close'] - bb_lower) / (bb_upper - bb_lower)
+            bb_position = bb_position.replace([np.inf, -np.inf], 0.5)
+            bb_position = bb_position.fillna(0.5)
+            
+            brain_max_features['bb_position'] = float(bb_position.iloc[-1])
+            brain_max_features['bb_upper'] = float(bb_upper.iloc[-1])
+            brain_max_features['bb_lower'] = float(bb_lower.iloc[-1])
+            
+            # Moving Averages
+            sma_5 = data['Close'].rolling(window=5).mean()
+            sma_20 = data['Close'].rolling(window=20).mean()
+            sma_50 = data['Close'].rolling(window=50).mean()
+            ema_12 = data['Close'].ewm(span=12).mean()
+            ema_26 = data['Close'].ewm(span=26).mean()
+            
+            brain_max_features['sma_5'] = float(sma_5.iloc[-1])
+            brain_max_features['sma_20'] = float(sma_20.iloc[-1])
+            brain_max_features['sma_50'] = float(sma_50.iloc[-1])
+            brain_max_features['ema_12'] = float(ema_12.iloc[-1])
+            brain_max_features['ema_26'] = float(ema_26.iloc[-1])
+            
+            # Volatility
+            volatility = data['Close'].rolling(window=20).std()
+            volatility_5 = data['Close'].rolling(5).std()
+            volatility_20 = data['Close'].rolling(20).std()
+            volatility_ratio = volatility_5 / volatility_20
+            volatility_ratio = volatility_ratio.replace([np.inf, -np.inf], 1)
+            volatility_ratio = volatility_ratio.fillna(1)
+            
+            brain_max_features['volatility'] = float(volatility.iloc[-1])
+            brain_max_features['volatility_ratio'] = float(volatility_ratio.iloc[-1])
+            
+            # Momentum
+            momentum = data['Close'] - data['Close'].shift(5)
+            momentum_5 = data['Close'].pct_change(5)
+            momentum_10 = data['Close'].pct_change(10)
+            momentum_20 = data['Close'].pct_change(20)
+            momentum_acceleration = momentum_5 - momentum_10
+            
+            brain_max_features['momentum'] = float(momentum.iloc[-1])
+            brain_max_features['momentum_5'] = float(momentum_5.iloc[-1])
+            brain_max_features['momentum_acceleration'] = float(momentum_acceleration.iloc[-1])
+            
+            # Trend strength (como en Brain Max)
+            trend_strength = abs(data['Close'].iloc[-1] - sma_20.iloc[-1]) / volatility.iloc[-1]
+            trend_strength = trend_strength if not np.isinf(trend_strength) else 0
+            brain_max_features['trend_strength'] = float(trend_strength)
+            
+            # Trend direction (como en Brain Max)
+            trend_direction = 1 if sma_20.iloc[-1] > sma_50.iloc[-1] else -1
+            brain_max_features['trend_direction'] = trend_direction
+            
+            # Support and resistance
+            support_level = data['Low'].rolling(window=20).min()
+            resistance_level = data['High'].rolling(window=20).max()
+            price_position = (data['Close'].iloc[-1] - support_level.iloc[-1]) / (resistance_level.iloc[-1] - support_level.iloc[-1])
+            price_position = price_position if not np.isnan(price_position) else 0.5
+            
+            brain_max_features['support_level'] = float(support_level.iloc[-1])
+            brain_max_features['resistance_level'] = float(resistance_level.iloc[-1])
+            brain_max_features['price_position'] = float(price_position)
+            
+            return brain_max_features
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo análisis Brain Max: {e}")
+            return {}
 
     def _analyze_technical_signals(self, price: float, rsi: float, macd: float, macd_signal: float, 
                                  bb_upper: float, bb_lower: float, sma_20: float, sma_50: float, 
@@ -387,6 +489,145 @@ class TechnicalAnalysisService:
         elif adx < 20:
             strength -= 10
             description_parts.append("Tendencia débil")
+        
+        # Limitar fuerza
+        strength = max(min(strength, 100.0), 0.0)
+        
+        description = " + ".join(description_parts) if description_parts else "Tendencia neutra"
+        
+        return direction, strength, description
+
+    def _analyze_trend_direction_enhanced(self, price: float, sma_20: float, sma_50: float, 
+                                        ema_12: float, ema_26: float, adx: float, 
+                                        brain_max_info: Dict[str, Any]) -> Tuple[str, float, str]:
+        """Analizar dirección de la tendencia con información mejorada del Brain Max"""
+        
+        direction = 'neutral'
+        strength = 50.0
+        description_parts = []
+        
+        # Análisis básico de Moving Averages
+        if sma_20 > sma_50 and ema_12 > ema_26:
+            direction = 'bullish'
+            strength += 20
+            description_parts.append("MA alcista")
+        elif sma_20 < sma_50 and ema_12 < ema_26:
+            direction = 'bearish'
+            strength += 20
+            description_parts.append("MA bajista")
+        
+        # Análisis de precio vs MA
+        if price > sma_20:
+            if direction == 'bullish':
+                strength += 10
+                description_parts.append("Precio sobre MA20")
+        elif price < sma_20:
+            if direction == 'bearish':
+                strength += 10
+                description_parts.append("Precio bajo MA20")
+        
+        # Análisis ADX
+        if adx > 25:
+            strength += 15
+            description_parts.append("Tendencia fuerte")
+        elif adx < 20:
+            strength -= 10
+            description_parts.append("Tendencia débil")
+        
+        # INTEGRAR INFORMACIÓN DEL BRAIN MAX
+        if brain_max_info:
+            # Análisis de RSI del Brain Max
+            rsi = brain_max_info.get('rsi', 50)
+            if rsi < 30:
+                if direction == 'bullish':
+                    strength += 15
+                    description_parts.append("RSI sobrevendido + MA alcista")
+                elif direction == 'neutral':
+                    direction = 'bullish'
+                    strength += 10
+                    description_parts.append("RSI sobrevendido")
+            elif rsi > 70:
+                if direction == 'bearish':
+                    strength += 15
+                    description_parts.append("RSI sobrecomprado + MA bajista")
+                elif direction == 'neutral':
+                    direction = 'bearish'
+                    strength += 10
+                    description_parts.append("RSI sobrecomprado")
+            
+            # Análisis de MACD del Brain Max
+            macd = brain_max_info.get('macd', 0)
+            macd_signal = brain_max_info.get('macd_signal', 0)
+            if macd > macd_signal:
+                if direction == 'bullish':
+                    strength += 10
+                    description_parts.append("MACD alcista")
+                elif direction == 'neutral':
+                    direction = 'bullish'
+                    strength += 5
+                    description_parts.append("MACD alcista")
+            elif macd < macd_signal:
+                if direction == 'bearish':
+                    strength += 10
+                    description_parts.append("MACD bajista")
+                elif direction == 'neutral':
+                    direction = 'bearish'
+                    strength += 5
+                    description_parts.append("MACD bajista")
+            
+            # Análisis de Bollinger Bands del Brain Max
+            bb_position = brain_max_info.get('bb_position', 0.5)
+            if bb_position < 0.2:  # Precio cerca de la banda inferior
+                if direction == 'bullish':
+                    strength += 10
+                    description_parts.append("Precio bajo BB + MA alcista")
+                elif direction == 'neutral':
+                    direction = 'bullish'
+                    strength += 5
+                    description_parts.append("Precio bajo BB")
+            elif bb_position > 0.8:  # Precio cerca de la banda superior
+                if direction == 'bearish':
+                    strength += 10
+                    description_parts.append("Precio alto BB + MA bajista")
+                elif direction == 'neutral':
+                    direction = 'bearish'
+                    strength += 5
+                    description_parts.append("Precio alto BB")
+            
+            # Análisis de momentum del Brain Max
+            momentum = brain_max_info.get('momentum', 0)
+            momentum_acceleration = brain_max_info.get('momentum_acceleration', 0)
+            if momentum > 0 and momentum_acceleration > 0:
+                if direction == 'bullish':
+                    strength += 8
+                    description_parts.append("Momentum alcista acelerando")
+            elif momentum < 0 and momentum_acceleration < 0:
+                if direction == 'bearish':
+                    strength += 8
+                    description_parts.append("Momentum bajista acelerando")
+            
+            # Análisis de trend strength del Brain Max
+            trend_strength = brain_max_info.get('trend_strength', 0)
+            if trend_strength > 2.0:  # Tendencia muy fuerte
+                strength += 12
+                description_parts.append("Fuerza de tendencia alta")
+            elif trend_strength > 1.0:  # Tendencia moderada
+                strength += 6
+                description_parts.append("Fuerza de tendencia moderada")
+            
+            # Análisis de trend direction del Brain Max
+            trend_direction = brain_max_info.get('trend_direction', 0)
+            if trend_direction == 1 and direction == 'bullish':
+                strength += 8
+                description_parts.append("Dirección de tendencia confirmada")
+            elif trend_direction == -1 and direction == 'bearish':
+                strength += 8
+                description_parts.append("Dirección de tendencia confirmada")
+            elif trend_direction != 0 and direction == 'neutral':
+                # Usar la dirección del Brain Max si no hay dirección clara
+                direction = 'bullish' if trend_direction == 1 else 'bearish'
+                strength += 5
+                description_parts.append("Dirección basada en Brain Max")
         
         # Limitar fuerza
         strength = max(min(strength, 100.0), 0.0)
