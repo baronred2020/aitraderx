@@ -49,7 +49,7 @@ export interface UseBrainTraderApiReturn {
   loadMegaMindCollaboration: (pair?: string) => Promise<void>;
   loadMegaMindArena: (pair?: string) => Promise<void>;
   loadMegaMindPerformance: () => Promise<void>;
-  loadAvailableBrains: () => Promise<void>;
+  loadAvailableBrains: (planType?: string) => Promise<void>;
   generateManualSignal: (brainType: string, pair?: string, style?: string) => Promise<any>;
   getSignalIntervals: (brainType: string, style?: string) => Promise<any>;
   
@@ -58,7 +58,7 @@ export interface UseBrainTraderApiReturn {
   refreshAll: (brainType: string, pair?: string, style?: string) => Promise<void>;
 }
 
-export const useBrainTraderApi = (): UseBrainTraderApiReturn => {
+export const useBrainTraderApi = (planType: string = 'starter'): UseBrainTraderApiReturn => {
   // Data states
   const [predictions, setPredictions] = useState<BrainTraderPrediction[]>([]);
   const [signals, setSignals] = useState<BrainTraderSignal[]>([]);
@@ -118,12 +118,12 @@ export const useBrainTraderApi = (): UseBrainTraderApiReturn => {
   }, []);
 
   // Load available brains
-  const loadAvailableBrains = useCallback(async () => {
+  const loadAvailableBrains = useCallback(async (planType: string = 'starter') => {
     setLoading(prev => ({ ...prev, brains: true }));
     setErrors(prev => ({ ...prev, brains: null }));
     
     try {
-      const result = await apiService.getAvailableBrains();
+      const result = await apiService.getAvailableBrains(planType);
       setAvailableBrains(result.available_brains);
       setDefaultBrain(result.default_brain);
     } catch (error) {
@@ -316,8 +316,8 @@ export const useBrainTraderApi = (): UseBrainTraderApiReturn => {
 
   // Load available brains on mount
   useEffect(() => {
-    loadAvailableBrains();
-  }, [loadAvailableBrains]);
+    loadAvailableBrains(planType);
+  }, [loadAvailableBrains, planType]);
 
   return {
     // Brain Trader Data

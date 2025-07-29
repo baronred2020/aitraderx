@@ -3,6 +3,7 @@ Prediction Service for AI Trading System
 """
 import logging
 import numpy as np
+import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import yfinance as yf
@@ -31,15 +32,16 @@ class PredictionService:
             'position_trading': 240
         }
     
-    async def can_generate_prediction(self, user_id: int, style: str = "day_trading", plan_type: str = "starter") -> Dict[str, Any]:
+    async def can_generate_prediction(self, user_id: str, style: str = "day_trading", plan_type: str = "starter") -> Dict[str, Any]:
         """Verificar si el usuario puede generar una predicción"""
         try:
             # Obtener límites del plan
-            max_predictions = self._get_user_plan_limits(plan_type)
+            plan_limits = self._get_user_plan_limits(user_id, plan_type)
+            max_predictions = plan_limits['max_predictions_per_day']
             predictions_used_today = self._get_predictions_used_today(user_id)
             
             # Verificar si tiene predicciones ilimitadas
-            has_unlimited = self._has_unlimited_predictions(plan_type)
+            has_unlimited = plan_limits['has_unlimited']
             
             if has_unlimited:
                 return {
@@ -89,7 +91,7 @@ class PredictionService:
                 "has_unlimited": False
             }
     
-    def increment_prediction_usage(self, user_id: int) -> bool:
+    def increment_prediction_usage(self, user_id: str) -> bool:
         """Incrementar el contador de uso de predicciones del usuario"""
         try:
             # Mock increment
@@ -98,7 +100,7 @@ class PredictionService:
             self.logger.error(f"Error incrementing prediction usage: {e}")
             return False
     
-    def get_prediction_limits(self, user_id: int, style: str = "day_trading", plan_type: str = "starter") -> Dict:
+    def get_prediction_limits(self, user_id: str, style: str = "day_trading", plan_type: str = "starter") -> Dict:
         """Obtener límites de predicciones del usuario desde la base de datos"""
         try:
             # Obtener límites del plan
@@ -141,15 +143,32 @@ class PredictionService:
             self.logger.error(f"Error getting prediction limits: {e}")
             return {}
     
-    async def generate_prediction(self, user_id: int, pair: str, brain_type: str, style: str) -> Dict:
+    async def generate_prediction(self, user_id: str, pair: str, brain_type: str, style: str) -> Dict:
         """Generar una nueva predicción"""
         try:
-            # Obtener precio actual real usando el servicio de Brain Trader
-            from src.services.brain_trader_service import BrainTraderService
-            brain_service = BrainTraderService()
-            
-            # Obtener precio actual real
-            current_price = await brain_service.get_real_price(pair)
+            # Obtener precio real usando yfinance
+            try:
+                # Mapear pares de forex a símbolos de yfinance
+                pair_mapping = {
+                    'EURUSD': 'EURUSD=X',
+                    'GBPUSD': 'GBPUSD=X',
+                    'USDJPY': 'USDJPY=X',
+                    'AUDUSD': 'AUDUSD=X',
+                    'USDCAD': 'USDCAD=X'
+                }
+                
+                symbol = pair_mapping.get(pair, 'EURUSD=X')
+                ticker = yf.Ticker(symbol)
+                current_price = ticker.info.get('regularMarketPrice', 1.0925)
+                
+                # Si no se puede obtener el precio real, usar un precio simulado
+                if not current_price or current_price <= 0:
+                    current_price = 1.0925 + random.uniform(-0.01, 0.01)
+                    
+            except Exception as e:
+                self.logger.warning(f"No se pudo obtener precio real para {pair}: {e}")
+                # Fallback a precio simulado
+                current_price = 1.0925 + random.uniform(-0.01, 0.01)
             
             # Generar predicción basada en análisis técnico
             direction = "up" if np.random.random() > 0.5 else "down"
@@ -183,23 +202,22 @@ class PredictionService:
             }
             
             # Guardar predicción en la base de datos
-            if self.db_session:
-                self._save_prediction_to_db(user_id, prediction)
-                # Actualizar contador de uso
-                self._update_prediction_usage(user_id)
+            self._save_prediction_to_db(user_id, prediction)
+            # Actualizar contador de uso
+            self._update_prediction_usage(user_id)
             
             return prediction
         except Exception as e:
             self.logger.error(f"Error generating prediction: {e}")
             return {}
     
-    def _save_prediction_to_db(self, user_id: int, prediction: Dict) -> bool:
+    def _save_prediction_to_db(self, user_id: str, prediction: Dict) -> bool:
         """Guardar predicción en la tabla predictions existente"""
         try:
             with db_config.get_connection() as connection:
                 # Adaptar a la estructura de la tabla predictions existente
                 insert_query = """
-                    INSERT INTO predictions 
+                    INSERT INTO user_predictions 
                     (user_id, pair, direction, current_price, target_price, confidence, 
                      timeframe, reasoning, brain_type, created_at, expires_at, is_completed) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -229,7 +247,7 @@ class PredictionService:
             self.logger.error(f"Error saving prediction to database: {e}")
             return False
     
-    async def get_active_prediction(self, user_id: int, style: str = "day_trading") -> Optional[Dict]:
+    async def get_active_prediction(self, user_id: str, style: str = "day_trading") -> Optional[Dict]:
         """Obtener predicción activa del usuario"""
         try:
             # Mock active prediction
@@ -238,37 +256,35 @@ class PredictionService:
             self.logger.error(f"Error getting active prediction: {e}")
             return None
     
-    async def get_prediction_history(self, user_id: int, limit: int = 20) -> List[Dict[str, Any]]:
+    async def get_prediction_history(self, user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Obtener historial de predicciones del usuario"""
         try:
             with db_config.get_connection() as connection:
-                # Usar el UUID del usuario demo para las pruebas
-                demo_user_id = "0bb94f45-4299-4506-b8c4-9d12d438c79c"
                 query = """
                     SELECT 
-                        prediction_id as id,
-                        symbol as pair,
-                        predicted_signal as direction,
-                        predicted_value as current_price,
+                        id,
+                        pair,
+                        direction,
+                        current_price,
                         target_price,
                         confidence,
                         timeframe,
-                        'Análisis técnico' as reasoning,
-                        'brain_max' as brain_type,
-                        prediction_date as created_at,
-                        DATE_ADD(prediction_date, INTERVAL 15 MINUTE) as expires_at,
-                        CASE WHEN actual_value IS NOT NULL THEN 1 ELSE 0 END as is_completed,
-                        actual_value as actual_price_at_expiry,
-                        CASE WHEN actual_signal = predicted_signal THEN 1 ELSE 0 END as prediction_success,
-                        accuracy as success_percentage
-                    FROM predictions 
+                        reasoning,
+                        brain_type,
+                        created_at,
+                        expires_at,
+                        is_completed,
+                        actual_price_at_expiry,
+                        prediction_success,
+                        success_percentage
+                    FROM user_predictions 
                     WHERE user_id = %s 
-                    ORDER BY prediction_date DESC 
+                    ORDER BY created_at DESC 
                     LIMIT %s
                 """
                 
                 cursor = connection.cursor()
-                cursor.execute(query, (demo_user_id, limit))
+                cursor.execute(query, (user_id, limit))
                 results = cursor.fetchall()
                 cursor.close()
                 
@@ -298,45 +314,43 @@ class PredictionService:
             self.logger.error(f"Error getting prediction history: {e}")
             return []
     
-    async def get_user_stats(self, user_id: int) -> Dict[str, Any]:
+    async def get_user_stats(self, user_id: str) -> Dict[str, Any]:
         """Obtener estadísticas del usuario"""
         try:
             with db_config.get_connection() as connection:
-                # Usar el UUID del usuario demo para las pruebas
-                demo_user_id = "0bb94f45-4299-4506-b8c4-9d12d438c79c"
                 cursor = connection.cursor()
                 
                 # Obtener total de predicciones
-                cursor.execute("SELECT COUNT(*) FROM predictions WHERE user_id = %s", (demo_user_id,))
+                cursor.execute("SELECT COUNT(*) FROM user_predictions WHERE user_id = %s", (user_id,))
                 total_predictions = cursor.fetchone()[0]
                 
-                # Obtener predicciones exitosas (donde actual_signal = predicted_signal)
-                cursor.execute("SELECT COUNT(*) FROM predictions WHERE user_id = %s AND actual_signal = predicted_signal AND actual_signal IS NOT NULL", (demo_user_id,))
+                # Obtener predicciones exitosas
+                cursor.execute("SELECT COUNT(*) FROM user_predictions WHERE user_id = %s AND prediction_success = 1", (user_id,))
                 successful_predictions = cursor.fetchone()[0]
                 
                 # Obtener predicciones de hoy
                 today = datetime.now().date()
-                cursor.execute("SELECT COUNT(*) FROM predictions WHERE user_id = %s AND DATE(prediction_date) = %s", (demo_user_id, today))
+                cursor.execute("SELECT COUNT(*) FROM user_predictions WHERE user_id = %s AND DATE(created_at) = %s", (user_id, today))
                 total_predictions_today = cursor.fetchone()[0]
                 
                 # Obtener mejor par
                 cursor.execute("""
-                    SELECT symbol, COUNT(*) as count 
-                    FROM predictions 
+                    SELECT pair, COUNT(*) as count 
+                    FROM user_predictions 
                     WHERE user_id = %s 
-                    GROUP BY symbol 
+                    GROUP BY pair 
                     ORDER BY count DESC 
                     LIMIT 1
-                """, (demo_user_id,))
+                """, (user_id,))
                 best_pair_result = cursor.fetchone()
                 best_pair = best_pair_result[0] if best_pair_result else None
                 
                 # Calcular porcentaje de éxito promedio
                 cursor.execute("""
-                    SELECT AVG(accuracy) 
-                    FROM predictions 
-                    WHERE user_id = %s AND accuracy IS NOT NULL
-                """, (demo_user_id,))
+                    SELECT AVG(success_percentage) 
+                    FROM user_predictions 
+                    WHERE user_id = %s AND success_percentage IS NOT NULL
+                """, (user_id,))
                 avg_success_result = cursor.fetchone()
                 average_success_percentage = float(avg_success_result[0]) if avg_success_result and avg_success_result[0] else 0.0
                 
@@ -365,7 +379,7 @@ class PredictionService:
                 "total_predictions_today": 0
             }
     
-    async def complete_expired_predictions(self, user_id: int) -> Dict:
+    async def complete_expired_predictions(self, user_id: str) -> Dict:
         """Completar predicciones expiradas"""
         try:
             # Mock completion
@@ -378,14 +392,14 @@ class PredictionService:
             self.logger.error(f"Error completing expired predictions: {e}")
             return {"success": False, "message": "Error completando predicciones", "completed": 0} 
     
-    def _has_unlimited_predictions(self, user_id: int, plan_type: str = None) -> bool:
+    def _has_unlimited_predictions(self, user_id: str, plan_type: str = None) -> bool:
         """Verificar si el usuario tiene predicciones ilimitadas"""
         # TODO: Implementar verificación real de rol de usuario
         # Por ahora, verificar por plan_type
         unlimited_plans = ['institutional', 'admin']
         return plan_type in unlimited_plans
     
-    def _get_user_plan_limits(self, user_id: int, plan_type: str = "starter") -> Dict:
+    def _get_user_plan_limits(self, user_id: str, plan_type: str = "starter") -> Dict:
         """Obtener límites según el plan del usuario"""
         plan_limits = {
             'starter': 5,
@@ -402,34 +416,37 @@ class PredictionService:
             'has_unlimited': max_predictions == -1
         } 
     
-    def _get_predictions_used_today(self, user_id: int) -> int:
+    def _get_predictions_used_today(self, user_id: str) -> int:
         """Obtener el número de predicciones usadas hoy desde la base de datos"""
         try:
             with db_config.get_connection() as connection:
-                # Usar el UUID del usuario demo para las pruebas
-                demo_user_id = "0bb94f45-4299-4506-b8c4-9d12d438c79c"
+                # Para desarrollo, usar un user_id fijo si no se proporciona uno válido
+                if user_id is None or user_id == 0:
+                    user_id_str = "0bb94f45-4299-4506-b8c4-9d12d438c79c"  # Usuario demo para desarrollo
+                else:
+                    user_id_str = str(user_id)
                 today = datetime.now().date()
                 query = """
                     SELECT COUNT(*) as count 
-                    FROM predictions 
+                    FROM user_predictions 
                     WHERE user_id = %s 
-                    AND DATE(prediction_date) = %s
+                    AND DATE(created_at) = %s
                 """
                 
                 cursor = connection.cursor()
-                cursor.execute(query, (demo_user_id, today))
+                cursor.execute(query, (user_id_str, today))
                 result = cursor.fetchone()
                 cursor.close()
                 
                 count = result[0] if result else 0
-                self.logger.info(f"Predicciones usadas hoy para usuario {demo_user_id}: {count}")
+                self.logger.info(f"Predicciones usadas hoy para usuario {user_id_str}: {count}")
                 return count
                 
         except Exception as e:
             self.logger.error(f"Error getting predictions used today: {e}")
             return 0
     
-    def _update_prediction_usage(self, user_id: int) -> bool:
+    def _update_prediction_usage(self, user_id: str) -> bool:
         """Actualizar el contador de uso de predicciones en la base de datos"""
         try:
             # Para la tabla predictions existente, no necesitamos una tabla separada de límites

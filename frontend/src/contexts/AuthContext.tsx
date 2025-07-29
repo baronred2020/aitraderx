@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useMe
 
 export interface User {
   id: string;
+  user_id: string;  // UUID del usuario para el backend
   username: string;
   email: string;
   role: 'admin' | 'user';

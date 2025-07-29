@@ -206,8 +206,8 @@ class ApiService {
   }
 
   // Brain Trader APIs
-  async getAvailableBrains(): Promise<{ available_brains: string[]; default_brain: string }> {
-    return this.request('/brain-trader/available-brains');
+  async getAvailableBrains(planType: string = 'starter'): Promise<{ available_brains: string[]; default_brain: string }> {
+    return this.request(`/brain-trader/available-brains?plan_type=${planType}`);
   }
 
   async getPredictions(

@@ -98,7 +98,8 @@ async def get_prediction_limits(
         prediction_service = PredictionService()
         # Usar el plan_type del usuario actual, por defecto 'starter'
         plan_type = getattr(current_user, 'plan_type', 'starter')
-        limits_info = await prediction_service.can_generate_prediction(current_user.id, style, plan_type)
+        user_id = getattr(current_user, 'user_id', '4dabfd30-483d-4fa0-a8d0-bd151a46340f')
+        limits_info = await prediction_service.can_generate_prediction(user_id, style, plan_type)
         
         return LimitsResponse(**limits_info)
         
@@ -125,11 +126,11 @@ async def generate_prediction(
         
         # Check if user can generate prediction
         plan_type = getattr(current_user, 'plan_type', 'starter')
-        user_id = getattr(current_user, 'id', 1)
+        user_id = getattr(current_user, 'user_id', '4dabfd30-483d-4fa0-a8d0-bd151a46340f')
         
         # Verificar si puede generar predicción
-        can_generate = await prediction_service.can_generate_prediction(user_id, request_data.style, plan_type)
-        if not can_generate:
+        can_generate_result = await prediction_service.can_generate_prediction(user_id, request_data.style, plan_type)
+        if not can_generate_result.get('can_generate', False):
             return JSONResponse(
                 status_code=400,
                 content={
@@ -212,8 +213,8 @@ async def get_prediction_history(
             )
         
         prediction_service = PredictionService()
-        # Usar el ID correcto del usuario (1 para el usuario de prueba)
-        user_id = getattr(current_user, 'id', 1)
+        # Usar el UUID del usuario
+        user_id = getattr(current_user, 'user_id', '4dabfd30-483d-4fa0-a8d0-bd151a46340f')
         history = await prediction_service.get_prediction_history(user_id, limit)
         
         return history
@@ -234,8 +235,8 @@ async def get_user_stats(request: Request, current_user: User = Depends(get_curr
             )
         
         prediction_service = PredictionService()
-        # Usar el ID correcto del usuario (1 para el usuario de prueba)
-        user_id = getattr(current_user, 'id', 1)
+        # Usar el UUID del usuario
+        user_id = getattr(current_user, 'user_id', '4dabfd30-483d-4fa0-a8d0-bd151a46340f')
         stats = await prediction_service.get_user_stats(user_id)
         
         return UserStatsResponse(**stats)

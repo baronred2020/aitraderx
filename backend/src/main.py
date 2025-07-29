@@ -863,16 +863,29 @@ async def check_alerts():
 
 # ===== BRAIN TRADER ENDPOINTS =====
 @app.get("/api/v1/brain-trader/available-brains")
-async def get_available_brains():
-    return {
-        "available_brains": [
-            "brain_max",
-            "brain_ultra", 
-            "brain_predictor",
-            "mega_mind"
-        ],
-        "default_brain": "brain_max"
-    }
+async def get_available_brains(plan_type: str = "starter"):
+    """Obtiene los cerebros disponibles según el plan de suscripción"""
+    try:
+        # Configuración de cerebros por plan
+        brains_by_plan = {
+            "starter": ["brain_max"],
+            "trader": ["brain_max", "mega_mind"],
+            "expert": ["brain_max", "brain_ultra", "mega_mind"],
+            "premium": ["brain_max", "brain_ultra", "brain_predictor", "mega_mind"],
+            "institutional": ["brain_max", "brain_ultra", "brain_predictor", "mega_mind"]
+        }
+        
+        # Obtener cerebros disponibles para el plan
+        available_brains = brains_by_plan.get(plan_type, ["brain_max"])
+        
+        return {
+            "available_brains": available_brains,
+            "default_brain": "brain_max"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting available brains: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/brain-trader/predictions/{brain_type}")
 async def get_predictions(brain_type: str, pair: str = "EURUSD", style: str = "day_trading", limit: int = 5):

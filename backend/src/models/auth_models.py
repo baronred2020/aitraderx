@@ -74,6 +74,7 @@ class SubscriptionResponse(BaseModel):
 class User(BaseModel):
     """Modelo para usuario interno del sistema"""
     id: int
+    user_id: str = "4dabfd30-483d-4fa0-a8d0-bd151a46340f"  # UUID del usuario
     username: str
     email: str
     plan_type: str = "starter"
