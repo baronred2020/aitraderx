@@ -30,7 +30,7 @@ class DatabaseCreator:
         self.host = "localhost"
         self.port = 3306
         self.user = "root"  # Usuario por defecto de XAMPP
-        self.password = ""   # Contraseña vacía por defecto en XAMPP
+        self.password = "root"   # Contraseña para XAMPP
         self.database_name = "trading_db"
         
         # Conexión inicial (sin especificar base de datos)

@@ -318,7 +318,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const getPlanLimitations = () => {
     if (!subscription || subscription.status !== 'active') {
       return {
-        maxPredictionsPerDay: 10,
+        maxPredictionsPerDay: 5,
         maxPairs: 1,
         maxTimeframes: 1,
         maxBacktests: 5,
@@ -329,7 +329,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     switch (subscription.planType) {
       case 'starter':
         return {
-          maxPredictionsPerDay: 10,
+          maxPredictionsPerDay: 5,
           maxPairs: 1,
           maxTimeframes: 1,
           maxBacktests: 5,
@@ -337,7 +337,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         };
       case 'trader':
         return {
-          maxPredictionsPerDay: 50,
+          maxPredictionsPerDay: 20,
           maxPairs: 5,
           maxTimeframes: 2,
           maxBacktests: 20,
@@ -345,7 +345,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         };
       case 'expert':
         return {
-          maxPredictionsPerDay: 200,
+          maxPredictionsPerDay: 50,
           maxPairs: 50,
           maxTimeframes: 5,
           maxBacktests: 100,
@@ -353,7 +353,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         };
       case 'premium':
         return {
-          maxPredictionsPerDay: 1000,
+          maxPredictionsPerDay: 100,
           maxPairs: 1000,
           maxTimeframes: 10,
           maxBacktests: 500,
@@ -361,7 +361,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         };
       case 'institutional':
         return {
-          maxPredictionsPerDay: 5000,
+          maxPredictionsPerDay: -1, // Sin límite
           maxPairs: 5000,
           maxTimeframes: 15,
           maxBacktests: 2000,
@@ -369,7 +369,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         };
       default:
         return {
-          maxPredictionsPerDay: 10,
+          maxPredictionsPerDay: 5,
           maxPairs: 1,
           maxTimeframes: 1,
           maxBacktests: 5,
@@ -474,13 +474,33 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   // Funciones del sistema de predicciones
   const getPlanLimits = () => {
-    if (!predictionLimits) return { used: 0, limit: 10, canGenerate: false };
+    if (!predictionLimits) {
+      // Fallback: usar límites del plan actual
+      const planLimits = getPlanLimitations();
+      return { 
+        used: 0, 
+        limit: planLimits.maxPredictionsPerDay, 
+        canGenerate: true, 
+        hasUnlimited: planLimits.maxPredictionsPerDay === -1 
+      };
+    }
+    
+    const hasUnlimited = predictionLimits.has_unlimited || predictionLimits.max_predictions_per_day === -1;
+    
+    if (hasUnlimited) {
+      return { 
+        used: 0, 
+        limit: -1, // Ilimitado
+        canGenerate: true, 
+        hasUnlimited: true 
+      };
+    }
     
     const used = predictionLimits.max_predictions_per_day - predictionLimits.remaining_predictions;
     const limit = predictionLimits.max_predictions_per_day;
     const canGenerate = predictionLimits.can_generate;
     
-    return { used, limit, canGenerate };
+    return { used, limit, canGenerate, hasUnlimited: false };
   };
 
   const canGeneratePrediction = () => {
@@ -824,13 +844,16 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
           <div>
             <span className="text-gray-600">Predicciones usadas hoy:</span>
             <span className="ml-2 font-semibold text-blue-600">
-              {predictionLimits ? (predictionLimits.max_predictions_per_day - predictionLimits.remaining_predictions) : 0} / {predictionLimits?.max_predictions_per_day || 0}
+              {(() => {
+                const { used, limit } = getPlanLimits();
+                return `${used} / ${limit === -1 ? '∞' : limit}`;
+              })()}
             </span>
           </div>
           <div>
             <span className="text-gray-600">Estado de predicción:</span>
             <span className="ml-2 font-semibold text-blue-600">
-              {predictionLimits?.can_generate ? 'Disponible' : 'No disponible'}
+              {getPlanLimits().canGenerate ? 'Disponible' : 'No disponible'}
             </span>
           </div>
         </div>
@@ -1381,78 +1404,162 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                   <p className="text-gray-500">Cargando historial...</p>
                 </div>
               ) : predictionHistory.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {predictionHistory.map((item, index) => (
-                    <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center justify-between mb-3">
+                    <div key={index} className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                      {/* Header con estado de la predicción */}
+                      <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                             item.prediction_success ? 'bg-green-100' : 'bg-red-100'
                           }`}>
                             {item.prediction_success ? (
-                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <CheckCircle className="w-6 h-6 text-green-600" />
                             ) : (
-                              <XCircle className="w-5 h-5 text-red-600" />
+                              <XCircle className="w-6 h-6 text-red-600" />
                             )}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-800">{item.pair}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-lg text-gray-800">{item.pair}</p>
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                item.direction === 'up' ? 'bg-green-100 text-green-700' :
+                                item.direction === 'down' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {item.direction.toUpperCase()}
+                              </span>
+                            </div>
                             <p className="text-sm text-gray-500">
-                              {new Date(item.created_at).toLocaleDateString()}
+                              {new Date(item.created_at).toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className={`font-bold text-lg ${
+                          <p className={`font-bold text-2xl ${
                             item.prediction_success ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {item.prediction_success ? '✓' : '✗'}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {item.direction.toUpperCase()}
+                            {item.confidence}% confianza
                           </p>
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="font-medium text-gray-700">Precio Predicho</p>
-                          <p className="font-semibold text-gray-800">${item.target_price.toFixed(4)}</p>
+                      {/* Comparación de precios */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <p className="font-medium text-gray-700 mb-1">Precio al Generar</p>
+                          <p className="font-bold text-lg text-gray-800">${item.current_price?.toFixed(5) || 'N/A'}</p>
+                          <p className="text-xs text-gray-500">Precio capturado en el momento</p>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-700">Precio Real</p>
-                          <p className="font-semibold text-gray-800">${item.actual_price_at_expiry?.toFixed(4) || 'N/A'}</p>
+                        <div className="bg-blue-50 rounded-lg p-4">
+                          <p className="font-medium text-gray-700 mb-1">Precio Objetivo</p>
+                          <p className="font-bold text-lg text-blue-600">${item.target_price.toFixed(5)}</p>
+                          <p className="text-xs text-gray-500">Precio predicho</p>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-700">Confianza</p>
-                          <p className="font-semibold text-gray-800">{item.confidence}%</p>
+                        <div className="bg-green-50 rounded-lg p-4">
+                          <p className="font-medium text-gray-700 mb-1">Precio Real</p>
+                          <p className="font-bold text-lg text-green-600">
+                            ${item.actual_price_at_expiry?.toFixed(5) || 'Pendiente'}
+                          </p>
+                          <p className="text-xs text-gray-500">Precio al expirar</p>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-700">Diferencia</p>
-                          <p className={`font-semibold ${
+                      </div>
+                      
+                      {/* Métricas de rendimiento */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-600">Diferencia</p>
+                          <p className={`font-bold text-lg ${
                             item.actual_price_at_expiry ? 
                               (item.actual_price_at_expiry > item.target_price ? 'text-green-600' : 'text-red-600') : 
                               'text-gray-500'
                           }`}>
                             {item.actual_price_at_expiry ? 
-                              `${((item.actual_price_at_expiry - item.target_price) / item.target_price * 100).toFixed(2)}%` : 
+                              `${((item.actual_price_at_expiry - item.target_price) / item.target_price * 100).toFixed(3)}%` : 
                               'N/A'
                             }
                           </p>
                         </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-600">Movimiento Real</p>
+                          <p className={`font-bold text-lg ${
+                            item.actual_price_at_expiry ? 
+                              (item.actual_price_at_expiry > item.current_price ? 'text-green-600' : 'text-red-600') : 
+                              'text-gray-500'
+                          }`}>
+                            {item.actual_price_at_expiry ? 
+                              `${((item.actual_price_at_expiry - item.current_price) / item.current_price * 100).toFixed(3)}%` : 
+                              'N/A'
+                            }
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-600">Éxito</p>
+                          <p className={`font-bold text-lg ${
+                            item.prediction_success ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {item.prediction_success ? 'Correcta' : 'Incorrecta'}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-600">Porcentaje Éxito</p>
+                          <p className="font-bold text-lg text-purple-600">
+                            {item.success_percentage?.toFixed(1) || 'N/A'}%
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Información adicional */}
+                      <div className="border-t pt-4">
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Brain:</span>
+                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                              {item.brain_type || 'brain_max'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Timeframe:</span>
+                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                              {item.timeframe}
+                            </span>
+                          </div>
+                        </div>
+                        {item.reasoning && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                              <span className="font-medium">Razonamiento:</span> {item.reasoning}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <History className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h4 className="text-lg font-semibold text-gray-600 mb-2">
+                <div className="text-center py-12">
+                  <History className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+                  <h4 className="text-xl font-semibold text-gray-600 mb-2">
                     No hay historial disponible
                   </h4>
-                  <p className="text-gray-500">
-                    El historial aparecerá aquí después de generar predicciones
+                  <p className="text-gray-500 mb-6">
+                    El historial aparecerá aquí después de generar predicciones con el botón "Generar Predicción"
                   </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>Consejo:</strong> Cada predicción que generes se guardará automáticamente 
+                      y se comparará con el precio real cuando expire el timeframe.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

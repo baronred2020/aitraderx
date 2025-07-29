@@ -1104,7 +1104,7 @@ class BrainTraderService:
             return []
 
     async def get_trends(self, brain_type: str, pair: str, limit: int) -> List[TrendResponse]:
-        """Obtener tendencias del cerebro especificado"""
+        """Obtener tendencias del cerebro especificado usando solo datos reales"""
         try:
             if not self._validate_brain_type(brain_type):
                 raise ValueError(f"Brain type inválido: {brain_type}")
@@ -1112,13 +1112,12 @@ class BrainTraderService:
             if not self._validate_pair(pair):
                 raise ValueError(f"Par inválido: {pair}")
             
-            trends = []
-            base_price = await self.get_real_price(pair)
-            
             # Usar servicio de análisis técnico si está disponible
             if technical_analysis_service:
                 try:
                     real_trends = await technical_analysis_service.generate_real_trends(pair, limit)
+                    trends = []
+                    
                     for trend in real_trends:
                         trend_response = TrendResponse(
                             pair=pair,
@@ -1133,37 +1132,18 @@ class BrainTraderService:
                         )
                         trends.append(trend_response)
                     
+                    logger.info(f"Generadas {len(trends)} tendencias reales para {brain_type}")
                     return trends
                     
                 except Exception as e:
                     logger.error(f"Error generando tendencias reales: {e}")
-                    # Fallback a generación aleatoria
-            
-            # Generación aleatoria como fallback
-            for i in range(min(limit, 3)):
-                direction = random.choice(['bullish', 'bearish', 'neutral'])
-                strength = random.uniform(50, 100)
-                support = base_price - 0.01
-                resistance = base_price + 0.01
-                
-                trend = TrendResponse(
-                    pair=pair,
-                    direction=direction,
-                    strength=strength,
-                    timeframe='4H',
-                    support=support,
-                    resistance=resistance,
-                    description=f'Tendencia {direction} con soporte en {support:.4f}',
-                    brain_type=brain_type,
-                    timestamp=datetime.now().isoformat()
-                )
-                trends.append(trend)
-            
-            return trends
+                    raise Exception(f"No se pudieron generar tendencias reales: {str(e)}")
+            else:
+                raise Exception("Servicio de análisis técnico no disponible")
             
         except Exception as e:
             logger.error(f"Error obteniendo tendencias: {e}")
-            raise 
+            raise
 
     def _calculate_real_confidence(self, indicators: Dict) -> float:
         """Calcula confianza real usando el calculador si está disponible"""

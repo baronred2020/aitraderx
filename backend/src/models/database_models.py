@@ -86,7 +86,7 @@ class SubscriptionPlan(Base):
     
     # Configuración de límites
     max_indicators = Column(Integer, default=1)
-    max_predictions_per_day = Column(Integer, default=10)
+    max_predictions_per_day = Column(Integer, default=5)
     max_backtests_per_month = Column(Integer, default=5)
     max_portfolios = Column(Integer, default=1)
     

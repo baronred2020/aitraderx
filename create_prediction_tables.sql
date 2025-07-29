@@ -39,4 +39,4 @@ CREATE INDEX idx_user_predictions_is_completed ON user_predictions(is_completed)
 
 -- Insertar límites por defecto para usuarios existentes (plan starter)
 INSERT INTO user_prediction_limits (user_id, plan_type, max_predictions_per_day)
-SELECT id, 'starter', 10 FROM users WHERE id NOT IN (SELECT user_id FROM user_prediction_limits); 
+SELECT id, 'starter', 5 FROM users WHERE id NOT IN (SELECT user_id FROM user_prediction_limits); 

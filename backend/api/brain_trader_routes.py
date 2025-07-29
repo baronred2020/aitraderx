@@ -137,7 +137,7 @@ async def get_trends(
     limit: int = 10
 ) -> List[TrendResponse]:
     """
-    Obtener análisis de tendencias
+    Obtener análisis de tendencias usando datos reales
     """
     try:
         # Validaciones
@@ -145,29 +145,11 @@ async def get_trends(
         if brain_type not in valid_brain_types:
             raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
         
-        # Simular tendencias
-        import random
-        trends = []
-        for i in range(min(limit, 3)):
-            direction = random.choice(['bullish', 'bearish', 'neutral'])
-            strength = random.uniform(50, 100)
-            base_price = 1.0925 if pair == 'EURUSD' else 1.2500
-            support = base_price - 0.01
-            resistance = base_price + 0.01
-            
-            trend = TrendResponse(
-                pair=pair,
-                direction=direction,
-                strength=strength,
-                timeframe='4H',
-                support=support,
-                resistance=resistance,
-                description=f'Tendencia {direction} con soporte en {support:.4f}',
-                brain_type=brain_type,
-                timestamp=datetime.now()
-            )
-            trends.append(trend)
+        # Usar el servicio real de brain trader
+        from services.brain_trader_service import BrainTraderService
+        brain_trader_service = BrainTraderService()
         
+        trends = await brain_trader_service.get_trends(brain_type, pair, limit)
         return trends
         
     except Exception as e:

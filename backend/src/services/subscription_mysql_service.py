@@ -26,7 +26,7 @@ class SubscriptionMySQLService:
         # Obtener URL de base de datos
         self.database_url = database_url or os.getenv(
             'DATABASE_URL', 
-            'mysql://trader:password123@localhost:3306/trading_db'
+            'mysql://root:root@localhost:3306/trading_db'
         )
         
         # Crear engine y session

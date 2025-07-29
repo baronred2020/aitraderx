@@ -30,7 +30,7 @@ SUBSCRIPTION_FILES = {
 DEFAULT_LIMITS = {
     PlanType.FREEMIUM: {
         "daily_requests": 100,
-        "predictions_per_day": 10,
+        "predictions_per_day": 5,
         "backtests_per_month": 5,
         "alerts_limit": 3,
         "trading_pairs": 1,
@@ -39,7 +39,7 @@ DEFAULT_LIMITS = {
     },
     PlanType.BASIC: {
         "daily_requests": 500,
-        "predictions_per_day": 50,
+        "predictions_per_day": 20,
         "backtests_per_month": 20,
         "alerts_limit": 10,
         "trading_pairs": 5,
@@ -48,7 +48,7 @@ DEFAULT_LIMITS = {
     },
     PlanType.PRO: {
         "daily_requests": 2000,
-        "predictions_per_day": 200,
+        "predictions_per_day": 50,
         "backtests_per_month": 100,
         "alerts_limit": 50,
         "trading_pairs": 50,
@@ -57,7 +57,7 @@ DEFAULT_LIMITS = {
     },
     PlanType.ELITE: {
         "daily_requests": 10000,
-        "predictions_per_day": 1000,
+        "predictions_per_day": 100,
         "backtests_per_month": 500,
         "alerts_limit": 200,
         "trading_pairs": 1000,

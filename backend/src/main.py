@@ -44,7 +44,6 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('../logs/app.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
@@ -57,28 +56,43 @@ try:
 except ImportError:
     import env_config
 
+# Importar configuración de base de datos
+try:
+    from config.database_config import db_config
+except ImportError:
+    from .config.database_config import db_config
+
 # Importar sistema de suscripciones y autenticación
 try:
-    from .api.subscription_routes import subscription_router
-    from .api.auth_routes import auth_router
-    from .services.subscription_service import SubscriptionService
-    from .api import market_data_routes
-    from .api.wallet_routes import router as wallet_router
-    from .api.mega_mind_routes import router as mega_mind_router
-    from .api.monitoring_routes import router as monitoring_router
-    from .api.brain_trader_routes import router as brain_trader_router
-    from .api.prediction_routes import router as prediction_router
+    # Importaciones de rutas
+    from api.auth_routes import auth_router
+    from api.brain_trader_routes import router as brain_trader_router
+    from api.market_data_routes import router as market_data_router
+    from api.monitoring_routes import router as monitoring_router
+    from api.prediction_routes import router as prediction_router
+    from api.subscription_routes import subscription_router
+    from services.subscription_service import SubscriptionService
+    from services.brain_trader_service import BrainTraderService
+    from api import market_data_routes
+    from api.mega_mind_routes import router as mega_mind_router
+    from api.wallet_routes import router as wallet_router
+    
 except ImportError:
     # Fallback para importaciones absolutas
-    from api.subscription_routes import subscription_router
     from api.auth_routes import auth_router
-    from services.subscription_service import SubscriptionService
-    from api import market_data_routes
-    from api.wallet_routes import router as wallet_router
-    from api.mega_mind_routes import router as mega_mind_router
-    from api.monitoring_routes import router as monitoring_router
     from api.brain_trader_routes import router as brain_trader_router
+    from api.market_data_routes import router as market_data_router
+    from api.monitoring_routes import router as monitoring_router
     from api.prediction_routes import router as prediction_router
+    from api.subscription_routes import subscription_router
+    from services.subscription_service import SubscriptionService
+    from services.brain_trader_service import BrainTraderService
+    from api import market_data_routes
+    from api.mega_mind_routes import router as mega_mind_router
+    from api.wallet_routes import router as wallet_router
+
+# Crear instancia global del BrainTraderService
+brain_trader_service = BrainTraderService()
 
 # Variables globales
 app_state = {}
@@ -137,7 +151,7 @@ app.add_middleware(
 # Incluir routers
 app.include_router(subscription_router)
 app.include_router(auth_router)
-app.include_router(market_data_routes.router)
+app.include_router(market_data_router)
 app.include_router(wallet_router)
 app.include_router(mega_mind_router)
 app.include_router(monitoring_router)
@@ -893,33 +907,20 @@ async def get_predictions(brain_type: str, pair: str = "EURUSD", style: str = "d
 
 @app.get("/api/v1/brain-trader/trends/{brain_type}")
 async def get_trends(brain_type: str, pair: str = "EURUSD", limit: int = 3):
-    valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind']
-    if brain_type not in valid_brain_types:
-        raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
-    
-    trends = []
-    base_price = 1.0925 if pair == 'EURUSD' else 1.2500
-    
-    for i in range(min(limit, 3)):
-        direction = random.choice(['bullish', 'bearish', 'neutral'])
-        strength = random.uniform(50, 100)
-        support = base_price - 0.01
-        resistance = base_price + 0.01
+    """Endpoint de tendencias - Usar el servicio real en lugar de datos mock"""
+    try:
+        # Validar brain type
+        valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind']
+        if brain_type not in valid_brain_types:
+            raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
         
-        trend = TrendResponse(
-            pair=pair,
-            direction=direction,
-            strength=strength,
-            timeframe='4H',
-            support=support,
-            resistance=resistance,
-            description=f'Tendencia {direction} con soporte en {support:.4f}',
-            brain_type=brain_type,
-            timestamp=datetime.now().isoformat()
-        )
-        trends.append(trend)
-    
-    return trends
+        # Usar el servicio real de brain trader
+        trends = await brain_trader_service.get_trends(brain_type, pair, limit)
+        return trends
+        
+    except Exception as e:
+        logger.error(f"Error getting trends: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ===== MEGA MIND ENDPOINTS =====
 @app.get("/api/v1/mega-mind/predictions")
@@ -1086,6 +1087,13 @@ async def websocket_endpoint(websocket: WebSocket):
 async def startup_event():
     """Inicialización de la aplicación"""
     print("🚀 AI Trading API iniciada")
+    
+    # Inicializar base de datos
+    try:
+        db_config.initialize_db()
+        print("✅ Base de datos inicializada")
+    except Exception as e:
+        print(f"❌ Error al inicializar base de datos: {e}")
     
     # Entrenar modelos para símbolos principales
     symbols = ['AAPL', 'TSLA', 'MSFT', 'NVDA']

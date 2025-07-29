@@ -14,7 +14,7 @@ import logging
 import re
 
 from models.auth_models import UserCreate, UserLogin, UserResponse, SubscriptionResponse, AuthResponse
-from services.subscription_service import SubscriptionService
+from services.subscription_mysql_service import SubscriptionMySQLService
 from services.user_service import UserService
 from config.auth_config import *
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 auth_router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
 # Instancias de servicios
-subscription_service = SubscriptionService()
+subscription_service = SubscriptionMySQLService("mysql://root:root@localhost:3306/trading_db")
 user_service = UserService()
 
 # Usar configuración desde auth_config.py
@@ -98,37 +98,37 @@ async def login(login_data: UserLogin):
         if not user:
             raise HTTPException(status_code=401, detail="Usuario no encontrado")
         
-        # Obtener suscripción del usuario
-        subscription = user_service.get_user_subscription(user.user_id)
-        
-        # Actualizar último login
-        user_service.update_last_login(user.user_id)
-        
         # Crear token de acceso
         token = create_access_token(data={"sub": username})
         
-        # Preparar respuesta
+        # Preparar respuesta con datos básicos
         user_response = {
-            "id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-            "firstName": user.first_name,
-            "lastName": user.last_name,
-            "phone": user.phone,
-            "role": user.role,
-            "isActive": user.is_active,
-            "createdAt": user.created_at.isoformat()
+            "id": user.get('user_id', ''),
+            "username": user.get('username', ''),
+            "email": user.get('email', ''),
+            "firstName": user.get('first_name', ''),
+            "lastName": user.get('last_name', ''),
+            "phone": user.get('phone', ''),
+            "role": user.get('role', 'user'),
+            "isActive": user.get('is_active', True),
+            "createdAt": user.get('created_at', datetime.now()).isoformat() if user.get('created_at') else datetime.now().isoformat()
         }
+        
+        # Obtener suscripción del usuario
+        user_id = user.get('user_id', '')
+        subscription = subscription_service.get_user_subscription(user_id)
         
         subscription_response = None
         if subscription:
+            # Obtener el plan asociado
+            plan = subscription_service.get_plan_by_id(subscription.plan_id)
             subscription_response = {
                 "id": subscription.subscription_id,
-                "planType": subscription.plan_type,
+                "planType": plan.plan_type if plan else "starter",
                 "status": subscription.status,
-                "startDate": subscription.start_date.isoformat(),
-                "endDate": subscription.end_date.isoformat(),
-                "isTrial": subscription.is_trial
+                "startDate": subscription.start_date,
+                "endDate": subscription.end_date,
+                "isTrial": subscription.is_trial if hasattr(subscription, 'is_trial') else False
             }
         
         return {
