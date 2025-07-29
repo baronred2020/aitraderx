@@ -122,14 +122,43 @@ async def login(login_data: UserLogin):
         if subscription:
             # Obtener el plan asociado
             plan = subscription_service.get_plan_by_id(subscription.plan_id)
+            plan_type = plan.plan_type if plan else "starter"
+            
+            # Para el plan starter, siempre debe estar activo
+            status = "active" if plan_type == "starter" else subscription.status
+            
             subscription_response = {
                 "id": subscription.subscription_id,
-                "planType": plan.plan_type if plan else "starter",
-                "status": subscription.status,
+                "planType": plan_type,
+                "status": status,
                 "startDate": subscription.start_date,
                 "endDate": subscription.end_date,
                 "isTrial": subscription.is_trial if hasattr(subscription, 'is_trial') else False
             }
+        else:
+            # Si no tiene suscripción, crear una automáticamente con plan starter
+            logger.info(f"Usuario {username} no tiene suscripción, creando plan starter automáticamente")
+            subscription = user_service.create_subscription(user_id, "starter", None)
+            
+            if subscription:
+                subscription_response = {
+                    "id": subscription['subscription_id'],
+                    "planType": "starter",
+                    "status": "active",
+                    "startDate": subscription['start_date'],
+                    "endDate": subscription['end_date'],
+                    "isTrial": True
+                }
+            else:
+                # Si no se puede crear la suscripción, crear una respuesta por defecto
+                subscription_response = {
+                    "id": f"default_{user_id}",
+                    "planType": "starter",
+                    "status": "active",
+                    "startDate": datetime.now(),
+                    "endDate": datetime.now() + timedelta(days=365),
+                    "isTrial": True
+                }
         
         return {
             "user": user_response,
@@ -177,7 +206,7 @@ async def register(register_data: UserCreate):
             raise HTTPException(status_code=500, detail="Error al crear usuario")
         
         # Crear suscripción en la base de datos
-        subscription = user_service.create_subscription(user.user_id, plan_type, payment_method)
+        subscription = user_service.create_subscription(user['user_id'], plan_type, payment_method)
         if not subscription:
             raise HTTPException(status_code=500, detail="Error al crear suscripción")
         
@@ -186,24 +215,24 @@ async def register(register_data: UserCreate):
         
         # Preparar respuesta
         user_response = {
-            "id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-            "firstName": user.first_name,
-            "lastName": user.last_name,
-            "phone": user.phone,
-            "role": user.role,
-            "isActive": user.is_active,
-            "createdAt": user.created_at.isoformat()
+            "id": user['user_id'],
+            "username": user['username'],
+            "email": user['email'],
+            "firstName": user['first_name'],
+            "lastName": user['last_name'],
+            "phone": user['phone'],
+            "role": user['role'],
+            "isActive": user['is_active'],
+            "createdAt": user['created_at'].isoformat()
         }
         
         subscription_response = {
-            "id": subscription.subscription_id,
-            "planType": subscription.plan_type,
-            "status": subscription.status,
-            "startDate": subscription.start_date.isoformat(),
-            "endDate": subscription.end_date.isoformat(),
-            "isTrial": subscription.is_trial
+            "id": subscription['subscription_id'],
+            "planType": subscription['plan_type'],
+            "status": subscription['status'],
+            "startDate": subscription['start_date'].isoformat(),
+            "endDate": subscription['end_date'].isoformat(),
+            "isTrial": subscription['is_trial']
         }
         
         return {

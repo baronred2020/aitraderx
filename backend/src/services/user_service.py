@@ -110,8 +110,18 @@ class UserService:
                 connection.commit()
                 cursor.close()
                 
-                # Retornar usuario creado
-                return self.get_user_by_id(user_id)
+                # Retornar usuario creado como objeto con atributos
+                return {
+                    'user_id': user_id,
+                    'username': user_data['username'],
+                    'email': user_data['email'],
+                    'first_name': user_data.get('firstName', ''),
+                    'last_name': user_data.get('lastName', ''),
+                    'phone': user_data.get('phone', ''),
+                    'role': 'user',
+                    'is_active': True,
+                    'created_at': datetime.now()
+                }
                 
         except Exception as e:
             self.logger.error(f"Error creating user: {e}")
@@ -131,4 +141,68 @@ class UserService:
                 
         except Exception as e:
             self.logger.error(f"Error checking if user exists: {e}")
-            return False 
+            return False
+    
+    def create_subscription(self, user_id: str, plan_type: str = "starter", payment_method: str = None) -> Optional[Dict[str, Any]]:
+        """Crea una suscripción para un usuario"""
+        try:
+            with db_config.get_connection() as connection:
+                cursor = connection.cursor()
+                
+                # Generar subscription_id único
+                subscription_id = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(36))
+                
+                # Obtener el plan de la base de datos
+                cursor.execute("SELECT plan_id FROM subscription_plans WHERE plan_type = %s", (plan_type,))
+                plan_result = cursor.fetchone()
+                
+                if not plan_result:
+                    self.logger.error(f"Plan type {plan_type} not found")
+                    return None
+                
+                plan_id = plan_result[0]
+                
+                # Fechas de suscripción
+                start_date = datetime.now()
+                end_date = start_date + timedelta(days=30)  # 30 días por defecto
+                
+                # Insertar suscripción usando la estructura real de la tabla
+                insert_query = """
+                    INSERT INTO user_subscriptions (
+                        subscription_id, user_id, plan_id, plan_type, start_date, 
+                        end_date, status, is_trial, payment_method, auto_renew
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                
+                cursor.execute(insert_query, (
+                    subscription_id,
+                    user_id,
+                    plan_id,
+                    plan_type,
+                    start_date,
+                    end_date,
+                    'active',
+                    plan_type == 'starter',  # Es trial si es starter
+                    payment_method,
+                    True  # Auto renew por defecto
+                ))
+                
+                connection.commit()
+                cursor.close()
+                
+                # Retornar suscripción creada
+                return {
+                    'subscription_id': subscription_id,
+                    'user_id': user_id,
+                    'plan_id': plan_id,
+                    'plan_type': plan_type,
+                    'status': 'active',
+                    'start_date': start_date,
+                    'end_date': end_date,
+                    'is_trial': plan_type == 'starter'
+                }
+                
+        except Exception as e:
+            self.logger.error(f"Error creating subscription: {e}")
+            return None 
