@@ -17,6 +17,9 @@ import joblib
 import numpy as np
 import pandas as pd
 
+# Configurar logging
+logger = logging.getLogger(__name__)
+
 # Agregar el directorio de modelos al path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'models'))
 
@@ -27,6 +30,14 @@ try:
 except ImportError as e:
     logging.error(f"Error importing TechnicalAnalysisService: {e}")
     technical_analysis_service = None
+
+# Importar el calculador de confianza real
+try:
+    from services.confidence_calculator import confidence_calculator
+    logger.info("ConfidenceCalculator importado correctamente")
+except ImportError as e:
+    logging.error(f"Error importing ConfidenceCalculator: {e}")
+    confidence_calculator = None
 
 # Importar el cargador de modelos
 try:
@@ -64,7 +75,6 @@ except ImportError as e:
         logging.error(f"Error importing ModelLoader (método alternativo): {e2}")
         model_loader = None
 
-logger = logging.getLogger(__name__)
 
 @dataclass
 class PredictionResponse:
@@ -132,6 +142,9 @@ class BrainTraderService:
             'USDCAD': 1.3500,
             'AUDUSD': 0.6500
         }
+        
+        # Asignar el calculador de confianza a la instancia
+        self.confidence_calculator = confidence_calculator
 
     def _validate_brain_type(self, brain_type: str) -> bool:
         """Validar tipo de cerebro"""
@@ -579,7 +592,7 @@ class BrainTraderService:
     def _get_fallback_prediction(self, pair: str, style: str, current_price: float) -> Dict[str, Any]:
         """Predicción de fallback cuando no hay modelo disponible"""
         direction = random.choice(['up', 'down', 'sideways'])
-        confidence = random.uniform(70, 85)
+        confidence = self._calculate_real_confidence(indicators) if hasattr(self, 'confidence_calculator') and self.confidence_calculator else random.uniform(70, 85)
         
         # Calcular precio objetivo basado en el estilo de trading
         if style == 'day_trading':
@@ -675,16 +688,32 @@ class BrainTraderService:
 
     def _analyze_rsi_only(self, rsi_value: float) -> tuple:
         """Análisis técnico usando solo RSI (para plan starter)"""
-        if rsi_value < 30:
-            return 'up', random.uniform(75, 90), 'RSI indica sobreventa - señal de compra'
-        elif rsi_value > 70:
-            return 'down', random.uniform(75, 90), 'RSI indica sobrecompra - señal de venta'
-        elif rsi_value < 45:
-            return 'up', random.uniform(60, 75), 'RSI en zona neutral-baja - tendencia alcista'
-        elif rsi_value > 55:
-            return 'down', random.uniform(60, 75), 'RSI en zona neutral-alta - tendencia bajista'
+        # Usar confianza real basada en RSI si el calculador está disponible
+        if hasattr(self, 'confidence_calculator') and self.confidence_calculator:
+            confidence = self.confidence_calculator.calculate_rsi_confidence(rsi_value)
         else:
-            return 'sideways', random.uniform(50, 65), 'RSI en zona neutral - movimiento lateral'
+            # Fallback a confianza aleatoria si no hay calculador disponible
+            if rsi_value < 30:
+                confidence = random.uniform(75, 90)
+            elif rsi_value > 70:
+                confidence = random.uniform(75, 90)
+            elif rsi_value < 45:
+                confidence = random.uniform(60, 75)
+            elif rsi_value > 55:
+                confidence = random.uniform(60, 75)
+            else:
+                confidence = random.uniform(50, 65)
+        
+        if rsi_value < 30:
+            return 'up', confidence, 'RSI indica sobreventa - señal de compra'
+        elif rsi_value > 70:
+            return 'down', confidence, 'RSI indica sobrecompra - señal de venta'
+        elif rsi_value < 45:
+            return 'up', confidence, 'RSI en zona neutral-baja - tendencia alcista'
+        elif rsi_value > 55:
+            return 'down', confidence, 'RSI en zona neutral-alta - tendencia bajista'
+        else:
+            return 'sideways', confidence, 'RSI en zona neutral - movimiento lateral'
 
     def _analyze_full_technical(self, indicators: Dict, base_price: float) -> tuple:
         """Análisis técnico completo (para planes pro y premium)"""
@@ -747,23 +776,23 @@ class BrainTraderService:
             
             if up_count > down_count:
                 direction = 'up'
-                confidence = random.uniform(80, 95)
+                confidence = self._calculate_real_confidence(indicators) if hasattr(self, 'confidence_calculator') and self.confidence_calculator else random.uniform(80, 95)
                 reasoning = f'Análisis completo: {up_count} señales alcistas vs {down_count} bajistas'
             elif down_count > up_count:
                 direction = 'down'
-                confidence = random.uniform(80, 95)
+                confidence = self._calculate_real_confidence(indicators) if hasattr(self, 'confidence_calculator') and self.confidence_calculator else random.uniform(80, 95)
                 reasoning = f'Análisis completo: {down_count} señales bajistas vs {up_count} alcistas'
             else:
                 direction = 'sideways'
-                confidence = random.uniform(60, 75)
+                confidence = self._calculate_real_confidence(indicators) if hasattr(self, 'confidence_calculator') and self.confidence_calculator else random.uniform(60, 75)
                 reasoning = 'Análisis completo: señales mixtas - movimiento lateral'
         elif len(signals) == 1:
             direction = signals[0]
-            confidence = random.uniform(70, 85)
+            confidence = self._calculate_real_confidence(indicators) if hasattr(self, 'confidence_calculator') and self.confidence_calculator else random.uniform(70, 85)
             reasoning = f'Análisis completo: señal única {direction}'
         else:
             direction = 'sideways'
-            confidence = random.uniform(50, 65)
+            confidence = self._calculate_real_confidence(indicators) if hasattr(self, 'confidence_calculator') and self.confidence_calculator else random.uniform(50, 65)
             reasoning = 'Análisis completo: sin señales claras'
         
         # Convertir direction a signal_type y determinar strength
@@ -1136,6 +1165,16 @@ class BrainTraderService:
             logger.error(f"Error obteniendo tendencias: {e}")
             raise 
 
+    def _calculate_real_confidence(self, indicators: Dict) -> float:
+        """Calcula confianza real usando el calculador si está disponible"""
+        try:
+            if hasattr(self, 'confidence_calculator') and self.confidence_calculator:
+                return self.confidence_calculator.calculate_real_confidence(indicators)
+            else:
+                return random.uniform(50, 85)  # Fallback
+        except Exception as e:
+            logger.error(f"Error calculando confianza real: {e}")
+            return random.uniform(50, 85)  # Fallback
     def _get_time_intervals(self, style: str) -> List[datetime]:
         """Obtener intervalos de tiempo para el estilo especificado"""
         intervals = []
@@ -1449,82 +1488,36 @@ class BrainTraderService:
             }
 
     def _calculate_signal_quality(self, signal_type: str, strength: str, confidence: float, indicators: Dict) -> float:
-        """Calcular score de calidad de la señal (0-100) con ponderación mejorada"""
+        """Calcular score de calidad de la señal (0-100) con confianza real"""
         quality_score = 0.0
         
-        # MEJORA: Base score por confianza del modelo (60% del score)
-        # La confianza del ensemble es el factor más importante
-        quality_score += confidence * 0.6  # 60% del score (antes era 40%)
+        # USAR CONFIANZA REAL DEL CALCULADOR
+        if hasattr(self, 'confidence_calculator') and self.confidence_calculator:
+            try:
+                # Calcular confianza real usando el calculador
+                real_confidence = self.confidence_calculator.calculate_real_confidence(indicators)
+                logger.info(f"Confianza real calculada: {real_confidence:.1f}%")
+                quality_score += real_confidence * 0.8  # 80% del score basado en confianza real
+            except Exception as e:
+                logger.error(f"Error calculando confianza real: {e}")
+                quality_score += confidence * 0.6  # Fallback a confianza del análisis
+        else:
+            # Fallback si no hay calculador disponible
+            quality_score += confidence * 0.6
         
         # Score por fuerza de la señal (20% del score)
         strength_scores = {
-            'strong': 20,  # Reducido de 30 a 20
-            'medium': 15,  # Reducido de 20 a 15
-            'weak': 10     # Mantenido en 10
+            'strong': 20,
+            'medium': 15,
+            'weak': 10
         }
         quality_score += strength_scores.get(strength, 10)
         
-        # Función helper para extraer valores de indicadores
-        def get_indicator_value(indicator, default_value):
-            if indicator is None:
-                return default_value
-            if hasattr(indicator, 'iloc'):
-                # Es una Series de pandas
-                if not indicator.empty:
-                    return float(indicator.iloc[-1])
-                else:
-                    return default_value
-            else:
-                # Es un valor escalar
-                return float(indicator)
+        # Asegurar que el score esté entre 0 y 100
+        quality_score = max(0, min(100, quality_score))
         
-        # Score por número de indicadores confirmando (20% del score)
-        confirming_indicators = 0
-        if signal_type == 'buy':
-            rsi_value = get_indicator_value(indicators.get('rsi'), 50)
-            macd_value = get_indicator_value(indicators.get('macd'), 0)
-            macd_signal_value = get_indicator_value(indicators.get('macd_signal'), 0)
-            sma_20_value = get_indicator_value(indicators.get('sma_20'), 0)
-            sma_50_value = get_indicator_value(indicators.get('sma_50'), 0)
-            
-            if rsi_value < 30:
-                confirming_indicators += 1
-            if macd_value > macd_signal_value:
-                confirming_indicators += 1
-            if sma_20_value > sma_50_value:
-                confirming_indicators += 1
-        elif signal_type == 'sell':
-            rsi_value = get_indicator_value(indicators.get('rsi'), 50)
-            macd_value = get_indicator_value(indicators.get('macd'), 0)
-            macd_signal_value = get_indicator_value(indicators.get('macd_signal'), 0)
-            sma_20_value = get_indicator_value(indicators.get('sma_20'), 0)
-            sma_50_value = get_indicator_value(indicators.get('sma_50'), 0)
-            
-            if rsi_value > 70:
-                confirming_indicators += 1
-            if macd_value < macd_signal_value:
-                confirming_indicators += 1
-            if sma_20_value < sma_50_value:
-                confirming_indicators += 1
-        
-        # MEJORA: Ponderación más balanceada para indicadores técnicos
-        # Máximo 6 indicadores confirmando = 20 puntos (20% del total)
-        max_indicators = 6  # RSI, MACD, SMA, ADX, BB, etc.
-        indicator_score = (confirming_indicators / max_indicators) * 20
-        quality_score += indicator_score
-        
-        # Score por ADX (fuerza de tendencia) - incluido en el cálculo anterior
-        adx_value = get_indicator_value(indicators.get('adx'), 25)
-        if adx_value > 25:
-            # ADX ya está incluido en confirming_indicators, no duplicar
-            pass
-        
-        # Logging para debugging
-        logger.info(f"Signal Quality Calculation - Confidence: {confidence:.2f}%, Strength: {strength}, "
-                   f"Confirming Indicators: {confirming_indicators}/{max_indicators}, "
-                   f"Final Score: {min(quality_score, 100.0):.2f}%")
-        
-        return min(quality_score, 100.0)  # Máximo 100
+        logger.info(f"Score de calidad final: {quality_score:.1f}%")
+        return quality_score
 
     def _calculate_stop_loss(self, signal_type: str, current_price: float, indicators: Dict) -> float:
         """Calcular stop loss basado en análisis técnico"""
