@@ -229,10 +229,10 @@ class BrainTraderService:
                                 
                                 if weighted_up > weighted_down:
                                     direction = 'up'
-                                    confidence = sum(confidences) / len(confidences)
+                                    confidence = sum(confidences)  # No dividir por número de modelos
                                 elif weighted_down > weighted_up:
                                     direction = 'down'
-                                    confidence = sum(confidences) / len(confidences)
+                                    confidence = sum(confidences)  # No dividir por número de modelos
                                 else:
                                     direction = 'sideways'
                                     confidence = 50.0
