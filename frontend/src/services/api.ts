@@ -400,6 +400,7 @@ class ApiService {
   ): Promise<{
     success: boolean;
     signal?: BrainTraderSignal;
+    signal_quality?: number;
     quality_score?: number;
     reasoning?: string;
     message?: string;
@@ -408,6 +409,17 @@ class ApiService {
     generated_at?: string;
     style?: string;
     timeframe?: string;
+    signal_type?: string;
+    current_price?: number;
+    stop_loss?: number;
+    take_profit?: string;
+    brain_type?: string;
+    timestamp?: string;
+    // Campos adicionales que devuelve el backend
+    pair?: string;
+    strength?: string;
+    confidence?: number;
+    entry_price?: number;
   }> {
     return this.request(`/brain-trader/signals/${brainType}/generate?pair=${pair}&style=${style}`, {
       method: 'POST'

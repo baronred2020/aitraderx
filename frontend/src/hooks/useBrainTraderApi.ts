@@ -52,6 +52,7 @@ export interface UseBrainTraderApiReturn {
   loadAvailableBrains: (planType?: string) => Promise<void>;
   generateManualSignal: (brainType: string, pair?: string, style?: string) => Promise<any>;
   getSignalIntervals: (brainType: string, style?: string) => Promise<any>;
+  addSignal: (signal: BrainTraderSignal) => void;
   
   // Utility functions
   clearErrors: () => void;
@@ -290,6 +291,11 @@ export const useBrainTraderApi = (planType: string = 'starter'): UseBrainTraderA
     }
   }, []);
 
+  // Add a new signal to the list
+  const addSignal = useCallback((newSignal: BrainTraderSignal) => {
+    setSignals(prevSignals => [newSignal, ...prevSignals]);
+  }, []);
+
   // Refresh all data for a specific brain
   const refreshAll = useCallback(async (
     brainType: string,
@@ -352,6 +358,7 @@ export const useBrainTraderApi = (planType: string = 'starter'): UseBrainTraderA
     loadAvailableBrains,
     generateManualSignal,
     getSignalIntervals,
+    addSignal,
     
     // Utility functions
     clearErrors,
