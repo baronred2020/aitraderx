@@ -32,13 +32,13 @@ class PredictionService:
             'scalping': '5M',
             'day_trading': '15M',
             'swing_trading': '1H',
-            'position_trading': '4H'
+            'position_trading': '1D'
         }
         self.style_durations = {
             'scalping': 5,
             'day_trading': 15,
             'swing_trading': 60,
-            'position_trading': 240
+            'position_trading': 1440
         }
     
     async def can_generate_prediction(self, user_id: str, style: str = "day_trading", plan_type: str = "starter") -> Dict[str, Any]:

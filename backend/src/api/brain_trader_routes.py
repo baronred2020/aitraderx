@@ -106,7 +106,7 @@ except ImportError as e:
                 'scalping': '5M',
                 'day_trading': '15M',
                 'swing_trading': '1H',
-                'position_trading': '4H'
+                'position_trading': '1D'
             }
             return timeframes.get(style, '15M')
             

@@ -247,7 +247,7 @@ class TechnicalAnalysisService:
             trend = TrendAnalysis(
                 direction=direction,
                 strength=strength,
-                timeframe='4H',
+                timeframe='1D',
                 support=support,
                 resistance=resistance,
                 description=description
