@@ -566,6 +566,10 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const loadPredictionHistory = async () => {
     setIsLoadingHistory(true);
     try {
+      // ✅ Primero completar predicciones expiradas automáticamente (sin recargar)
+      await _completeExpiredPredictionsInternal();
+      
+      // Luego cargar el historial actualizado
       const history = await apiService.getPredictionHistory();
       setPredictionHistory(history);
     } catch (error) {
@@ -584,6 +588,34 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       console.error('Error cargando estadísticas:', error);
     } finally {
       setIsLoadingStats(false);
+    }
+  };
+
+  // ✅ Función para completar predicciones expiradas (solo llamada manual)
+  const completeExpiredPredictions = async () => {
+    try {
+      const result = await apiService.completeExpiredPredictions();
+      if (result.success) {
+        console.log('✅ Predicciones expiradas completadas:', result.message);
+        // Recargar historial después de completar
+        await loadPredictionHistory();
+        // Recargar estadísticas
+        await loadUserStats();
+      }
+    } catch (error) {
+      console.error('Error completing expired predictions:', error);
+    }
+  };
+
+  // ✅ Función interna para completar predicciones sin recargar (solo completar, no recargar)
+  const _completeExpiredPredictionsInternal = async () => {
+    try {
+      const result = await apiService.completeExpiredPredictions();
+      if (result.success && result.completed > 0) {
+        console.log('✅ Predicciones expiradas completadas internamente:', result.message);
+      }
+    } catch (error) {
+      console.error('Error completing expired predictions internally:', error);
     }
   };
 
@@ -1431,7 +1463,16 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
             {/* Historial de Predicciones */}
             <div>
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">Historial de Predicciones</h4>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-gray-800">Historial de Predicciones</h4>
+                <button
+                  onClick={completeExpiredPredictions}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4" />
+                  Completar Expiradas
+                </button>
+              </div>
               {isLoadingHistory ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -1442,17 +1483,21 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                   {predictionHistory.map((item, index) => (
                     <div key={index} className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                       {/* Header con estado de la predicción */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                            item.prediction_success ? 'bg-green-100' : 'bg-red-100'
-                          }`}>
-                            {item.prediction_success ? (
-                              <CheckCircle className="w-6 h-6 text-green-600" />
-                            ) : (
-                              <XCircle className="w-6 h-6 text-red-600" />
-                            )}
-                          </div>
+                                              <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                              item.prediction_success === true ? 'bg-green-100' :
+                              item.prediction_success === false ? 'bg-red-100' :
+                              'bg-gray-100'
+                            }`}>
+                              {item.prediction_success === true ? (
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                              ) : item.prediction_success === false ? (
+                                <XCircle className="w-6 h-6 text-red-600" />
+                              ) : (
+                                <Clock className="w-6 h-6 text-gray-600" />
+                              )}
+                            </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <p className="font-bold text-lg text-gray-800">{item.pair}</p>
@@ -1477,9 +1522,13 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                         </div>
                         <div className="text-right">
                           <p className={`font-bold text-2xl ${
-                            item.prediction_success ? 'text-green-600' : 'text-red-600'
+                            item.prediction_success === true ? 'text-green-600' :
+                            item.prediction_success === false ? 'text-red-600' :
+                            'text-gray-600'
                           }`}>
-                            {item.prediction_success ? '✓' : '✗'}
+                            {item.prediction_success === true ? '✓' :
+                             item.prediction_success === false ? '✗' :
+                             '⏳'}
                           </p>
                           <p className="text-sm text-gray-500">
                             {item.confidence}% confianza
@@ -1537,17 +1586,24 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-medium text-gray-600">Éxito</p>
+                          <p className="text-sm font-medium text-gray-600">Estado</p>
                           <p className={`font-bold text-lg ${
-                            item.prediction_success ? 'text-green-600' : 'text-red-600'
+                            item.prediction_success === true ? 'text-green-600' :
+                            item.prediction_success === false ? 'text-red-600' :
+                            'text-gray-600'
                           }`}>
-                            {item.prediction_success ? 'Correcta' : 'Incorrecta'}
+                            {item.prediction_success === true ? 'Correcta' :
+                             item.prediction_success === false ? 'Incorrecta' :
+                             'Pendiente'}
                           </p>
                         </div>
                         <div className="text-center">
                           <p className="text-sm font-medium text-gray-600">Porcentaje Éxito</p>
-                          <p className="font-bold text-lg text-purple-600">
-                            {item.success_percentage?.toFixed(1) || 'N/A'}%
+                          <p className={`font-bold text-lg ${
+                            item.success_percentage !== null && item.success_percentage !== undefined ? 'text-purple-600' : 'text-gray-500'
+                          }`}>
+                            {item.success_percentage !== null && item.success_percentage !== undefined ? 
+                              `${item.success_percentage.toFixed(1)}%` : 'Pendiente'}
                           </p>
                         </div>
                       </div>
