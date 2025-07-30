@@ -578,7 +578,14 @@ class BrainTraderService:
             # Verificar que no hay NaN o Inf
             if np.any(np.isnan(features_array)) or np.any(np.isinf(features_array)):
                 logger.warning("Features contienen NaN o Inf, usando valores de fallback")
-                features_array = np.zeros(64, dtype=np.float32)
+                # Usar valores de fallback más realistas en lugar de ceros
+                features_array = np.nan_to_num(features_array, nan=0.5, posinf=1.0, neginf=0.0)
+            
+            # Verificar si todos los features son cero (problema crítico)
+            if np.all(features_array == 0):
+                logger.error("CRÍTICO: Todos los features son cero, usando valores por defecto")
+                # Usar valores por defecto más realistas para evitar predicciones basadas en ceros
+                features_array = np.array([0.5] * 64, dtype=np.float32)  # Valores neutrales
             
             logger.info(f"Features generados: {len(features_array)} (esperado: 64)")
             return features_array

@@ -80,7 +80,7 @@ async def test_prediction_logic():
     print("   - Day Trading (15min): 0.1% a 0.5%")
     print("   - Scalping (5min): 0.05% a 0.2%")
     print("   - Swing Trading (1h): 0.2% a 1%")
-    print("   - Position Trading (4h): 0.5% a 2%")
+    print("   - Position Trading (1d): 0.5% a 2%")
 
 if __name__ == "__main__":
     asyncio.run(test_prediction_logic()) 
