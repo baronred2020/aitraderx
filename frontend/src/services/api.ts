@@ -386,7 +386,8 @@ class ApiService {
     return this.request('/api/v1/predictions/stats');
   }
 
-  async completeExpiredPredictions(): Promise<{ success: boolean; message: string; completed: number }> {
+  // ✅ Completar predicciones expiradas
+  async completeExpiredPredictions(): Promise<{ success: boolean; message: string; completed: number; total: number }> {
     return this.request('/api/v1/predictions/complete-expired', {
       method: 'POST'
     });

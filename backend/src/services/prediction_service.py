@@ -216,7 +216,7 @@ class PredictionService:
             
             # Crear predicción con precio actual real
             prediction = {
-                "id": np.random.randint(1000, 9999),
+                "id": None,  # Se asignará después de guardar
                 "pair": pair,
                 "direction": direction,
                 "current_price": current_price,  # Precio real capturado
@@ -230,12 +230,18 @@ class PredictionService:
                 "time_remaining": self.style_durations.get(style, 15) * 60,
                 "is_completed": False,
                 "actual_price_at_expiry": None,
-                "prediction_success": None,
-                "success_percentage": None
+                "prediction_success": None,  # ✅ Siempre None al crear
+                "success_percentage": None   # ✅ Siempre None al crear
             }
             
-            # Guardar predicción en la base de datos
-            self._save_prediction_to_db(user_id, prediction)
+            # ✅ Guardar predicción en la base de datos y obtener el ID real
+            prediction_id = self._save_prediction_to_db(user_id, prediction)
+            if prediction_id > 0:
+                prediction["id"] = prediction_id
+                self.logger.info(f"Predicción guardada con ID: {prediction_id}")
+            else:
+                self.logger.error("Error: No se pudo obtener ID de la predicción guardada")
+            
             # Actualizar contador de uso
             self._update_prediction_usage(user_id)
             
@@ -244,16 +250,17 @@ class PredictionService:
             self.logger.error(f"Error generating prediction: {e}")
             return {}
     
-    def _save_prediction_to_db(self, user_id: str, prediction: Dict) -> bool:
-        """Guardar predicción en la tabla predictions existente"""
+    def _save_prediction_to_db(self, user_id: str, prediction: Dict) -> int:
+        """Guardar predicción en la tabla predictions existente y retornar el ID"""
         try:
             with db_config.get_connection() as connection:
-                # Adaptar a la estructura de la tabla predictions existente
+                # ✅ Incluir todos los campos necesarios
                 insert_query = """
                     INSERT INTO user_predictions 
                     (user_id, pair, direction, current_price, target_price, confidence, 
-                     timeframe, reasoning, brain_type, created_at, expires_at, is_completed) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                     timeframe, reasoning, brain_type, created_at, expires_at, is_completed,
+                     actual_price_at_expiry, prediction_success, success_percentage) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 
                 cursor = connection.cursor()
@@ -269,16 +276,22 @@ class PredictionService:
                     prediction['brain_type'],
                     prediction['created_at'],
                     prediction['expires_at'],
-                    prediction['is_completed']
+                    prediction['is_completed'],
+                    prediction['actual_price_at_expiry'],  # ✅ Agregado
+                    prediction['prediction_success'],      # ✅ Agregado
+                    prediction['success_percentage']       # ✅ Agregado
                 ))
+                
+                # ✅ Obtener el ID de la predicción insertada
+                prediction_id = cursor.lastrowid
                 
                 connection.commit()
                 cursor.close()
-                return True
+                return prediction_id
                 
         except Exception as e:
             self.logger.error(f"Error saving prediction to database: {e}")
-            return False
+            return 0
     
     async def get_active_prediction(self, user_id: str, style: str = "day_trading") -> Optional[Dict]:
         """Obtener predicción activa del usuario"""
@@ -413,17 +426,133 @@ class PredictionService:
             }
     
     async def complete_expired_predictions(self, user_id: str) -> Dict:
-        """Completar predicciones expiradas"""
+        """Completar predicciones expiradas del usuario"""
         try:
-            # Mock completion
-            return {
-                "success": True,
-                "message": "Predicciones expiradas completadas",
-                "completed": 2
-            }
+            with db_config.get_connection() as connection:
+                cursor = connection.cursor()
+                
+                # ✅ Buscar predicciones expiradas que no han sido completadas
+                query = """
+                    SELECT id, pair, direction, current_price, target_price, expires_at
+                    FROM user_predictions 
+                    WHERE user_id = %s 
+                    AND is_completed = FALSE 
+                    AND expires_at < NOW()
+                    AND actual_price_at_expiry IS NULL
+                """
+                
+                cursor.execute(query, (user_id,))
+                expired_predictions = cursor.fetchall()
+                
+                completed_count = 0
+                
+                for prediction in expired_predictions:
+                    pred_id, pair, direction, current_price, target_price, expires_at = prediction
+                    
+                    try:
+                        # ✅ Obtener precio real actual usando yfinance
+                        pair_mapping = {
+                            'EURUSD': 'EURUSD=X',
+                            'GBPUSD': 'GBPUSD=X',
+                            'USDJPY': 'USDJPY=X',
+                            'AUDUSD': 'AUDUSD=X',
+                            'USDCAD': 'USDCAD=X'
+                        }
+                        
+                        symbol = pair_mapping.get(pair, 'EURUSD=X')
+                        ticker = yf.Ticker(symbol)
+                        actual_price = ticker.info.get('regularMarketPrice', current_price)
+                        
+                        # ✅ Si no se puede obtener el precio real, usar el precio actual
+                        if not actual_price or actual_price <= 0:
+                            actual_price = current_price
+                        
+                        # ✅ Calcular si la predicción fue exitosa
+                        prediction_success = self._calculate_prediction_success(
+                            direction, current_price, target_price, actual_price
+                        )
+                        
+                        # ✅ Calcular porcentaje de éxito
+                        success_percentage = self._calculate_success_percentage(
+                            direction, current_price, target_price, actual_price
+                        )
+                        
+                        # ✅ Actualizar la predicción en la base de datos
+                        update_query = """
+                            UPDATE user_predictions 
+                            SET is_completed = TRUE,
+                                actual_price_at_expiry = %s,
+                                prediction_success = %s,
+                                success_percentage = %s
+                            WHERE id = %s
+                        """
+                        
+                        cursor.execute(update_query, (
+                            actual_price,
+                            prediction_success,
+                            success_percentage,
+                            pred_id
+                        ))
+                        
+                        completed_count += 1
+                        
+                    except Exception as e:
+                        self.logger.error(f"Error completing prediction {pred_id}: {e}")
+                        continue
+                
+                connection.commit()
+                cursor.close()
+                
+                return {
+                    "success": True,
+                    "completed": completed_count,
+                    "total": len(expired_predictions),
+                    "message": f"Se completaron {completed_count} predicciones expiradas"
+                }
+                
         except Exception as e:
             self.logger.error(f"Error completing expired predictions: {e}")
-            return {"success": False, "message": "Error completando predicciones", "completed": 0} 
+            return {"success": False, "message": "Error completando predicciones", "completed": 0}
+    
+    def _calculate_prediction_success(self, direction: str, current_price: float, target_price: float, actual_price: float) -> bool:
+        """Calcular si una predicción fue exitosa"""
+        try:
+            if direction == 'up':
+                return actual_price >= target_price
+            elif direction == 'down':
+                return actual_price <= target_price
+            else:  # sideways
+                threshold = current_price * 0.001  # 0.1% threshold
+                return abs(actual_price - current_price) <= threshold
+        except Exception as e:
+            self.logger.error(f"Error calculating prediction success: {e}")
+            return False
+    
+    def _calculate_success_percentage(self, direction: str, current_price: float, target_price: float, actual_price: float) -> float:
+        """Calcular porcentaje de éxito de una predicción"""
+        try:
+            if direction == 'up':
+                if actual_price >= target_price:
+                    return 100.0
+                else:
+                    movement = (actual_price - current_price) / (target_price - current_price)
+                    return max(0, min(100, movement * 100))
+            elif direction == 'down':
+                if actual_price <= target_price:
+                    return 100.0
+                else:
+                    movement = (current_price - actual_price) / (current_price - target_price)
+                    return max(0, min(100, movement * 100))
+            else:  # sideways
+                threshold = current_price * 0.001
+                deviation = abs(actual_price - current_price)
+                if deviation <= threshold:
+                    return 100.0
+                else:
+                    return max(0, 100 - (deviation / threshold) * 100)
+        except Exception as e:
+            self.logger.error(f"Error calculating success percentage: {e}")
+            return 0.0 
     
     def _has_unlimited_predictions(self, user_id: str, plan_type: str = None) -> bool:
         """Verificar si el usuario tiene predicciones ilimitadas"""

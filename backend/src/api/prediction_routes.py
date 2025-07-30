@@ -247,21 +247,21 @@ async def get_user_stats(request: Request, current_user: User = Depends(get_curr
 
 @router.post("/complete-expired")
 async def complete_expired_predictions(request: Request, current_user: User = Depends(get_current_user)):
-    """Complete expired predictions (admin function)"""
+    """Complete expired predictions for the current user"""
     try:
-        # Get database session from request state
-        db_session = request.state.db if hasattr(request.state, 'db') else None
-        
-        if not db_session:
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
             raise HTTPException(
                 status_code=503, 
                 detail="Database connection not available"
             )
         
-        prediction_service = PredictionService(db_session)
-        completed_count = await prediction_service.complete_expired_predictions()
+        prediction_service = PredictionService()
+        # ✅ Usar el UUID del usuario
+        user_id = getattr(current_user, 'user_id', '4dabfd30-483d-4fa0-a8d0-bd151a46340f')
+        result = await prediction_service.complete_expired_predictions(user_id)
         
-        return {"success": True, "message": "Expired predictions completed", "completed": completed_count}
+        return result
         
     except Exception as e:
         logger.error(f"Error completing expired predictions: {e}")
