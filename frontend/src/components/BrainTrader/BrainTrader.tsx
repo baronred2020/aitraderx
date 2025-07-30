@@ -32,7 +32,7 @@ import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import { useBrainTraderApi } from '../../hooks/useBrainTraderApi';
 import { useYahooMarketData } from '../../hooks/useYahooMarketData';
 import { apiService } from '../../services/api';
-import type { PredictionHistoryItem, PredictionLimits, UserStats } from '../../services/api';
+import type { PredictionHistoryItem, PredictionLimits, UserStats, BrainTraderSignal } from '../../services/api';
 
 
 interface BrainTraderProps {}
@@ -108,6 +108,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     loadMegaMindCollaboration,
     loadMegaMindArena,
     loadMegaMindPerformance,
+    addSignal,
     refreshAll,
   } = useBrainTraderApi(subscription?.planType || 'starter');
   
@@ -460,6 +461,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     }
   }, [activeTab, selectedStyle, activeBrain]);
 
+  // Debug: Log cuando cambian las señales
+  useEffect(() => {
+    console.log('🔍 Señales actualizadas:', signals.length, 'signals:', signals);
+  }, [signals]);
+
   // Función para mostrar errores de API
   const hasApiErrors = () => {
     return Object.values(errors).some(error => error !== null);
@@ -588,24 +594,52 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     setSignalMessage('');
     
     try {
+      console.log('🔍 Generando señal...', { activeBrain, selectedPair, selectedStyle });
+      
       const response = await apiService.generateSignal(
         activeBrain,
         selectedPair,
         selectedStyle
       );
       
+      console.log('🔍 Respuesta del backend:', response);
+      
       if (response.success) {
-        setSignalQuality(response.quality_score || 0);
-        setSignalMessage(`Señal generada exitosamente (Calidad: ${response.quality_score?.toFixed(1)}%)`);
-        // Actualizar lista de señales
-        await loadSignals(activeBrain, selectedPair);
+        setSignalQuality(response.signal_quality || 0);
+        setSignalMessage(`Señal generada exitosamente (Calidad: ${response.signal_quality?.toFixed(1)}%)`);
+        
+        // Si la señal se generó exitosamente, agregarla al estado local
+        console.log('🔍 Respuesta completa:', response);
+        
+        // Crear la señal desde los campos directos de la respuesta
+        const newSignal: BrainTraderSignal = {
+          pair: response.pair || selectedPair,
+          type: (response.signal_type as 'buy' | 'sell' | 'hold') || 'hold',
+          strength: (response.strength as 'strong' | 'medium' | 'weak') || 'medium',
+          confidence: response.confidence || response.signal_quality || 0,
+          entry_price: response.current_price || response.entry_price || 0,
+          stop_loss: response.stop_loss || 0,
+          take_profit: typeof response.take_profit === 'string' ? parseFloat(response.take_profit) : (response.take_profit || 0),
+          brain_type: response.brain_type || activeBrain,
+          timestamp: response.timestamp || response.generated_at || new Date().toISOString()
+        };
+        
+        console.log('🔍 Nueva señal a agregar:', newSignal);
+        console.log('🔍 Función addSignal disponible:', typeof addSignal);
+        
+        // Agregar la nueva señal al inicio de la lista
+        addSignal(newSignal);
+        
+        console.log('🔍 Señal agregada, signals actual:', signals);
       } else {
-        setSignalQuality(0);
+        setSignalQuality(response.signal_quality || 0);
         setSignalMessage(response.message || 'Error generando señal');
+        console.log('❌ Respuesta no exitosa:', response);
       }
     } catch (error) {
       setSignalQuality(0);
       setSignalMessage('Error generando señal');
+      console.error('❌ Error generando señal:', error);
     } finally {
       setIsGeneratingSignal(false);
     }
