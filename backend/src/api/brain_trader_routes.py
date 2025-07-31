@@ -339,7 +339,9 @@ async def get_trends(
 async def generate_signal(
     brain_type: str,
     pair: str = "EURUSD",
-    style: str = "day_trading"
+    style: str = "day_trading",
+    user_id: str = None,
+    plan_type: str = "starter"
 ) -> Dict[str, Any]:
     """Generar una señal manual en el intervalo de tiempo correcto"""
     try:
@@ -355,6 +357,24 @@ async def generate_signal(
         valid_styles = ['scalping', 'day_trading', 'swing_trading', 'position_trading']
         if style not in valid_styles:
             raise HTTPException(status_code=400, detail=f"Style must be one of: {valid_styles}")
+        
+        # Verificar límites de señales si se proporciona user_id
+        if user_id:
+            from services.signal_service import SignalService
+            signal_service = SignalService()
+            
+            # Verificar si puede generar señal
+            can_generate = await signal_service.can_generate_signal(user_id, style, plan_type)
+            
+            if not can_generate["can_generate"]:
+                return {
+                    "success": False,
+                    "message": f"Límite de señales alcanzado. Máximo {can_generate['max_signals_per_day']} señales por día para el plan {plan_type}.",
+                    "remaining_signals": can_generate["remaining_signals"],
+                    "max_signals_per_day": can_generate["max_signals_per_day"],
+                    "plan_type": plan_type,
+                    "upgrade_required": True
+                }
         
         # Verificar si es momento válido para generar señal
         if not brain_trader_service._is_valid_signal_time(style):
@@ -409,6 +429,15 @@ async def generate_signal(
             # Extraer datos del objeto signal
             signal = signal_result.get("signal")
             if signal:
+                # Incrementar contador de señales si se proporciona user_id
+                if user_id:
+                    from services.signal_service import SignalService
+                    signal_service = SignalService()
+                    signal_service.increment_signal_usage(user_id)
+                    
+                    # Obtener límites actualizados
+                    updated_limits = await signal_service.can_generate_signal(user_id, style, plan_type)
+                
                 return {
                     "success": True,
                     "signal_type": signal.type,
@@ -422,7 +451,9 @@ async def generate_signal(
                     "timestamp": signal.timestamp,
                     "timeframe": brain_trader_service.get_timeframe_for_style(style),
                     "generated_at": datetime.now().isoformat(),
-                    "next_interval": brain_trader_service._get_next_valid_interval(style).strftime('%H:%M')
+                    "next_interval": brain_trader_service._get_next_valid_interval(style).strftime('%H:%M'),
+                    "remaining_signals": updated_limits["remaining_signals"] if user_id else None,
+                    "max_signals_per_day": updated_limits["max_signals_per_day"] if user_id else None
                 }
             else:
                 return {
@@ -447,6 +478,41 @@ async def generate_signal(
             
     except Exception as e:
         logger.error(f"Error generating signal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/signals/{brain_type}/limits")
+async def get_signal_limits(
+    brain_type: str,
+    user_id: str = None,
+    plan_type: str = "starter",
+    style: str = "day_trading"
+) -> Dict[str, Any]:
+    """Obtener límites de señales del usuario"""
+    try:
+        if not user_id:
+            return {
+                "success": False,
+                "message": "user_id es requerido para consultar límites"
+            }
+        
+        from services.signal_service import SignalService
+        signal_service = SignalService()
+        
+        limits = await signal_service.can_generate_signal(user_id, style, plan_type)
+        
+        return {
+            "success": True,
+            "can_generate": limits["can_generate"],
+            "remaining_signals": limits["remaining_signals"],
+            "max_signals_per_day": limits["max_signals_per_day"],
+            "plan_type": plan_type,
+            "style": style,
+            "timeframe": limits["timeframe"],
+            "has_unlimited": limits["has_unlimited"]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting signal limits: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/signals/{brain_type}/intervals")

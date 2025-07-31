@@ -62,6 +62,7 @@ class SubscriptionMiddleware:
             "/api/alerts": "alerts",
             "/api/portfolios": "portfolios",
             "/api/indicators": "indicators",
+            "/api/v1/brain-trader/signals": "signals",
         }
     
     async def __call__(self, request: Request, call_next):
@@ -155,6 +156,8 @@ class SubscriptionMiddleware:
                 self.subscription_service.update_usage_metrics(user_id, "backtests")
             elif "/api/alerts" in path and request.method == "POST":
                 self.subscription_service.update_usage_metrics(user_id, "alerts")
+            elif "/api/v1/brain-trader/signals" in path and request.method == "POST":
+                self.subscription_service.update_usage_metrics(user_id, "signals")
             elif "/api/rl/train" in path:
                 self.subscription_service.update_usage_metrics(user_id, "rl_episodes")
             elif "/api/models/custom" in path:
