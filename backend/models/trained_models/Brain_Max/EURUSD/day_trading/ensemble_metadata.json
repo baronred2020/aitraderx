@@ -1,0 +1,28 @@
+{
+  "pair": "EURUSD",
+  "style": "day_trading",
+  "accuracy": 0.16694605222928594,
+  "models_count": 6,
+  "weights": {
+    "rf": 0.16690388082360755,
+    "gb": 0.16601828130436158,
+    "et": 0.16693550937786636,
+    "xgb": 0.16636619540120823,
+    "lgb": 0.16683008086367038,
+    "mlp": 0.16694605222928594
+  },
+  "timestamp": "2025-07-30T21:32:31.336267",
+  "config": {
+    "pair": "EURUSD",
+    "style": "day_trading",
+    "months": 48,
+    "data_source": "colab",
+    "dataset": {
+      "name": "colab_datasets",
+      "path": "/content",
+      "csv_files": [
+        "/content/EURUSD_M15.csv"
+      ]
+    }
+  }
+}

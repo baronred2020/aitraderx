@@ -43,6 +43,7 @@ export interface UseBrainTraderApiReturn {
   
   // API functions
   loadPredictions: (brainType: string, pair?: string, style?: string, limit?: number, planType?: string) => Promise<void>;
+  loadPredictionsWithIntervals: (brainType: string, pair?: string, style?: string, limit?: number, planType?: string) => Promise<void>;
   loadSignals: (brainType: string, pair?: string, limit?: number) => Promise<void>;
   loadTrends: (brainType: string, pair?: string, limit?: number) => Promise<void>;
   loadMegaMindPredictions: (pair?: string, style?: string, limit?: number) => Promise<void>;
@@ -52,6 +53,7 @@ export interface UseBrainTraderApiReturn {
   loadAvailableBrains: (planType?: string) => Promise<void>;
   generateManualSignal: (brainType: string, pair?: string, style?: string) => Promise<any>;
   getSignalIntervals: (brainType: string, style?: string) => Promise<any>;
+  getNextPredictionTime: (brainType: string, style?: string) => Promise<any>;
   addSignal: (signal: BrainTraderSignal) => void;
   
   // Utility functions
@@ -291,6 +293,41 @@ export const useBrainTraderApi = (planType: string = 'starter'): UseBrainTraderA
     }
   }, []);
 
+  // Load predictions with intervals
+  const loadPredictionsWithIntervals = useCallback(async (
+    brainType: string,
+    pair: string = 'EURUSD',
+    style: string = 'day_trading',
+    limit: number = 5,
+    planType: string = 'starter'
+  ) => {
+    setLoading(prev => ({ ...prev, predictions: true }));
+    setErrors(prev => ({ ...prev, predictions: null }));
+    
+    try {
+      const result = await apiService.getPredictionsWithIntervals(brainType, pair, style, limit, planType);
+      setPredictions(result);
+    } catch (error) {
+      setErrors(prev => ({ ...prev, predictions: error instanceof Error ? error.message : 'Error loading predictions with intervals' }));
+    } finally {
+      setLoading(prev => ({ ...prev, predictions: false }));
+    }
+  }, []);
+
+  // Get next prediction time
+  const getNextPredictionTime = useCallback(async (
+    brainType: string,
+    style: string = 'day_trading'
+  ) => {
+    try {
+      const result = await apiService.getNextPredictionTime(brainType, style);
+      return result;
+    } catch (error) {
+      console.error('Error getting next prediction time:', error);
+      throw error;
+    }
+  }, []);
+
   // Add a new signal to the list
   const addSignal = useCallback((newSignal: BrainTraderSignal) => {
     setSignals(prevSignals => [newSignal, ...prevSignals]);
@@ -349,6 +386,7 @@ export const useBrainTraderApi = (planType: string = 'starter'): UseBrainTraderA
     
     // API functions
     loadPredictions,
+    loadPredictionsWithIntervals,
     loadSignals,
     loadTrends,
     loadMegaMindPredictions,
@@ -358,6 +396,7 @@ export const useBrainTraderApi = (planType: string = 'starter'): UseBrainTraderA
     loadAvailableBrains,
     generateManualSignal,
     getSignalIntervals,
+    getNextPredictionTime,
     addSignal,
     
     // Utility functions

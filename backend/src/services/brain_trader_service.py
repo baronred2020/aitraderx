@@ -182,7 +182,9 @@ class BrainTraderService:
             
             # Obtener datos históricos para features
             if technical_analysis_service:
-                data = await technical_analysis_service.get_historical_data(pair, "30d")
+                # Para day trading necesitamos más datos históricos (al menos 60 días)
+                period = "60d" if style == "day_trading" else "30d"
+                data = await technical_analysis_service.get_historical_data(pair, period)
                 if not data.empty:
                     # Preparar features para el modelo
                     features = self._prepare_features_for_model(data, pair, style)
@@ -325,6 +327,11 @@ class BrainTraderService:
     def _prepare_features_for_model(self, data: pd.DataFrame, pair: str, style: str) -> Optional[np.ndarray]:
         """Preparar features para el modelo entrenado (64 features) - Basado en Modelo_Brain_Max.py"""
         try:
+            # Verificar que tenemos suficientes datos
+            if len(data) < 30:  # Reducido de 50 a 30 para ser más flexible
+                logger.warning(f"Datos insuficientes para {pair}: {len(data)} registros")
+                return None
+            
             # Calcular indicadores técnicos avanzados para coincidir exactamente con Modelo_Brain_Max.py
             features = []
             
@@ -566,14 +573,14 @@ class BrainTraderService:
             # Convertir a array numpy
             features_array = np.array(features, dtype=np.float32)
             
-            # Asegurar que tenemos exactamente 64 features
-            if len(features_array) < 64:
+            # Asegurar que tenemos exactamente 62 features (como el modelo entrenado)
+            if len(features_array) < 62:
                 # Rellenar con ceros si faltan features
-                padding = np.zeros(64 - len(features_array), dtype=np.float32)
+                padding = np.zeros(62 - len(features_array), dtype=np.float32)
                 features_array = np.concatenate([features_array, padding])
-            elif len(features_array) > 64:
+            elif len(features_array) > 62:
                 # Truncar si hay demasiadas features
-                features_array = features_array[:64]
+                features_array = features_array[:62]
             
             # Verificar que no hay NaN o Inf
             if np.any(np.isnan(features_array)) or np.any(np.isinf(features_array)):
@@ -585,9 +592,9 @@ class BrainTraderService:
             if np.all(features_array == 0):
                 logger.error("CRÍTICO: Todos los features son cero, usando valores por defecto")
                 # Usar valores por defecto más realistas para evitar predicciones basadas en ceros
-                features_array = np.array([0.5] * 64, dtype=np.float32)  # Valores neutrales
+                features_array = np.array([0.5] * 62, dtype=np.float32)  # Valores neutrales
             
-            logger.info(f"Features generados: {len(features_array)} (esperado: 64)")
+            logger.info(f"Features generados: {len(features_array)} (esperado: 62)")
             return features_array
             
         except Exception as e:
@@ -599,7 +606,7 @@ class BrainTraderService:
     def _get_fallback_prediction(self, pair: str, style: str, current_price: float) -> Dict[str, Any]:
         """Predicción de fallback cuando no hay modelo disponible"""
         direction = random.choice(['up', 'down', 'sideways'])
-        confidence = self._calculate_real_confidence(indicators) if hasattr(self, 'confidence_calculator') and self.confidence_calculator else random.uniform(70, 85)
+        confidence = random.uniform(70, 85)  # Confianza por defecto para fallback
         
         # Calcular precio objetivo basado en el estilo de trading
         if style == 'day_trading':
@@ -1557,3 +1564,150 @@ class BrainTraderService:
                 return current_price * 0.985
             else:
                 return current_price 
+
+    async def get_predictions_with_intervals(self, brain_type: str, pair: str, style: str, limit: int = 5, plan_type: str = 'starter') -> List[PredictionResponse]:
+        """Generar predicciones respetando intervalos de tiempo específicos"""
+        try:
+            logger.info(f"Generando predicciones con intervalos para {pair} - {style}")
+            
+            predictions = []
+            current_time = datetime.now()
+            
+            # Verificar si es un momento válido para generar predicción
+            if not self._is_valid_signal_time(style):
+                next_interval = self._get_next_valid_interval(style)
+                time_until_next = (next_interval - current_time).total_seconds()
+                
+                logger.info(f"No es momento válido para predicción. Próximo intervalo: {next_interval}")
+                logger.info(f"Tiempo hasta próximo intervalo: {time_until_next:.0f} segundos")
+                
+                # Retornar predicción con información del próximo intervalo
+                return [PredictionResponse(
+                    pair=pair,
+                    direction="wait",
+                    confidence=0.0,
+                    target_price=0.0,
+                    timeframe=self.get_timeframe_for_style(style),
+                    reasoning=f"Esperando próximo intervalo de {style}. Próximo: {next_interval.strftime('%H:%M')}",
+                    brain_type=brain_type,
+                    timestamp=current_time.isoformat(),
+                    expires_at=next_interval.isoformat()
+                )]
+            
+            # Obtener precio real actual
+            current_price = await self.get_real_price(pair)
+            logger.info(f"Precio actual para {pair}: {current_price}")
+            
+            # Generar predicciones para los próximos intervalos
+            intervals = self._get_time_intervals(style)
+            
+            for i, interval_time in enumerate(intervals[:limit]):
+                try:
+                    # Generar predicción para este intervalo
+                    if brain_type == 'brain_max':
+                        prediction_result = await self._get_brain_max_prediction(pair, style, current_price)
+                        
+                        if prediction_result:
+                            # Calcular precio objetivo basado en el intervalo
+                            interval_duration = self.get_duration_for_style(style)
+                            price_change = prediction_result.get('target_price', current_price) - current_price
+                            
+                            # Ajustar precio objetivo según el intervalo
+                            adjusted_target = current_price + (price_change * (i + 1))
+                            
+                            prediction = PredictionResponse(
+                                pair=pair,
+                                direction=prediction_result['direction'],
+                                confidence=prediction_result['confidence'],
+                                target_price=adjusted_target,
+                                timeframe=self.get_timeframe_for_style(style),
+                                reasoning=f"{prediction_result.get('reasoning', 'Predicción del modelo')} - Intervalo {i+1}",
+                                brain_type=brain_type,
+                                timestamp=current_time.isoformat(),
+                                expires_at=interval_time.isoformat()
+                            )
+                            predictions.append(prediction)
+                            
+                            logger.info(f"Predicción {i+1}: {prediction.direction} ({prediction.confidence:.1f}%) @ {prediction.target_price:.5f}")
+                        else:
+                            # Fallback si no hay predicción del modelo
+                            fallback = self._get_fallback_prediction(pair, style, current_price)
+                            prediction = PredictionResponse(
+                                pair=pair,
+                                direction=fallback['direction'],
+                                confidence=fallback['confidence'],
+                                target_price=fallback['target_price'],
+                                timeframe=self.get_timeframe_for_style(style),
+                                reasoning=f"Fallback - {fallback['reasoning']} - Intervalo {i+1}",
+                                brain_type=brain_type,
+                                timestamp=current_time.isoformat(),
+                                expires_at=interval_time.isoformat()
+                            )
+                            predictions.append(prediction)
+                    else:
+                        # Para otros tipos de brain, usar análisis técnico
+                        if technical_analysis_service:
+                            data = await technical_analysis_service.get_historical_data(pair, "30d")
+                            if not data.empty:
+                                indicators = await technical_analysis_service.calculate_technical_indicators(data)
+                                
+                                if plan_type == 'starter':
+                                    current_rsi = indicators.get('rsi', {}).iloc[-1] if 'rsi' in indicators and not indicators['rsi'].empty else 50
+                                    direction, confidence, reasoning = self._analyze_rsi_only(current_rsi)
+                                else:
+                                    direction, confidence, reasoning = self._analyze_full_technical(indicators, current_price)
+                                
+                                # Calcular precio objetivo
+                                if direction == 'up':
+                                    target_price = current_price * 1.002  # 0.2% de movimiento
+                                elif direction == 'down':
+                                    target_price = current_price * 0.998
+                                else:
+                                    target_price = current_price
+                                
+                                prediction = PredictionResponse(
+                                    pair=pair,
+                                    direction=direction,
+                                    confidence=confidence,
+                                    target_price=target_price,
+                                    timeframe=self.get_timeframe_for_style(style),
+                                    reasoning=f"{reasoning} - Intervalo {i+1}",
+                                    brain_type=brain_type,
+                                    timestamp=current_time.isoformat(),
+                                    expires_at=interval_time.isoformat()
+                                )
+                                predictions.append(prediction)
+                
+                except Exception as e:
+                    logger.error(f"Error generando predicción para intervalo {i+1}: {e}")
+                    continue
+            
+            logger.info(f"Generadas {len(predictions)} predicciones con intervalos")
+            return predictions
+            
+        except Exception as e:
+            logger.error(f"Error en get_predictions_with_intervals: {e}")
+            return []
+
+    async def get_next_prediction_time(self, style: str) -> Dict[str, Any]:
+        """Obtener información sobre el próximo momento válido para predicción"""
+        try:
+            current_time = datetime.now()
+            next_interval = self._get_next_valid_interval(style)
+            time_until_next = (next_interval - current_time).total_seconds()
+            
+            is_valid_now = self._is_valid_signal_time(style)
+            
+            return {
+                'current_time': current_time.isoformat(),
+                'next_interval': next_interval.isoformat(),
+                'time_until_next_seconds': time_until_next,
+                'time_until_next_minutes': time_until_next / 60,
+                'is_valid_now': is_valid_now,
+                'style': style,
+                'timeframe': self.get_timeframe_for_style(style)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo próximo tiempo de predicción: {e}")
+            return {}

@@ -102,12 +102,16 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     loading,
     errors,
     loadPredictions,
+    loadPredictionsWithIntervals,
     loadSignals,
     loadTrends,
     loadMegaMindPredictions,
     loadMegaMindCollaboration,
     loadMegaMindArena,
     loadMegaMindPerformance,
+    generateManualSignal,
+    getSignalIntervals,
+    getNextPredictionTime,
     addSignal,
     refreshAll,
   } = useBrainTraderApi(subscription?.planType || 'starter');
@@ -138,6 +142,13 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const [signalMessage, setSignalMessage] = useState<string>('');
   const [signalIntervals, setSignalIntervals] = useState<any>(null);
   const [isValidSignalTime, setIsValidSignalTime] = useState(false);
+
+  // Estados para el sistema de intervalos
+  const [intervalInfo, setIntervalInfo] = useState<any>(null);
+  const [isValidPredictionTime, setIsValidPredictionTime] = useState(false);
+  const [nextPredictionTime, setNextPredictionTime] = useState<string>('');
+  const [timeUntilNext, setTimeUntilNext] = useState<number>(0);
+  const [useIntervals, setUseIntervals] = useState(false);
 
   // Configuración según suscripción
   const getAvailablePairs = () => {
@@ -461,6 +472,14 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     }
   }, [activeTab, selectedStyle, activeBrain]);
 
+  // Efecto para cargar información de intervalos de predicciones
+  useEffect(() => {
+    if (useIntervals) {
+      console.log('Cargando información de intervalos de predicciones...');
+      loadIntervalInfo();
+    }
+  }, [selectedStyle, activeBrain, useIntervals]);
+
   // Debug: Log cuando cambian las señales
   useEffect(() => {
     console.log('🔍 Señales actualizadas:', signals.length, 'signals:', signals);
@@ -540,6 +559,61 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       console.error('Error generando predicción:', error);
     } finally {
       setIsGeneratingPrediction(false);
+    }
+  };
+
+  // Nueva función para generar predicciones con intervalos
+  const generatePredictionWithIntervals = async () => {
+    if (!canGeneratePrediction()) return;
+    
+    setIsGeneratingPrediction(true);
+    try {
+      // Usar el nuevo método con intervalos
+      await loadPredictionsWithIntervals(
+        activeBrain,
+        selectedPair,
+        selectedStyle,
+        5, // limit
+        subscription?.planType || 'starter'
+      );
+      
+      // Actualizar límites e historial
+      await Promise.all([
+        loadPredictionLimits(),
+        loadPredictionHistory(),
+        loadUserStats()
+      ]);
+      
+    } catch (error) {
+      console.error('Error generando predicción con intervalos:', error);
+    } finally {
+      setIsGeneratingPrediction(false);
+    }
+  };
+
+  // Nueva función para obtener información del próximo intervalo
+  const getNextIntervalInfo = async () => {
+    try {
+      const intervalInfo = await getNextPredictionTime(activeBrain, selectedStyle);
+      return intervalInfo;
+    } catch (error) {
+      console.error('Error obteniendo información del próximo intervalo:', error);
+      return null;
+    }
+  };
+
+  // Función para cargar información de intervalos
+  const loadIntervalInfo = async () => {
+    try {
+      const info = await getNextIntervalInfo();
+      if (info) {
+        setIntervalInfo(info);
+        setIsValidPredictionTime(info.is_valid_now);
+        setNextPredictionTime(info.next_interval);
+        setTimeUntilNext(info.time_until_next_minutes);
+      }
+    } catch (error) {
+      console.error('Error cargando información de intervalos:', error);
     }
   };
 
@@ -952,13 +1026,57 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         {/* Contenido de las Pestañas */}
         {activeTab === 'predictions' && (
           <div className="space-y-6">
+            {/* Opción de Intervalos */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800">Sistema de Intervalos</h4>
+                    <p className="text-sm text-gray-600">Generar predicciones respetando intervalos de tiempo</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useIntervals}
+                    onChange={(e) => setUseIntervals(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              
+              {useIntervals && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${isValidPredictionTime ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {isValidPredictionTime ? 'Momento válido para predicción' : 'Esperando próximo intervalo'}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {isValidPredictionTime ? '✅ Listo' : `⏳ ${timeUntilNext.toFixed(1)} min`}
+                    </span>
+                  </div>
+                  
+                  {nextPredictionTime && (
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Próximo intervalo:</span> {new Date(nextPredictionTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Botón Generar Predicción */}
             <div className="mb-6">
               <button
-                onClick={generatePrediction}
-                disabled={isGeneratingPrediction || !canGeneratePrediction()}
+                onClick={useIntervals ? generatePredictionWithIntervals : generatePrediction}
+                disabled={isGeneratingPrediction || !canGeneratePrediction() || (useIntervals && !isValidPredictionTime)}
                 className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${
-                  canGeneratePrediction()
+                  canGeneratePrediction() && (!useIntervals || isValidPredictionTime)
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
@@ -971,7 +1089,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                 ) : (
                   <div className="flex items-center justify-center">
                     <TrendingUpIcon className="w-5 h-5 mr-2" />
-                    Generar Predicción
+                    {useIntervals ? 'Generar Predicción con Intervalos' : 'Generar Predicción'}
                   </div>
                 )}
               </button>
@@ -980,6 +1098,8 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                 <p className="text-sm text-gray-500 mt-2 text-center">
                   {predictionLimits && (predictionLimits.max_predictions_per_day - predictionLimits.remaining_predictions) >= predictionLimits.max_predictions_per_day
                     ? 'Has alcanzado el límite diario de predicciones'
+                    : useIntervals && !isValidPredictionTime
+                    ? `Espera hasta el próximo intervalo (${timeUntilNext.toFixed(1)} min)`
                     : 'No puedes generar una nueva predicción en este momento'
                   }
                 </p>

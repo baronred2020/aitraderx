@@ -1,0 +1,13 @@
+{
+  "pair": "EURUSD",
+  "style": "day_trading",
+  "months": 48,
+  "data_source": "colab",
+  "dataset": {
+    "name": "colab_datasets",
+    "path": "/content",
+    "csv_files": [
+      "/content/EURUSD_M15.csv"
+    ]
+  }
+}

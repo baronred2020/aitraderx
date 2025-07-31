@@ -241,13 +241,58 @@ async def get_predictions(
     limit: int = 5,
     plan_type: str = "starter"
 ) -> List[PredictionResponse]:
-    """Obtiene predicciones del cerebro especificado"""
+    """Obtiene predicciones del cerebro especificado (método original)"""
     try:
         predictions = await brain_trader_service.get_predictions(brain_type, pair, style, limit, plan_type)
         return predictions
     except Exception as e:
         logger.error(f"Error getting predictions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/predictions/{brain_type}/with-intervals")
+async def get_predictions_with_intervals(
+    brain_type: str,
+    pair: str = "EURUSD",
+    style: str = "day_trading",
+    limit: int = 5,
+    plan_type: str = "starter"
+) -> List[PredictionResponse]:
+    """Obtener predicciones respetando intervalos de tiempo específicos"""
+    try:
+        logger.info(f"Obteniendo predicciones con intervalos para {brain_type} - {pair} - {style}")
+        
+        predictions = await brain_trader_service.get_predictions_with_intervals(
+            brain_type=brain_type,
+            pair=pair,
+            style=style,
+            limit=limit,
+            plan_type=plan_type
+        )
+        
+        logger.info(f"Predicciones con intervalos obtenidas: {len(predictions)}")
+        return predictions
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo predicciones con intervalos: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo predicciones con intervalos: {str(e)}")
+
+@router.get("/predictions/{brain_type}/next-interval")
+async def get_next_prediction_time(
+    brain_type: str,
+    style: str = "day_trading"
+) -> Dict[str, Any]:
+    """Obtener información sobre el próximo momento válido para predicción"""
+    try:
+        logger.info(f"Obteniendo próximo tiempo de predicción para {brain_type} - {style}")
+        
+        next_time_info = await brain_trader_service.get_next_prediction_time(style)
+        
+        logger.info(f"Información de próximo intervalo obtenida")
+        return next_time_info
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo próximo tiempo de predicción: {e}")
+        raise HTTPException(status_code=500, detail=f"Error obteniendo próximo tiempo de predicción: {str(e)}")
 
 @router.get("/signals/{brain_type}")
 async def get_signals(

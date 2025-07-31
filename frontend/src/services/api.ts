@@ -443,6 +443,32 @@ class ApiService {
     return this.request(`/brain-trader/signals/${brainType}/intervals?style=${style}`);
   }
 
+  // Nuevas funciones para predicciones con intervalos
+  async getPredictionsWithIntervals(
+    brainType: string,
+    pair: string = 'EURUSD',
+    style: string = 'day_trading',
+    limit: number = 5,
+    planType: string = 'starter'
+  ): Promise<BrainTraderPrediction[]> {
+    return this.request(`/brain-trader/predictions/${brainType}/with-intervals?pair=${pair}&style=${style}&limit=${limit}&plan_type=${planType}`);
+  }
+
+  async getNextPredictionTime(
+    brainType: string,
+    style: string = 'day_trading'
+  ): Promise<{
+    current_time: string;
+    next_interval: string;
+    time_until_next_seconds: number;
+    time_until_next_minutes: number;
+    is_valid_now: boolean;
+    style: string;
+    timeframe: string;
+  }> {
+    return this.request(`/brain-trader/predictions/${brainType}/next-interval?style=${style}`);
+  }
+
   // ===== FIN PREDICTION-SPECIFIC APIs =====
 }
 
