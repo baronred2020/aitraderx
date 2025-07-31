@@ -25,7 +25,10 @@ import {
   History,
   Calendar,
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon
+  TrendingDown as TrendingDownIcon,
+  ArrowUp,
+  ArrowDown,
+  Minus
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
@@ -37,6 +40,75 @@ import type { PredictionHistoryItem, PredictionLimits, UserStats, BrainTraderSig
 
 
 interface BrainTraderProps {}
+
+// Componente para mostrar iconos de dirección
+const DirectionIcon: React.FC<{ direction: 'up' | 'down' | 'sideways'; size?: number; className?: string }> = ({ 
+  direction, 
+  size = 24, 
+  className = "" 
+}) => {
+  const iconStyle = {
+    width: `${size}px`,
+    height: `${size}px`
+  };
+  
+  switch (direction) {
+    case 'up':
+      return (
+        <div 
+          className={`flex items-center justify-center rounded-xl text-white shadow-xl border-2 border-green-400 ${className}`} 
+          style={{
+            ...iconStyle,
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+            boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 4px 6px -2px rgba(16, 185, 129, 0.2)'
+          }}
+        >
+          <div className="flex flex-col items-center">
+            {/* Flecha alcista completa */}
+            <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-white"></div>
+            <div className="w-3 h-6 bg-white rounded-sm mt-1"></div>
+          </div>
+        </div>
+      );
+    case 'down':
+      return (
+        <div 
+          className={`flex items-center justify-center rounded-xl text-white shadow-xl border-2 border-red-400 ${className}`} 
+          style={{
+            ...iconStyle,
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)',
+            boxShadow: '0 10px 25px -5px rgba(239, 68, 68, 0.4), 0 4px 6px -2px rgba(239, 68, 68, 0.2)'
+          }}
+        >
+          <div className="flex flex-col items-center">
+            {/* Flecha bajista completa */}
+            <div className="w-3 h-6 bg-white rounded-sm mb-1"></div>
+            <div className="w-0 h-0 border-l-4 border-r-4 border-t-8 border-transparent border-t-white"></div>
+          </div>
+        </div>
+      );
+    case 'sideways':
+      return (
+        <div 
+          className={`flex items-center justify-center rounded-xl text-white shadow-xl border-2 border-yellow-400 ${className}`} 
+          style={{
+            ...iconStyle,
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+            boxShadow: '0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 4px 6px -2px rgba(245, 158, 11, 0.2)'
+          }}
+        >
+          <div className="flex items-center space-x-1">
+            {/* Flecha lateral mejorada */}
+            <div className="w-1 h-4 bg-white rounded-sm"></div>
+            <div className="w-4 h-1 bg-white rounded-sm"></div>
+            <div className="w-1 h-4 bg-white rounded-sm"></div>
+          </div>
+        </div>
+      );
+    default:
+      return null;
+  }
+};
 
 interface ModelInfo {
   brainType: 'brain_max' | 'brain_ultra' | 'brain_predictor' | 'mega_mind';
@@ -51,7 +123,8 @@ interface Prediction {
   pair: string;
   direction: 'up' | 'down' | 'sideways';
   confidence: number;
-  target_price: number;
+  precision: number;
+  win_rate: number;
   timeframe: string;
   reasoning: string;
   brain_type: string;
@@ -728,7 +801,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       
       if (response.success) {
         setSignalQuality(response.signal_quality || 0);
-        setSignalMessage(`Señal generada exitosamente (Calidad: ${response.signal_quality?.toFixed(1)}%)`);
+                          setSignalMessage(`Señal generada exitosamente (Calidad: ${(response.signal_quality || 0).toFixed(1)}%)`);
         
         // Si la señal se generó exitosamente, agregarla al estado local
         console.log('🔍 Respuesta completa:', response);
@@ -1085,7 +1158,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                       </span>
                     </div>
                     <span className="text-sm text-gray-500">
-                      {isValidPredictionTime ? '✅ Listo' : `⏳ ${timeUntilNext.toFixed(1)} min`}
+                      {isValidPredictionTime ? '✅ Listo' : `⏳ ${(timeUntilNext || 0).toFixed(1)} min`}
                     </span>
                   </div>
                   
@@ -1127,7 +1200,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                   {predictionLimits && (predictionLimits.max_predictions_per_day - predictionLimits.remaining_predictions) >= predictionLimits.max_predictions_per_day
                     ? 'Has alcanzado el límite diario de predicciones'
                     : useIntervals && !isValidPredictionTime
-                    ? `Espera hasta el próximo intervalo (${timeUntilNext.toFixed(1)} min)`
+                    ? `Espera hasta el próximo intervalo (${(timeUntilNext || 0).toFixed(1)} min)`
                     : 'No puedes generar una nueva predicción en este momento'
                   }
                 </p>
@@ -1176,7 +1249,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                   <h5 className="font-semibold text-gray-700 mb-2">Precio Actual</h5>
                   <div className="flex items-center">
                     <span className="text-2xl font-bold text-gray-800">
-                      ${getCurrentPrice(selectedPair)?.toFixed(4) || '---'}
+                      ${getCurrentPrice(selectedPair) ? getCurrentPrice(selectedPair)!.toFixed(4) : '---'}
                     </span>
                     {getPriceChange(selectedPair) && (
                       <span className={`ml-2 text-sm font-semibold ${
@@ -1185,7 +1258,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                           : 'text-red-600'
                       }`}>
                         {getPriceChange(selectedPair)!.changePercent >= 0 ? '+' : ''}
-                        {getPriceChange(selectedPair)!.changePercent.toFixed(2)}%
+                        {(getPriceChange(selectedPair)?.changePercent || 0).toFixed(2)}%
                       </span>
                     )}
                   </div>
@@ -1194,25 +1267,16 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                 {currentPrediction && (
                   <>
                     <div className="bg-white rounded-lg p-4">
-                      <h5 className="font-semibold text-gray-700 mb-2">Diferencia con Predicción</h5>
-                      <div className="flex items-center">
-                        {(() => {
-                          const currentPrice = getCurrentPrice(selectedPair);
-                          const targetPrice = currentPrediction.target_price;
-                          if (!currentPrice) return <span className="text-gray-500">---</span>;
-                          
-                          const difference = targetPrice - currentPrice;
-                          const differencePercent = (difference / currentPrice) * 100;
-                          
-                          return (
-                            <span className={`text-lg font-bold ${
-                              difference >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {difference >= 0 ? '+' : ''}{difference.toFixed(4)} 
-                              ({differencePercent >= 0 ? '+' : ''}{differencePercent.toFixed(2)}%)
-                            </span>
-                          );
-                        })()}
+                      <h5 className="font-semibold text-gray-700 mb-2">Métricas del Modelo</h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Precisión</p>
+                          <p className="text-lg font-bold text-blue-600">{(currentPrediction.precision || 0).toFixed(1)}%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Win Rate</p>
+                          <p className="text-lg font-bold text-green-600">{(currentPrediction.win_rate || 0).toFixed(1)}%</p>
+                        </div>
                       </div>
                     </div>
                     
@@ -1221,13 +1285,17 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                       <div className="flex items-center">
                         {(() => {
                           const currentPrice = getCurrentPrice(selectedPair);
-                          const targetPrice = currentPrediction.target_price;
                           if (!currentPrice) return <span className="text-gray-500">---</span>;
                           
                           const isExpired = new Date() > new Date(currentPrediction.expires_at || '');
                           if (isExpired) {
-                            const isCorrect = (currentPrediction.direction === 'up' && currentPrice > targetPrice) ||
-                                            (currentPrediction.direction === 'down' && currentPrice < targetPrice);
+                            // Calcular si la dirección fue correcta
+                            const priceChange = getPriceChange(selectedPair);
+                            const isCorrect = priceChange && (
+                              (currentPrediction.direction === 'up' && priceChange.changePercent > 0) ||
+                              (currentPrediction.direction === 'down' && priceChange.changePercent < 0) ||
+                              (currentPrediction.direction === 'sideways' && Math.abs(priceChange.changePercent) < 0.1)
+                            );
                             
                             return (
                               <span className={`text-sm font-semibold ${
@@ -1270,73 +1338,123 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
             {/* Predicción Actual */}
             {currentPrediction && (
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-gray-800">Predicción Actual</h4>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">
-                      Expira: {new Date(currentPrediction.expires_at || '').toLocaleString()}
-                    </span>
-                    <div className={`w-3 h-3 rounded-full ${
+              <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 border border-blue-500/30 rounded-2xl p-6 mb-6 shadow-2xl" style={{
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #3730a3 100%)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.3)'
+              }}>
+                {/* Header con estado */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                    <h4 className="text-xl font-bold text-white">Predicción Activa</h4>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-xs text-blue-300">Expira</p>
+                      <p className="text-sm font-semibold text-white">
+                        {new Date(currentPrediction.expires_at || '').toLocaleString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border-2 border-white ${
                       new Date() < new Date(currentPrediction.expires_at || '') 
-                        ? 'bg-green-500' 
+                        ? 'bg-green-500 animate-pulse' 
                         : 'bg-red-500'
                     }`}></div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-lg p-4">
-                    <h5 className="font-semibold text-gray-700 mb-2">Dirección</h5>
-                    <div className="flex items-center">
-                      {currentPrediction.direction === 'up' ? (
-                        <TrendingUpIcon className="w-6 h-6 text-green-600 mr-2" />
-                      ) : (
-                        <TrendingDownIcon className="w-6 h-6 text-red-600 mr-2" />
-                      )}
-                      <span className={`text-lg font-bold ${
-                        currentPrediction.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {currentPrediction.direction.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-4">
-                    <h5 className="font-semibold text-gray-700 mb-2">Confianza</h5>
-                    <div className="flex items-center">
-                      <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
-                        <div 
-                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${currentPrediction.confidence}%` }}
-                        ></div>
+                {/* Contenido principal */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Columna 1: Dirección y Confianza */}
+                  <div className="space-y-4">
+                    {/* Dirección */}
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <h5 className="text-sm font-medium text-blue-300 mb-3">Dirección del Mercado</h5>
+                      <div className="flex items-center justify-between">
+                        <DirectionIcon direction={currentPrediction.direction} size={48} className="mr-4" />
+                        <div className="text-right">
+                          <span className={`text-2xl font-bold ${
+                            currentPrediction.direction === 'up' ? 'text-green-400' : 
+                            currentPrediction.direction === 'down' ? 'text-red-400' : 'text-yellow-400'
+                          }`}>
+                            {currentPrediction.direction === 'up' ? 'BULLISH' :
+                             currentPrediction.direction === 'down' ? 'BEARISH' : 'NEUTRAL'}
+                          </span>
+                          <p className="text-xs text-gray-400 mt-1">Tendencia Principal</p>
+                        </div>
                       </div>
-                      <span className="text-sm font-semibold text-gray-700">
-                        {currentPrediction.confidence}%
-                      </span>
+                    </div>
+                    
+                    {/* Confianza */}
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <h5 className="text-sm font-medium text-blue-300 mb-3">Nivel de Confianza</h5>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-400">Probabilidad</span>
+                          <span className="text-lg font-bold text-white">
+                            {(currentPrediction.confidence || 0).toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500 shadow-lg"
+                            style={{ width: `${currentPrediction.confidence}%` }}
+                          ></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="bg-white rounded-lg p-4">
-                    <h5 className="font-semibold text-gray-700 mb-2">Precio Objetivo</h5>
-                    <span className="text-lg font-bold text-gray-800">
-                      ${currentPrediction.target_price.toFixed(4)}
-                    </span>
+                  {/* Columna 2: Métricas del Modelo */}
+                  <div className="space-y-4">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <h5 className="text-sm font-medium text-blue-300 mb-3">Métricas del Modelo</h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-400">
+                            {(currentPrediction.precision || 0).toFixed(1)}%
+                          </div>
+                          <div className="text-xs text-gray-400">Precisión</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-400">
+                            {(currentPrediction.win_rate || 0).toFixed(1)}%
+                          </div>
+                          <div className="text-xs text-gray-400">Win Rate</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <h5 className="text-sm font-medium text-blue-300 mb-3">Configuración</h5>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-400">Timeframe</span>
+                          <span className="text-sm font-semibold text-white">{currentPrediction.timeframe}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-gray-400">Brain Type</span>
+                          <span className="text-sm font-semibold text-white">{currentPrediction.brain_type}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="bg-white rounded-lg p-4">
-                    <h5 className="font-semibold text-gray-700 mb-2">Timeframe</h5>
-                    <span className="text-lg font-bold text-gray-800">
-                      {currentPrediction.timeframe}
-                    </span>
+                  {/* Columna 3: Análisis Técnico */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <h5 className="text-sm font-medium text-blue-300 mb-3">Análisis Técnico</h5>
+                    <div className="bg-black/20 rounded-lg p-3">
+                      <p className="text-sm text-gray-300 leading-relaxed">
+                        {currentPrediction.reasoning}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="mt-4 bg-white rounded-lg p-4">
-                  <h5 className="font-semibold text-gray-700 mb-2">Análisis Técnico</h5>
-                  <p className="text-gray-600 text-sm">
-                    {currentPrediction.reasoning}
-                  </p>
                 </div>
               </div>
             )}
@@ -1508,11 +1626,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                       
                       <div className="text-right">
                         <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
-                          <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>${signal.entry_price.toFixed(4)}</p>
-                          <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{signal.confidence.toFixed(1)}% confianza</p>
+                                              <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>${(signal.entry_price || 0).toFixed(4)}</p>
+                    <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{(signal.confidence || 0).toFixed(1)}% confianza</p>
                           <div className="flex gap-2 mt-1 text-xs">
-                            <span style={{ color: 'var(--danger-color)' }}>SL: ${signal.stop_loss.toFixed(4)}</span>
-                            <span style={{ color: 'var(--success-color)' }}>TP: ${signal.take_profit.toFixed(4)}</span>
+                                                          <span style={{ color: 'var(--danger-color)' }}>SL: ${(signal.stop_loss || 0).toFixed(4)}</span>
+                              <span style={{ color: 'var(--success-color)' }}>TP: ${(signal.take_profit || 0).toFixed(4)}</span>
                           </div>
                         </div>
                       </div>
@@ -1574,7 +1692,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                       
                       <div className="text-right">
                         <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
-                          <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>{trend.strength.toFixed(0)}%</p>
+                          <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>{(trend.strength || 0).toFixed(0)}%</p>
                           <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>Fuerza</p>
                         </div>
                       </div>
@@ -1583,11 +1701,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
                         <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Soporte</p>
-                        <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>${trend.support.toFixed(4)}</p>
+                        <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>${(trend.support || 0).toFixed(4)}</p>
                       </div>
                       <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
                         <p className="font-medium" style={{ color: 'var(--secondary-text)' }}>Resistencia</p>
-                        <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>${trend.resistance.toFixed(4)}</p>
+                        <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>${(trend.resistance || 0).toFixed(4)}</p>
                       </div>
                     </div>
                     
@@ -1629,7 +1747,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                   <div className="bg-white rounded-lg p-4">
                     <h5 className="font-semibold text-gray-700 mb-2">Tasa de Éxito</h5>
                     <span className="text-2xl font-bold text-purple-600">
-                      {((userStats.successful_predictions / userStats.total_predictions) * 100).toFixed(1)}%
+                      {userStats.total_predictions > 0 ? ((userStats.successful_predictions / userStats.total_predictions) * 100).toFixed(1) : '0.0'}%
                     </span>
                   </div>
                   <div className="bg-white rounded-lg p-4">
@@ -1717,22 +1835,30 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                         </div>
                       </div>
                       
-                      {/* Comparación de precios */}
+                      {/* Información de la predicción */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="font-medium text-gray-700 mb-1">Precio al Generar</p>
-                          <p className="font-bold text-lg text-gray-800">${item.current_price?.toFixed(5) || 'N/A'}</p>
-                          <p className="text-xs text-gray-500">Precio capturado en el momento</p>
+                          <p className="font-medium text-gray-700 mb-1">Dirección Predicha</p>
+                          <p className={`font-bold text-lg ${
+                            item.direction === 'up' ? 'text-green-600' :
+                            item.direction === 'down' ? 'text-red-600' :
+                            'text-yellow-600'
+                          }`}>
+                            {item.direction === 'up' ? '↗️ SUBIDA' :
+                             item.direction === 'down' ? '↘️ BAJADA' :
+                             '↔️ LATERAL'}
+                          </p>
+                          <p className="text-xs text-gray-500">Dirección predicha</p>
                         </div>
                         <div className="bg-blue-50 rounded-lg p-4">
-                          <p className="font-medium text-gray-700 mb-1">Precio Objetivo</p>
-                          <p className="font-bold text-lg text-blue-600">${item.target_price.toFixed(5)}</p>
-                          <p className="text-xs text-gray-500">Precio predicho</p>
+                          <p className="font-medium text-gray-700 mb-1">Precio al Generar</p>
+                          <p className="font-bold text-lg text-blue-600">${(item.current_price || 0).toFixed(5)}</p>
+                          <p className="text-xs text-gray-500">Precio capturado en el momento</p>
                         </div>
                         <div className="bg-green-50 rounded-lg p-4">
                           <p className="font-medium text-gray-700 mb-1">Precio Real</p>
                           <p className="font-bold text-lg text-green-600">
-                            ${item.actual_price_at_expiry?.toFixed(5) || 'Pendiente'}
+                            ${item.actual_price_at_expiry ? item.actual_price_at_expiry.toFixed(5) : 'Pendiente'}
                           </p>
                           <p className="text-xs text-gray-500">Precio al expirar</p>
                         </div>
@@ -1741,14 +1867,14 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                       {/* Métricas de rendimiento */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
-                          <p className="text-sm font-medium text-gray-600">Diferencia</p>
+                          <p className="text-sm font-medium text-gray-600">Pips Ganados/Perdidos</p>
                           <p className={`font-bold text-lg ${
                             item.actual_price_at_expiry ? 
-                              (item.actual_price_at_expiry > item.target_price ? 'text-green-600' : 'text-red-600') : 
+                              (item.actual_price_at_expiry > item.current_price ? 'text-green-600' : 'text-red-600') : 
                               'text-gray-500'
                           }`}>
                             {item.actual_price_at_expiry ? 
-                              `${((item.actual_price_at_expiry - item.target_price) / item.target_price * 100).toFixed(3)}%` : 
+                              `${((item.actual_price_at_expiry - (item.current_price || 0)) * 10000).toFixed(1)} pips` : 
                               'N/A'
                             }
                           </p>
@@ -1761,7 +1887,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                               'text-gray-500'
                           }`}>
                             {item.actual_price_at_expiry ? 
-                              `${((item.actual_price_at_expiry - item.current_price) / item.current_price * 100).toFixed(3)}%` : 
+                              `${((item.actual_price_at_expiry - (item.current_price || 0)) / (item.current_price || 1) * 100).toFixed(3)}%` : 
                               'N/A'
                             }
                           </p>
@@ -1784,7 +1910,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                             item.success_percentage !== null && item.success_percentage !== undefined ? 'text-purple-600' : 'text-gray-500'
                           }`}>
                             {item.success_percentage !== null && item.success_percentage !== undefined ? 
-                              `${item.success_percentage.toFixed(1)}%` : 'Pendiente'}
+                              `${(item.success_percentage || 0).toFixed(1)}%` : 'Pendiente'}
                           </p>
                         </div>
                       </div>
@@ -1906,7 +2032,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                 <Target className="w-4 h-4" style={{ color: 'var(--success-color)' }} />
                 <p className="text-sm font-medium" style={{ color: 'var(--secondary-text)' }}>Precisión</p>
               </div>
-              <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{modelInfo.accuracy.toFixed(1)}%</p>
+                                  <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{(modelInfo.accuracy || 0).toFixed(1)}%</p>
             </div>
             <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.3)' }}>
               <div className="flex items-center gap-2 mb-2">
@@ -1945,34 +2071,23 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
               <div key={index} className="rounded-xl p-4 hover:bg-purple-700/30 transition-all duration-200 border" style={{ backgroundColor: 'rgba(147, 51, 234, 0.2)', borderColor: 'rgba(147, 51, 234, 0.3)' }}>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg`} style={{
-                      backgroundColor: prediction.direction === 'up' ? 'rgba(34, 197, 94, 0.2)' :
-                      prediction.direction === 'down' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(100, 116, 139, 0.2)',
-                      color: prediction.direction === 'up' ? 'var(--success-color)' :
-                      prediction.direction === 'down' ? 'var(--danger-color)' : 'var(--secondary-text)',
-                      boxShadow: prediction.direction === 'up' ? '0 10px 25px rgba(34, 197, 94, 0.25)' :
-                      prediction.direction === 'down' ? '0 10px 25px rgba(239, 68, 68, 0.25)' : '0 10px 25px rgba(100, 116, 139, 0.25)'
-                    }}>
-                      {prediction.direction === 'up' ? <TrendingUp className="w-6 h-6" /> :
-                       prediction.direction === 'down' ? <TrendingDown className="w-6 h-6" /> :
-                       <Activity className="w-6 h-6" />}
-                    </div>
+                    <DirectionIcon direction={prediction.direction} size={48} />
                     
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-lg" style={{ color: 'var(--primary-text)' }}>{prediction.pair}</p>
                       <p className="text-sm line-clamp-2" style={{ color: 'var(--secondary-text)' }}>{prediction.reasoning}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#a855f7' }}></div>
-                        <p className="text-xs" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Colaboración: {(prediction.collaboration_score * 100).toFixed(1)}%</p>
+                        <p className="text-xs" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Colaboración: {((prediction.collaboration_score || 0) * 100).toFixed(1)}%</p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="text-right">
                     <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
-                      <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>${prediction.target_price.toFixed(4)}</p>
-                      <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{prediction.confidence.toFixed(1)}% confianza</p>
-                      <p className="text-xs" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Método: {prediction.fusion_method}</p>
+                      <p className="font-bold text-lg" style={{ color: 'var(--primary-text)' }}>{(prediction.precision || 0).toFixed(1)}% precisión</p>
+                      <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{(prediction.confidence || 0).toFixed(1)}% confianza</p>
+                      <p className="text-xs" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Win Rate: {(prediction.win_rate || 0).toFixed(1)}%</p>
                     </div>
                   </div>
                 </div>
@@ -1990,11 +2105,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
                   <p className="font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Score</p>
-                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{(megaMindCollaboration.collaboration_score * 100).toFixed(1)}%</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{((megaMindCollaboration.collaboration_score || 0) * 100).toFixed(1)}%</p>
                 </div>
                 <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
                   <p className="font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Consenso</p>
-                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{(megaMindCollaboration.consensus_level * 100).toFixed(1)}%</p>
+                  <p className="font-semibold" style={{ color: 'var(--primary-text)' }}>{((megaMindCollaboration.consensus_level || 0) * 100).toFixed(1)}%</p>
                 </div>
                 <div className="rounded-lg p-2" style={{ backgroundColor: 'rgba(147, 51, 234, 0.3)' }}>
                   <p className="font-medium" style={{ color: 'rgba(147, 51, 234, 0.8)' }}>Estado</p>

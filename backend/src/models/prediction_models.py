@@ -22,8 +22,9 @@ class UserPrediction(Base):
     pair = Column(String(10), nullable=False)
     direction = Column(Enum(PredictionDirection), nullable=False)
     current_price = Column(DECIMAL(10, 5), nullable=False)
-    target_price = Column(DECIMAL(10, 5), nullable=False)
     confidence = Column(DECIMAL(5, 2), nullable=False)
+    precision = Column(DECIMAL(5, 2), nullable=False, default=0.0)
+    win_rate = Column(DECIMAL(5, 2), nullable=False, default=0.0)
     timeframe = Column(String(10), default='15M')
     reasoning = Column(Text)
     brain_type = Column(String(20), nullable=False)
@@ -48,36 +49,45 @@ class UserPrediction(Base):
         return datetime.utcnow() > self.expires_at
     
     def calculate_success(self, actual_price):
-        """Calculate if prediction was successful"""
+        """Calculate if prediction was successful based on direction"""
+        current_price = float(self.current_price)
+        price_change = actual_price - current_price
+        price_change_percent = (price_change / current_price) * 100
+        
         if self.direction == PredictionDirection.UP:
-            return actual_price >= self.target_price
+            # Predicción exitosa si el precio subió más del 0.01% (1 pip)
+            return price_change_percent > 0.01
         elif self.direction == PredictionDirection.DOWN:
-            return actual_price <= self.target_price
+            # Predicción exitosa si el precio bajó más del 0.01% (1 pip)
+            return price_change_percent < -0.01
         else:  # SIDEWAYS
-            threshold = float(self.current_price) * 0.001  # 0.1% threshold
-            return abs(actual_price - float(self.current_price)) <= threshold
+            # Predicción exitosa si el precio se movió menos del 0.05% (5 pips)
+            return abs(price_change_percent) <= 0.05
     
     def calculate_success_percentage(self, actual_price):
         """Calculate success percentage based on price movement"""
+        current_price = float(self.current_price)
+        price_change = actual_price - current_price
+        price_change_percent = (price_change / current_price) * 100
+        
         if self.direction == PredictionDirection.UP:
-            if actual_price >= self.target_price:
+            if price_change_percent > 0.01:
                 return 100.0
             else:
-                movement = (actual_price - float(self.current_price)) / (float(self.target_price) - float(self.current_price))
-                return max(0, min(100, movement * 100))
+                # Calcular porcentaje basado en qué tan cerca estuvo de subir
+                return max(0, min(100, (price_change_percent + 0.01) / 0.02 * 100))
         elif self.direction == PredictionDirection.DOWN:
-            if actual_price <= self.target_price:
+            if price_change_percent < -0.01:
                 return 100.0
             else:
-                movement = (float(self.current_price) - actual_price) / (float(self.current_price) - float(self.target_price))
-                return max(0, min(100, movement * 100))
+                # Calcular porcentaje basado en qué tan cerca estuvo de bajar
+                return max(0, min(100, (-price_change_percent + 0.01) / 0.02 * 100))
         else:  # SIDEWAYS
-            threshold = float(self.current_price) * 0.001
-            deviation = abs(actual_price - float(self.current_price))
-            if deviation <= threshold:
+            if abs(price_change_percent) <= 0.05:
                 return 100.0
             else:
-                return max(0, 100 - (deviation / threshold) * 100)
+                # Calcular porcentaje basado en qué tan estable estuvo el precio
+                return max(0, 100 - (abs(price_change_percent) - 0.05) / 0.05 * 100)
 
 class UserPredictionLimit(Base):
     __tablename__ = 'user_prediction_limits'

@@ -179,7 +179,8 @@ class PredictionResponse(BaseModel):
     pair: str
     direction: str
     confidence: float
-    target_price: float
+    precision: float
+    win_rate: float
     timeframe: str
     reasoning: str
     brain_type: str

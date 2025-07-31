@@ -5,7 +5,8 @@ export interface BrainTraderPrediction {
   pair: string;
   direction: 'up' | 'down' | 'sideways';
   confidence: number;
-  target_price: number;
+  precision: number;
+  win_rate: number;
   timeframe: string;
   reasoning: string;
   brain_type: string;
@@ -145,8 +146,9 @@ export interface PredictionHistoryItem {
   pair: string;
   direction: string;
   current_price: number;
-  target_price: number;
   confidence: number;
+  precision: number;
+  win_rate: number;
   timeframe: string;
   reasoning: string;
   brain_type: string;  // ✅ Agregada propiedad brain_type

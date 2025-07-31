@@ -196,23 +196,19 @@ class PredictionService:
                     # Usar predicción del modelo entrenado
                     direction = prediction_result['direction']
                     confidence = prediction_result.get('confidence', 75.0)
-                    target_price = prediction_result.get('target_price', current_price * (1 + 0.001))
+                    precision = prediction_result.get('precision', 0.0)
+                    win_rate = prediction_result.get('win_rate', 0.0)
                     reasoning = prediction_result.get('reasoning', f"Predicción de {brain_type} para {pair}")
                     
-                    self.logger.info(f"Predicción generada con {brain_type}: {direction} - {confidence:.2f}%")
+                    self.logger.info(f"Predicción generada con {brain_type}: {direction} - {confidence:.2f}% - Precision: {precision:.1f}% - Win Rate: {win_rate:.1f}%")
                 else:
-                    # Fallback a predicción básica
-                    self.logger.warning(f"No se pudo obtener predicción de {brain_type}, usando fallback")
-                    direction = "up" if np.random.random() > 0.5 else "down"
-                    confidence = np.random.uniform(60, 95)
-                    target_price = current_price * (1 + (0.001 if direction == "up" else -0.001))
-                    reasoning = f"Análisis técnico básico para {pair} usando {brain_type} - {direction.upper()}"
+                    # No usar fallback - solo datos reales
+                    self.logger.error(f"No se pudo obtener predicción real de {brain_type}")
+                    return {}
             else:
-                # Predicción básica para otros tipos de cerebro
-                direction = "up" if np.random.random() > 0.5 else "down"
-                confidence = np.random.uniform(60, 95)
-                target_price = current_price * (1 + (0.001 if direction == "up" else -0.001))
-                reasoning = f"Análisis técnico para {pair} usando {brain_type} - {direction.upper()}"
+                # No usar fallback - solo datos reales
+                self.logger.error(f"Brain type {brain_type} no soportado o no disponible")
+                return {}
             
             # Crear predicción con precio actual real
             prediction = {
@@ -220,8 +216,9 @@ class PredictionService:
                 "pair": pair,
                 "direction": direction,
                 "current_price": current_price,  # Precio real capturado
-                "target_price": target_price,
                 "confidence": confidence,
+                "precision": precision if 'precision' in locals() else 0.0,
+                "win_rate": win_rate if 'win_rate' in locals() else 0.0,
                 "timeframe": self.style_timeframes.get(style, "15M"),
                 "reasoning": reasoning,
                 "brain_type": brain_type,
@@ -312,8 +309,9 @@ class PredictionService:
                         pair,
                         direction,
                         current_price,
-                        target_price,
                         confidence,
+                        `precision`,
+                        win_rate,
                         timeframe,
                         reasoning,
                         brain_type,
@@ -341,17 +339,18 @@ class PredictionService:
                         "pair": row[1],
                         "direction": row[2],
                         "current_price": float(row[3]) if row[3] else 0.0,
-                        "target_price": float(row[4]) if row[4] else 0.0,
-                        "confidence": float(row[5]) if row[5] else 0.0,
-                        "timeframe": row[6],
-                        "reasoning": row[7],
-                        "brain_type": row[8],
-                        "created_at": row[9].isoformat() if row[9] else "",
-                        "expires_at": row[10].isoformat() if row[10] else "",
-                        "is_completed": bool(row[11]),
-                        "actual_price_at_expiry": float(row[12]) if row[12] else None,
-                        "prediction_success": bool(row[13]) if row[13] is not None else None,
-                        "success_percentage": float(row[14]) if row[14] else None
+                        "confidence": float(row[4]) if row[4] else 0.0,
+                        "precision": float(row[5]) if row[5] else 0.0,
+                        "win_rate": float(row[6]) if row[6] else 0.0,
+                        "timeframe": row[7],
+                        "reasoning": row[8],
+                        "brain_type": row[9],
+                        "created_at": row[10].isoformat() if row[10] else "",
+                        "expires_at": row[11].isoformat() if row[11] else "",
+                        "is_completed": bool(row[12]),
+                        "actual_price_at_expiry": float(row[13]) if row[13] else None,
+                        "prediction_success": bool(row[14]) if row[14] is not None else None,
+                        "success_percentage": float(row[15]) if row[15] else None
                     })
                 
                 return history

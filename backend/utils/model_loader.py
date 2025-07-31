@@ -92,6 +92,19 @@ class ModelLoader:
             # Usar el primer scaler como referencia (o None si no hay)
             scaler = scalers.get('lgb') if 'lgb' in scalers else (list(scalers.values())[0] if scalers else None)
             
+            # Cargar metadatos del modelo si existen
+            metadata_file = model_dir / "metadata.json"
+            trading_results = {}
+            if metadata_file.exists():
+                try:
+                    import json
+                    with open(metadata_file, 'r') as f:
+                        metadata = json.load(f)
+                    trading_results = metadata.get('trading_results', {})
+                    logger.info(f"Loaded metadata for {model_key}: {trading_results}")
+                except Exception as e:
+                    logger.warning(f"Error loading metadata for {model_key}: {e}")
+            
             # Información del modelo
             model_info = {
                 'name': 'Brain Max',
@@ -100,7 +113,8 @@ class ModelLoader:
                 'version': '1.0.0',
                 'accuracy': self._get_model_accuracy(pair, style),
                 'last_training': self._get_last_training_date(model_file),
-                'features': self._get_model_features(pair, style)
+                'features': self._get_model_features(pair, style),
+                'trading_results': trading_results
             }
             
             # Guardar en cache
@@ -147,6 +161,19 @@ class ModelLoader:
             with open(scaler_file, 'rb') as f:
                 scaler = pickle.load(f)
             
+            # Cargar metadatos del modelo si existen
+            metadata_file = model_file.parent / "metadata.json"
+            trading_results = {}
+            if metadata_file.exists():
+                try:
+                    import json
+                    with open(metadata_file, 'r') as f:
+                        metadata = json.load(f)
+                    trading_results = metadata.get('trading_results', {})
+                    logger.info(f"Loaded metadata for {model_key}: {trading_results}")
+                except Exception as e:
+                    logger.warning(f"Error loading metadata for {model_key}: {e}")
+            
             # Información del modelo
             model_info = {
                 'name': 'Brain Ultra',
@@ -155,7 +182,8 @@ class ModelLoader:
                 'version': '2.0.0',
                 'accuracy': self._get_model_accuracy(pair, style),
                 'last_training': self._get_last_training_date(model_file),
-                'features': self._get_model_features(pair, style)
+                'features': self._get_model_features(pair, style),
+                'trading_results': trading_results
             }
             
             # Guardar en cache
@@ -202,6 +230,19 @@ class ModelLoader:
             with open(scaler_file, 'rb') as f:
                 scaler = pickle.load(f)
             
+            # Cargar metadatos del modelo si existen
+            metadata_file = model_file.parent / "metadata.json"
+            trading_results = {}
+            if metadata_file.exists():
+                try:
+                    import json
+                    with open(metadata_file, 'r') as f:
+                        metadata = json.load(f)
+                    trading_results = metadata.get('trading_results', {})
+                    logger.info(f"Loaded metadata for {model_key}: {trading_results}")
+                except Exception as e:
+                    logger.warning(f"Error loading metadata for {model_key}: {e}")
+            
             # Información del modelo
             model_info = {
                 'name': 'Brain Predictor',
@@ -210,7 +251,8 @@ class ModelLoader:
                 'version': '3.0.0',
                 'accuracy': self._get_model_accuracy(pair, "predictive"),
                 'last_training': self._get_last_training_date(model_file),
-                'features': self._get_model_features(pair, "predictive")
+                'features': self._get_model_features(pair, "predictive"),
+                'trading_results': trading_results
             }
             
             # Guardar en cache

@@ -203,11 +203,13 @@ class PredictionResponse(BaseModel):
     pair: str
     direction: str
     confidence: float
-    target_price: float
+    precision: float
+    win_rate: float
     timeframe: str
     reasoning: str
     brain_type: str
     timestamp: str
+    expires_at: str
 
 class SignalResponse(BaseModel):
     pair: str
@@ -235,7 +237,8 @@ class MegaMindPredictionResponse(BaseModel):
     pair: str
     direction: str
     confidence: float
-    target_price: float
+    precision: float
+    win_rate: float
     timeframe: str
     reasoning: str
     brain_type: str
@@ -243,6 +246,7 @@ class MegaMindPredictionResponse(BaseModel):
     collaboration_score: float
     fusion_details: dict
     timestamp: str
+    expires_at: str
 
 # Clases del sistema de IA
 class DataCollector:
@@ -889,34 +893,20 @@ async def get_available_brains(plan_type: str = "starter"):
 
 @app.get("/api/v1/brain-trader/predictions/{brain_type}")
 async def get_predictions(brain_type: str, pair: str = "EURUSD", style: str = "day_trading", limit: int = 5):
-    valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind']
-    if brain_type not in valid_brain_types:
-        raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
-    
-    predictions = []
-    base_price = 1.0925 if pair == 'EURUSD' else 1.2500
-    
-    for i in range(min(limit, 5)):
-        direction = random.choice(['up', 'down', 'sideways'])
-        confidence = random.uniform(70, 95)
-        if brain_type == 'mega_mind':
-            confidence = random.uniform(90, 98)
+    """Endpoint de predicciones - Usar el servicio real en lugar de datos mock"""
+    try:
+        # Validar brain type
+        valid_brain_types = ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind']
+        if brain_type not in valid_brain_types:
+            raise HTTPException(status_code=400, detail=f"Brain type must be one of: {valid_brain_types}")
         
-        target_price = base_price + (random.uniform(-0.01, 0.01))
+        # Usar el servicio real de brain trader
+        predictions = await brain_trader_service.get_predictions(brain_type, pair, style, limit)
+        return predictions
         
-        prediction = PredictionResponse(
-            pair=pair,
-            direction=direction,
-            confidence=confidence,
-            target_price=target_price,
-            timeframe='1H',
-            reasoning=f'Análisis técnico basado en {brain_type} - {direction.upper()}',
-            brain_type=brain_type,
-            timestamp=datetime.now().isoformat()
-        )
-        predictions.append(prediction)
-    
-    return predictions
+    except Exception as e:
+        logger.error(f"Error getting predictions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/brain-trader/trends/{brain_type}")
 async def get_trends(brain_type: str, pair: str = "EURUSD", limit: int = 3):
@@ -938,39 +928,15 @@ async def get_trends(brain_type: str, pair: str = "EURUSD", limit: int = 3):
 # ===== MEGA MIND ENDPOINTS =====
 @app.get("/api/v1/mega-mind/predictions")
 async def get_mega_mind_predictions(pair: str = "EURUSD", style: str = "day_trading", limit: int = 5):
-    predictions = []
-    base_price = 1.0925 if pair == 'EURUSD' else 1.2500
-    
-    for i in range(min(limit, 5)):
-        direction = random.choice(['up', 'down', 'sideways'])
-        confidence = random.uniform(90, 98)  # MEGA MIND tiene mayor precisión
-        target_price = base_price + (random.uniform(-0.01, 0.01))
+    """Endpoint de predicciones MEGA MIND - Usar el servicio real"""
+    try:
+        # Usar el servicio real de brain trader para MEGA MIND
+        predictions = await brain_trader_service.get_predictions('mega_mind', pair, style, limit)
+        return predictions
         
-        # Simular detalles de fusión
-        fusion_details = {
-            'brain_max_confidence': random.uniform(75, 88),
-            'brain_ultra_confidence': random.uniform(80, 92),
-            'brain_predictor_confidence': random.uniform(85, 94),
-            'consensus_level': random.uniform(0.6, 1.0),
-            'collaboration_boost': 1.2
-        }
-        
-        prediction = MegaMindPredictionResponse(
-            pair=pair,
-            direction=direction,
-            confidence=confidence,
-            target_price=target_price,
-            timeframe='Multi-TF',
-            reasoning=f'MEGA MIND fusion: {direction.upper()} consensus',
-            brain_type='mega_mind',
-            fusion_method='weighted_consensus',
-            collaboration_score=random.uniform(0.85, 0.98),
-            fusion_details=fusion_details,
-            timestamp=datetime.now().isoformat()
-        )
-        predictions.append(prediction)
-    
-    return predictions
+    except Exception as e:
+        logger.error(f"Error getting MEGA MIND predictions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/mega-mind/collaboration")
 async def get_brain_collaboration(pair: str = "EURUSD"):
