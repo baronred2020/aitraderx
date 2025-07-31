@@ -171,6 +171,16 @@ export interface PredictionLimits {
   has_unlimited?: boolean;
 }
 
+export interface SignalLimits {
+  can_generate: boolean;
+  remaining_signals: number;
+  max_signals_per_day: number;
+  plan_type: string;
+  style: string;
+  timeframe: string;
+  has_unlimited: boolean;
+}
+
 export interface UserStats {
   total_predictions: number;
   successful_predictions: number;
@@ -397,7 +407,9 @@ class ApiService {
   async generateSignal(
     brainType: string,
     pair: string = 'EURUSD',
-    style: string = 'day_trading'
+    style: string = 'day_trading',
+    userId?: string,
+    planType: string = 'starter'
   ): Promise<{
     success: boolean;
     signal?: BrainTraderSignal;
@@ -421,13 +433,38 @@ class ApiService {
     strength?: string;
     confidence?: number;
     entry_price?: number;
+    // Campos de límites de señales
+    remaining_signals?: number;
+    max_signals_per_day?: number;
+    upgrade_required?: boolean;
   }> {
-    return this.request(`/brain-trader/signals/${brainType}/generate?pair=${pair}&style=${style}`, {
+    const params = new URLSearchParams({
+      pair,
+      style,
+      ...(userId && { user_id: userId }),
+      plan_type: planType
+    });
+    
+    return this.request(`/brain-trader/signals/${brainType}/generate?${params.toString()}`, {
       method: 'POST'
     });
   }
 
   // Get signal intervals information
+  async getSignalLimits(
+    brainType: string,
+    userId: string,
+    planType: string = 'starter',
+    style: string = 'day_trading'
+  ): Promise<SignalLimits> {
+    const params = new URLSearchParams({
+      user_id: userId,
+      plan_type: planType,
+      style
+    });
+    return this.request(`/brain-trader/signals/${brainType}/limits?${params.toString()}`);
+  }
+
   async getSignalIntervals(
     brainType: string,
     style: string = 'day_trading'

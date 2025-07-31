@@ -31,6 +31,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import { useBrainTraderApi } from '../../hooks/useBrainTraderApi';
 import { useYahooMarketData } from '../../hooks/useYahooMarketData';
+import { useSignalLimits } from '../../hooks/useSignalLimits';
 import { apiService } from '../../services/api';
 import type { PredictionHistoryItem, PredictionLimits, UserStats, BrainTraderSignal } from '../../services/api';
 
@@ -135,6 +136,19 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const [activeTab, setActiveTab] = useState<'predictions' | 'signals' | 'trends' | 'history'>('predictions');
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  // Hook para límites de señales
+  const {
+    limits: signalLimits,
+    loading: signalLimitsLoading,
+    error: signalLimitsError,
+    checkLimits: checkSignalLimits,
+    generateSignal: generateSignalWithLimits,
+    canGenerate: canGenerateSignal,
+    remainingSignals,
+    maxSignals,
+    hasUnlimited: hasUnlimitedSignals
+  } = useSignalLimits(activeBrain, selectedStyle);
 
   // Estados para el sistema de señales manuales
   const [isGeneratingSignal, setIsGeneratingSignal] = useState(false);
@@ -480,6 +494,12 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     }
   }, [selectedStyle, activeBrain, useIntervals]);
 
+  // Efecto para recargar límites de señales cuando cambie el brain o style
+  useEffect(() => {
+    console.log('Recargando límites de señales...', { activeBrain, selectedStyle });
+    checkSignalLimits();
+  }, [activeBrain, selectedStyle, checkSignalLimits]);
+
   // Debug: Log cuando cambian las señales
   useEffect(() => {
     console.log('🔍 Señales actualizadas:', signals.length, 'signals:', signals);
@@ -702,11 +722,7 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     try {
       console.log('🔍 Generando señal...', { activeBrain, selectedPair, selectedStyle });
       
-      const response = await apiService.generateSignal(
-        activeBrain,
-        selectedPair,
-        selectedStyle
-      );
+      const response = await generateSignalWithLimits(selectedPair);
       
       console.log('🔍 Respuesta del backend:', response);
       
@@ -739,7 +755,14 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
         console.log('🔍 Señal agregada, signals actual:', signals);
       } else {
         setSignalQuality(response.signal_quality || 0);
-        setSignalMessage(response.message || 'Error generando señal');
+        
+        // Manejar mensajes de límites alcanzados
+        if (response.upgrade_required) {
+          setSignalMessage(`Límite alcanzado. ${response.message || 'Actualiza tu plan para más señales.'}`);
+        } else {
+          setSignalMessage(response.message || 'Error generando señal');
+        }
+        
         console.log('❌ Respuesta no exitosa:', response);
       }
     } catch (error) {
@@ -771,6 +794,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   };
 
   const isSignalTime = () => {
+    // Verificar si puede generar señales según límites
+    if (!canGenerateSignal) {
+      return false;
+    }
+    
     // Para el plan Starter, permitir siempre generar señales para testing
     if (!subscription || subscription.status !== 'active' || subscription.planType === 'starter') {
       return true;
@@ -1340,6 +1368,27 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                   <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>
                     {selectedStyle.replace('_', ' ').toUpperCase()} - {signalIntervals?.timeframe || '15M'} intervalos
                   </p>
+                  
+                  {/* Información de límites de señales */}
+                  {signalLimits && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Target className="w-3 h-3 text-blue-400" />
+                        <span className="text-xs text-blue-400">
+                          {hasUnlimitedSignals ? (
+                            'Señales ilimitadas'
+                          ) : (
+                            `${remainingSignals}/${maxSignals} señales restantes`
+                          )}
+                        </span>
+                      </div>
+                      {signalLimitsError && (
+                        <span className="text-xs text-red-400">
+                          Error: {signalLimitsError}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="text-right">
@@ -1354,9 +1403,9 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
               
               <button
                 onClick={generateSignal}
-                disabled={isGeneratingSignal || !isSignalTime()}
+                disabled={isGeneratingSignal || !isSignalTime() || !canGenerateSignal}
                 className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
-                  isSignalTime() && !isGeneratingSignal
+                  isSignalTime() && !isGeneratingSignal && canGenerateSignal
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
                     : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 }`}
@@ -1391,6 +1440,18 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                       Se requiere calidad mínima del 70% para mostrar la señal
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Mensaje de límites alcanzados */}
+              {signalLimits && !canGenerateSignal && !hasUnlimitedSignals && (
+                <div className="mt-3 p-3 rounded-lg bg-yellow-500/20 border border-yellow-500/30">
+                  <p className="text-sm font-medium text-yellow-400">
+                    🚫 Límite de señales alcanzado
+                  </p>
+                  <p className="text-xs text-yellow-300 mt-1">
+                    Has usado todas tus {maxSignals} señales del día. Actualiza tu plan para más señales.
+                  </p>
                 </div>
               )}
 

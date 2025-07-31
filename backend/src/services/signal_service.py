@@ -8,6 +8,9 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+import os
 from models.signal_models import UserSignal, UserSignalLimit, SignalType, SignalStrength
 
 logger = logging.getLogger(__name__)
@@ -15,9 +18,24 @@ logger = logging.getLogger(__name__)
 class SignalService:
     """Servicio para manejar señales de trading"""
     
-    def __init__(self, db_session=None):
+    def __init__(self, database_url: str = None):
         self.logger = logging.getLogger(__name__)
-        self.db_session = db_session
+        
+        # Configurar conexión a base de datos
+        if database_url:
+            self.database_url = database_url
+        else:
+            # Usar variables de entorno por defecto
+            db_host = os.getenv('DB_HOST', 'localhost')
+            db_user = os.getenv('DB_USER', 'root')
+            db_password = os.getenv('DB_PASSWORD', 'root')
+            db_name = os.getenv('DB_NAME', 'trading_db')
+            self.database_url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}"
+        
+        # Crear engine y session factory
+        self.engine = create_engine(self.database_url)
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        
         self.style_timeframes = {
             'scalping': '5M',
             'day_trading': '15M',
@@ -30,6 +48,23 @@ class SignalService:
             'swing_trading': 60,
             'position_trading': 1440
         }
+        
+        # Probar conexión
+        self._test_connection()
+    
+    def _test_connection(self):
+        """Verificar conexión a la base de datos"""
+        try:
+            with self.engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            self.logger.info("✅ Conexión a MySQL establecida para SignalService")
+        except Exception as e:
+            self.logger.error(f"❌ Error conectando a MySQL en SignalService: {e}")
+            raise
+    
+    def get_db_session(self) -> Session:
+        """Obtener sesión de base de datos"""
+        return self.SessionLocal()
     
     async def can_generate_signal(self, user_id: str, style: str = "day_trading", plan_type: str = "starter") -> Dict[str, Any]:
         """Verificar si el usuario puede generar una señal"""
@@ -93,8 +128,7 @@ class SignalService:
     def increment_signal_usage(self, user_id: str) -> bool:
         """Incrementar el contador de uso de señales del usuario"""
         try:
-            # Mock increment for now
-            return True
+            return self._update_signal_usage(user_id)
         except Exception as e:
             self.logger.error(f"Error incrementing signal usage: {e}")
             return False
@@ -223,8 +257,24 @@ class SignalService:
     def _get_signals_used_today(self, user_id: str) -> int:
         """Obtener número de señales usadas hoy por el usuario"""
         try:
-            # Mock data for now - in real implementation, query database
-            return 0
+            with self.get_db_session() as session:
+                # Consultar la tabla user_signal_limits
+                query = text("""
+                    SELECT signals_used_today 
+                    FROM user_signal_limits 
+                    WHERE user_id = :user_id
+                """)
+                
+                result = session.execute(query, {"user_id": user_id}).fetchone()
+                
+                if result:
+                    signals_used = result[0] or 0
+                    self.logger.info(f"Usuario {user_id} ha usado {signals_used} señales hoy")
+                    return signals_used
+                else:
+                    self.logger.warning(f"No se encontraron límites para usuario {user_id}")
+                    return 0
+                
         except Exception as e:
             self.logger.error(f"Error getting signals used today: {e}")
             return 0
@@ -232,8 +282,25 @@ class SignalService:
     def _update_signal_usage(self, user_id: str) -> bool:
         """Actualizar el contador de uso de señales"""
         try:
-            # Mock update for now
-            return True
+            with self.get_db_session() as session:
+                # Actualizar el contador de señales usadas hoy
+                query = text("""
+                    UPDATE user_signal_limits 
+                    SET signals_used_today = signals_used_today + 1,
+                        last_reset_date = CURRENT_DATE
+                    WHERE user_id = :user_id
+                """)
+                
+                result = session.execute(query, {"user_id": user_id})
+                session.commit()
+                
+                if result.rowcount > 0:
+                    self.logger.info(f"Contador de señales actualizado para usuario {user_id}")
+                    return True
+                else:
+                    self.logger.warning(f"No se pudo actualizar contador para usuario {user_id}")
+                    return False
+                
         except Exception as e:
             self.logger.error(f"Error updating signal usage: {e}")
             return False 
