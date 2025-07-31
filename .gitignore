@@ -25,3 +25,9 @@ Thumbs.db
 # Frontend específico
 frontend/node_modules/
 frontend/.cache/
+
+# Modelos grandes - excluir del repositorio
+*.pkl
+backend/models/trained_models/**/*.pkl
+backend/models/backup_models_20250730_175237/**/*.pkl
+backend/models/backup/**/*.pkl
