@@ -192,6 +192,41 @@ export interface UserStats {
   total_predictions_today: number;
 }
 
+export interface RealMetrics {
+  total_predictions: number;
+  successful_predictions: number;
+  win_rate: number;
+  precision: number;
+  average_confidence: number;
+  average_success_percentage: number;
+  best_pair: string | null;
+  best_brain_type: string | null;
+  recent_performance: Array<{
+    id: number;
+    pair: string;
+    direction: string;
+    prediction_success: boolean;
+    success_percentage: number;
+    confidence: number;
+    brain_type: string;
+    created_at: string;
+  }>;
+  metrics_by_pair: Record<string, {
+    total_predictions: number;
+    successful_predictions: number;
+    win_rate: number;
+    precision: number;
+    average_confidence: number;
+  }>;
+  metrics_by_brain: Record<string, {
+    total_predictions: number;
+    successful_predictions: number;
+    win_rate: number;
+    precision: number;
+    average_confidence: number;
+  }>;
+}
+
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     // Asegurar que el endpoint no comience con /api/v1 para evitar duplicación
@@ -506,6 +541,31 @@ class ApiService {
     timeframe: string;
   }> {
     return this.request(`/brain-trader/predictions/${brainType}/next-interval?style=${style}`);
+  }
+
+  // ===== MÉTRICAS REALES APIs =====
+
+  async getRealMetrics(
+    brainType?: string,
+    pair?: string,
+    style?: string
+  ): Promise<RealMetrics> {
+    const params = new URLSearchParams();
+    if (brainType) params.append('brain_type', brainType);
+    if (pair) params.append('pair', pair);
+    if (style) params.append('style', style);
+    
+    return this.request(`/predictions/real-metrics?${params.toString()}`);
+  }
+
+  async completeExpiredPredictionsWithRealResults(): Promise<{
+    total_expired: number;
+    completed: number;
+    failed: number;
+  }> {
+    return this.request('/predictions/complete-expired-with-real-results', {
+      method: 'POST'
+    });
   }
 
   // ===== FIN PREDICTION-SPECIFIC APIs =====

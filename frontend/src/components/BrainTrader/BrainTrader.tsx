@@ -35,6 +35,7 @@ import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import { useBrainTraderApi } from '../../hooks/useBrainTraderApi';
 import { useYahooMarketData } from '../../hooks/useYahooMarketData';
 import { useSignalLimits } from '../../hooks/useSignalLimits';
+import { useRealMetrics } from '../../hooks/useRealMetrics';
 import { apiService } from '../../services/api';
 import type { PredictionHistoryItem, PredictionLimits, UserStats, BrainTraderSignal } from '../../services/api';
 
@@ -222,6 +223,15 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
     maxSignals,
     hasUnlimited: hasUnlimitedSignals
   } = useSignalLimits(activeBrain, selectedStyle);
+
+  // Hook para métricas reales
+  const {
+    metrics: realMetrics,
+    loading: realMetricsLoading,
+    error: realMetricsError,
+    refetch: refetchRealMetrics,
+    completeExpiredPredictions: completeExpiredWithRealResults
+  } = useRealMetrics(activeBrain, selectedPair, selectedStyle);
 
   // Estados para el sistema de señales manuales
   const [isGeneratingSignal, setIsGeneratingSignal] = useState(false);
@@ -1267,21 +1277,75 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                 {currentPrediction && (
                   <>
                     <div className="bg-white rounded-lg p-4">
-                      <h5 className="font-semibold text-gray-700 mb-2">Métricas del Modelo</h5>
+                      <h5 className="font-semibold text-gray-700 mb-2 flex items-center justify-between">
+                        <span>Métricas del Modelo</span>
+                        {realMetrics && realMetrics.total_predictions > 0 && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            📊 Reales
+                          </span>
+                        )}
+                      </h5>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Precisión</p>
-                          <p className="text-lg font-bold text-blue-600">{(currentPrediction.precision || 0).toFixed(1)}%</p>
+                          <p className="text-lg font-bold text-blue-600">
+                            {realMetrics && realMetrics.total_predictions > 0 
+                              ? `${realMetrics.precision.toFixed(1)}%` 
+                              : `${(currentPrediction.precision || 0).toFixed(1)}%`
+                            }
+                          </p>
+                          {realMetrics && realMetrics.total_predictions > 0 && (
+                            <p className="text-xs text-gray-500">Basada en {realMetrics.total_predictions} predicciones</p>
+                          )}
                         </div>
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Win Rate</p>
-                          <p className="text-lg font-bold text-green-600">{(currentPrediction.win_rate || 0).toFixed(1)}%</p>
+                          <p className="text-lg font-bold text-green-600">
+                            {realMetrics && realMetrics.total_predictions > 0 
+                              ? `${realMetrics.win_rate.toFixed(1)}%` 
+                              : `${(currentPrediction.win_rate || 0).toFixed(1)}%`
+                            }
+                          </p>
+                          {realMetrics && realMetrics.total_predictions > 0 && (
+                            <p className="text-xs text-gray-500">{realMetrics.successful_predictions}/{realMetrics.total_predictions} exitosas</p>
+                          )}
                         </div>
                       </div>
+                      
+                      {realMetrics && realMetrics.total_predictions > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <div className="grid grid-cols-2 gap-4 text-xs">
+                            <div className="text-center">
+                              <p className="text-gray-600">Confianza Promedio</p>
+                              <p className="font-semibold text-purple-600">{realMetrics.average_confidence.toFixed(1)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-gray-600">Mejor Par</p>
+                              <p className="font-semibold text-indigo-600">{realMetrics.best_pair || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="bg-white rounded-lg p-4">
-                      <h5 className="font-semibold text-gray-700 mb-2">Estado de Predicción</h5>
+                      <h5 className="font-semibold text-gray-700 mb-2 flex items-center justify-between">
+                        <span>Estado de Predicción</span>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await completeExpiredWithRealResults();
+                              await refetchRealMetrics();
+                            } catch (error) {
+                              console.error('Error completing predictions:', error);
+                            }
+                          }}
+                          disabled={realMetricsLoading}
+                          className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full hover:bg-blue-200 disabled:opacity-50"
+                        >
+                          {realMetricsLoading ? '🔄' : '🔄 Actualizar'}
+                        </button>
+                      </h5>
                       <div className="flex items-center">
                         {(() => {
                           const currentPrice = getCurrentPrice(selectedPair);
@@ -1763,13 +1827,34 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
             {/* Historial de Predicciones */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-semibold text-gray-800">Historial de Predicciones</h4>
+                <div className="flex items-center gap-4">
+                  <h4 className="text-lg font-semibold text-gray-800">Historial de Predicciones</h4>
+                  {realMetrics && realMetrics.total_predictions > 0 && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                        📊 Métricas Reales
+                      </span>
+                      <span className="text-gray-600">
+                        {realMetrics.win_rate.toFixed(1)}% éxito ({realMetrics.successful_predictions}/{realMetrics.total_predictions})
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <button
-                  onClick={completeExpiredPredictions}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  onClick={async () => {
+                    try {
+                      await completeExpiredWithRealResults();
+                      await refetchRealMetrics();
+                      await loadPredictionHistory();
+                    } catch (error) {
+                      console.error('Error completing predictions:', error);
+                    }
+                  }}
+                  disabled={realMetricsLoading}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
-                  <Clock className="w-4 h-4" />
-                  Completar Expiradas
+                  {realMetricsLoading ? '🔄' : '🔄'}
+                  Actualizar Métricas
                 </button>
               </div>
               {isLoadingHistory ? (
@@ -1915,6 +2000,85 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                         </div>
                       </div>
                       
+                      {/* Métricas reales del modelo */}
+                      {realMetrics && realMetrics.total_predictions > 0 && (
+                        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 mb-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h6 className="font-semibold text-gray-800 flex items-center gap-2">
+                              📊 Métricas Reales del Modelo
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                Basadas en {realMetrics.total_predictions} predicciones
+                              </span>
+                            </h6>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center">
+                              <p className="text-sm font-medium text-gray-600">Win Rate Real</p>
+                              <p className="font-bold text-lg text-green-600">
+                                {realMetrics.win_rate.toFixed(1)}%
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {realMetrics.successful_predictions}/{realMetrics.total_predictions} exitosas
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm font-medium text-gray-600">Precisión Real</p>
+                              <p className="font-bold text-lg text-blue-600">
+                                {realMetrics.precision.toFixed(1)}%
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Promedio de éxito
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm font-medium text-gray-600">Confianza Promedio</p>
+                              <p className="font-bold text-lg text-purple-600">
+                                {realMetrics.average_confidence.toFixed(1)}%
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Nivel de confianza
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm font-medium text-gray-600">Mejor Par</p>
+                              <p className="font-bold text-lg text-indigo-600">
+                                {realMetrics.best_pair || 'N/A'}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Mayor tasa de éxito
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Métricas específicas por par si están disponibles */}
+                          {realMetrics.metrics_by_pair && realMetrics.metrics_by_pair[item.pair] && (
+                            <div className="mt-3 pt-3 border-t border-green-200">
+                              <p className="text-xs text-gray-600 mb-2">📈 Rendimiento específico para {item.pair}:</p>
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div className="text-center">
+                                  <p className="text-gray-600">Win Rate</p>
+                                  <p className="font-semibold text-green-600">
+                                    {realMetrics.metrics_by_pair[item.pair].win_rate.toFixed(1)}%
+                                  </p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-gray-600">Precisión</p>
+                                  <p className="font-semibold text-blue-600">
+                                    {realMetrics.metrics_by_pair[item.pair].precision.toFixed(1)}%
+                                  </p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-gray-600">Total</p>
+                                  <p className="font-semibold text-gray-700">
+                                    {realMetrics.metrics_by_pair[item.pair].total_predictions}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       {/* Información adicional */}
                       <div className="border-t pt-4">
                         <div className="flex items-center justify-between text-sm text-gray-600">
@@ -1941,6 +2105,124 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Resumen de métricas reales */}
+                  {realMetrics && realMetrics.total_predictions > 0 && (
+                    <div className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h5 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                          📊 Resumen de Métricas Reales
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {realMetrics.total_predictions} predicciones analizadas
+                          </span>
+                        </h5>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div className="bg-white rounded-lg p-4 border border-blue-100">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <p className="text-sm font-medium text-gray-700">Win Rate General</p>
+                          </div>
+                          <p className="text-2xl font-bold text-green-600">{realMetrics.win_rate.toFixed(1)}%</p>
+                          <p className="text-xs text-gray-500">{realMetrics.successful_predictions} de {realMetrics.total_predictions} exitosas</p>
+                        </div>
+                        
+                        <div className="bg-white rounded-lg p-4 border border-blue-100">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <p className="text-sm font-medium text-gray-700">Precisión Promedio</p>
+                          </div>
+                          <p className="text-2xl font-bold text-blue-600">{realMetrics.precision.toFixed(1)}%</p>
+                          <p className="text-xs text-gray-500">Basada en porcentajes de éxito</p>
+                        </div>
+                        
+                        <div className="bg-white rounded-lg p-4 border border-blue-100">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            <p className="text-sm font-medium text-gray-700">Confianza Promedio</p>
+                          </div>
+                          <p className="text-2xl font-bold text-purple-600">{realMetrics.average_confidence.toFixed(1)}%</p>
+                          <p className="text-xs text-gray-500">Nivel de confianza del modelo</p>
+                        </div>
+                        
+                        <div className="bg-white rounded-lg p-4 border border-blue-100">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                            <p className="text-sm font-medium text-gray-700">Mejor Rendimiento</p>
+                          </div>
+                          <p className="text-lg font-bold text-indigo-600">{realMetrics.best_pair || 'N/A'}</p>
+                          <p className="text-xs text-gray-500">Par con mayor éxito</p>
+                        </div>
+                      </div>
+                      
+                      {/* Métricas por par */}
+                      {Object.keys(realMetrics.metrics_by_pair).length > 0 && (
+                        <div className="mb-4">
+                          <h6 className="text-sm font-semibold text-gray-700 mb-3">📈 Rendimiento por Par de Divisas</h6>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {Object.entries(realMetrics.metrics_by_pair).map(([pair, metrics]) => (
+                              <div key={pair} className="bg-white rounded-lg p-3 border border-gray-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-semibold text-gray-800">{pair}</span>
+                                  <span className={`text-xs px-2 py-1 rounded-full ${
+                                    metrics.win_rate >= 70 ? 'bg-green-100 text-green-800' :
+                                    metrics.win_rate >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {metrics.win_rate.toFixed(1)}%
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <div>
+                                    <p className="text-gray-600">Precisión</p>
+                                    <p className="font-semibold text-blue-600">{metrics.precision.toFixed(1)}%</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-600">Total</p>
+                                    <p className="font-semibold text-gray-700">{metrics.total_predictions}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Métricas por brain type */}
+                      {Object.keys(realMetrics.metrics_by_brain).length > 0 && (
+                        <div>
+                          <h6 className="text-sm font-semibold text-gray-700 mb-3">🧠 Rendimiento por Tipo de Brain</h6>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {Object.entries(realMetrics.metrics_by_brain).map(([brain, metrics]) => (
+                              <div key={brain} className="bg-white rounded-lg p-3 border border-gray-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-semibold text-gray-800">{brain.replace('_', ' ').toUpperCase()}</span>
+                                  <span className={`text-xs px-2 py-1 rounded-full ${
+                                    metrics.win_rate >= 70 ? 'bg-green-100 text-green-800' :
+                                    metrics.win_rate >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {metrics.win_rate.toFixed(1)}%
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <div>
+                                    <p className="text-gray-600">Precisión</p>
+                                    <p className="font-semibold text-blue-600">{metrics.precision.toFixed(1)}%</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-600">Total</p>
+                                    <p className="font-semibold text-gray-700">{metrics.total_predictions}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">

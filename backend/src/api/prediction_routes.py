@@ -69,6 +69,19 @@ class UserStatsResponse(BaseModel):
     best_pair: Optional[str]
     total_predictions_today: int
 
+class RealMetricsResponse(BaseModel):
+    total_predictions: int
+    successful_predictions: int
+    win_rate: float
+    precision: float
+    average_confidence: float
+    average_success_percentage: float
+    best_pair: Optional[str]
+    best_brain_type: Optional[str]
+    recent_performance: List[Dict[str, Any]]
+    metrics_by_pair: Dict[str, Dict[str, Any]]
+    metrics_by_brain: Dict[str, Dict[str, Any]]
+
 class LimitsResponse(BaseModel):
     can_generate: bool
     remaining_predictions: int
@@ -244,6 +257,84 @@ async def get_user_stats(request: Request, current_user: User = Depends(get_curr
     except Exception as e:
         logger.error(f"Error getting user stats: {e}")
         raise HTTPException(status_code=500, detail="Error getting user stats")
+
+@router.get("/real-metrics", response_model=RealMetricsResponse)
+async def get_real_metrics(
+    brain_type: Optional[str] = None,
+    pair: Optional[str] = None,
+    style: Optional[str] = None,
+    request: Request = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get real metrics based on completed predictions"""
+    try:
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
+            )
+        
+        prediction_service = PredictionService()
+        # Usar el UUID del usuario
+        user_id = getattr(current_user, 'user_id', '4dabfd30-483d-4fa0-a8d0-bd151a46340f')
+        
+        # Obtener métricas reales
+        real_metrics = await prediction_service.get_real_metrics(
+            user_id, brain_type, pair, style
+        )
+        
+        if not real_metrics:
+            # Retornar métricas vacías si no hay datos
+            return RealMetricsResponse(
+                total_predictions=0,
+                successful_predictions=0,
+                win_rate=0.0,
+                precision=0.0,
+                average_confidence=0.0,
+                average_success_percentage=0.0,
+                best_pair=None,
+                best_brain_type=None,
+                recent_performance=[],
+                metrics_by_pair={},
+                metrics_by_brain={}
+            )
+        
+        return RealMetricsResponse(**real_metrics)
+        
+    except Exception as e:
+        logger.error(f"Error getting real metrics: {e}")
+        raise HTTPException(status_code=500, detail="Error getting real metrics")
+
+@router.post("/complete-expired-with-real-results")
+async def complete_expired_predictions_with_real_results(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """Complete expired predictions with real market results"""
+    try:
+        # Verificar conexión a la base de datos
+        if not db_config.test_connection():
+            raise HTTPException(
+                status_code=503, 
+                detail="Database connection not available"
+            )
+        
+        prediction_service = PredictionService()
+        # Usar el UUID del usuario
+        user_id = getattr(current_user, 'user_id', '4dabfd30-483d-4fa0-a8d0-bd151a46340f')
+        
+        # Completar predicciones expiradas con resultados reales
+        result = await prediction_service.complete_expired_predictions_with_real_results(user_id)
+        
+        return {
+            "message": "Expired predictions completed with real results",
+            "result": result
+        }
+        
+    except Exception as e:
+        logger.error(f"Error completing expired predictions: {e}")
+        raise HTTPException(status_code=500, detail="Error completing expired predictions")
 
 @router.post("/complete-expired")
 async def complete_expired_predictions(request: Request, current_user: User = Depends(get_current_user)):

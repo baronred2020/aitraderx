@@ -22,6 +22,15 @@ except ImportError as e:
     logging.error(f"Error importing BrainTraderService: {e}")
     brain_trader_service = None
 
+# Importar RealMetricsCalculator para métricas reales
+try:
+    from services.real_metrics_calculator import RealMetricsCalculator
+    real_metrics_calculator = RealMetricsCalculator()
+    logger.info("RealMetricsCalculator importado correctamente")
+except ImportError as e:
+    logging.error(f"Error importing RealMetricsCalculator: {e}")
+    real_metrics_calculator = None
+
 class PredictionService:
     """Servicio para manejar predicciones"""
     
@@ -196,9 +205,38 @@ class PredictionService:
                     # Usar predicción del modelo entrenado
                     direction = prediction_result['direction']
                     confidence = prediction_result.get('confidence', 75.0)
-                    precision = prediction_result.get('precision', 0.0)
-                    win_rate = prediction_result.get('win_rate', 0.0)
                     reasoning = prediction_result.get('reasoning', f"Predicción de {brain_type} para {pair}")
+                    
+                    # Obtener métricas reales del usuario en lugar de métricas simuladas del modelo
+                    try:
+                        if real_metrics_calculator:
+                            # Obtener métricas reales del usuario para este brain_type y par
+                            user_real_metrics = await real_metrics_calculator.calculate_real_metrics_for_user(
+                                user_id, brain_type, pair, style
+                            )
+                            
+                            # Usar métricas reales si están disponibles, sino usar métricas del modelo como fallback
+                            if user_real_metrics and user_real_metrics.get('total_predictions', 0) > 0:
+                                precision = user_real_metrics.get('precision', 0.0)
+                                win_rate = user_real_metrics.get('win_rate', 0.0)
+                                self.logger.info(f"Usando métricas REALES del usuario para {brain_type} en {pair}: precision={precision:.1f}%, win_rate={win_rate:.1f}%")
+                            else:
+                                # Fallback a métricas del modelo si no hay datos reales
+                                precision = prediction_result.get('precision', 0.0)
+                                win_rate = prediction_result.get('win_rate', 0.0)
+                                self.logger.info(f"Usando métricas del modelo (fallback) para {brain_type} en {pair}: precision={precision:.1f}%, win_rate={win_rate:.1f}%")
+                        else:
+                            # Fallback a métricas del modelo si RealMetricsCalculator no está disponible
+                            precision = prediction_result.get('precision', 0.0)
+                            win_rate = prediction_result.get('win_rate', 0.0)
+                            self.logger.info(f"Usando métricas del modelo (fallback) para {brain_type} en {pair}: precision={precision:.1f}%, win_rate={win_rate:.1f}%")
+                            
+                    except Exception as e:
+                        self.logger.error(f"Error obteniendo métricas reales: {e}")
+                        # Fallback a métricas del modelo
+                        precision = prediction_result.get('precision', 0.0)
+                        win_rate = prediction_result.get('win_rate', 0.0)
+                        self.logger.info(f"Usando métricas del modelo (fallback por error) para {brain_type} en {pair}: precision={precision:.1f}%, win_rate={win_rate:.1f}%")
                     
                     self.logger.info(f"Predicción generada con {brain_type}: {direction} - {confidence:.2f}% - Precision: {precision:.1f}% - Win Rate: {win_rate:.1f}%")
                 else:
@@ -424,6 +462,45 @@ class PredictionService:
                 "best_pair": None,
                 "total_predictions_today": 0
             }
+    
+    async def get_real_metrics(self, user_id: str, brain_type: str = None, pair: str = None, style: str = None) -> Dict[str, Any]:
+        """
+        Obtener métricas reales basadas en predicciones completadas
+        """
+        try:
+            if real_metrics_calculator is None:
+                self.logger.error("RealMetricsCalculator no disponible")
+                return {}
+            
+            # Obtener métricas reales
+            real_metrics = await real_metrics_calculator.calculate_real_metrics_for_user(
+                user_id, brain_type, pair, style
+            )
+            
+            return real_metrics
+            
+        except Exception as e:
+            self.logger.error(f"Error getting real metrics: {e}")
+            return {}
+    
+    async def complete_expired_predictions_with_real_results(self, user_id: str = None) -> Dict[str, Any]:
+        """
+        Completar predicciones expiradas con resultados reales
+        """
+        try:
+            if real_metrics_calculator is None:
+                self.logger.error("RealMetricsCalculator no disponible")
+                return {'total_expired': 0, 'completed': 0, 'failed': 0}
+            
+            # Completar predicciones expiradas
+            result = await real_metrics_calculator.complete_expired_predictions(user_id)
+            
+            self.logger.info(f"Predicciones expiradas completadas: {result}")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error completing expired predictions: {e}")
+            return {'total_expired': 0, 'completed': 0, 'failed': 0}
     
     async def complete_expired_predictions(self, user_id: str) -> Dict:
         """Completar predicciones expiradas del usuario"""
