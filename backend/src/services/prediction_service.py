@@ -254,10 +254,10 @@ class PredictionService:
                 # ✅ Incluir todos los campos necesarios
                 insert_query = """
                     INSERT INTO user_predictions 
-                    (user_id, pair, direction, current_price, target_price, confidence, 
-                     timeframe, reasoning, brain_type, created_at, expires_at, is_completed,
+                    (user_id, pair, direction, current_price, confidence, 
+                     `precision`, win_rate, timeframe, reasoning, brain_type, created_at, expires_at, is_completed,
                      actual_price_at_expiry, prediction_success, success_percentage) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 
                 cursor = connection.cursor()
@@ -266,17 +266,18 @@ class PredictionService:
                     prediction['pair'],
                     prediction['direction'],
                     prediction['current_price'],
-                    prediction['target_price'],
                     prediction['confidence'],
+                    prediction['precision'],
+                    prediction['win_rate'],
                     prediction['timeframe'],
                     prediction['reasoning'],
                     prediction['brain_type'],
                     prediction['created_at'],
                     prediction['expires_at'],
                     prediction['is_completed'],
-                    prediction['actual_price_at_expiry'],  # ✅ Agregado
-                    prediction['prediction_success'],      # ✅ Agregado
-                    prediction['success_percentage']       # ✅ Agregado
+                    prediction['actual_price_at_expiry'],
+                    prediction['prediction_success'],
+                    prediction['success_percentage']
                 ))
                 
                 # ✅ Obtener el ID de la predicción insertada
