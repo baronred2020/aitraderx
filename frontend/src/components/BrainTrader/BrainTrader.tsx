@@ -669,22 +669,41 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   const generatePredictionWithIntervals = async () => {
     if (!canGeneratePrediction()) return;
     
+    // Verificar que sea un tiempo válido para generar predicción
+    if (!isValidPredictionTime) {
+      console.log('❌ No es un tiempo válido para generar predicción con intervalos');
+      return;
+    }
+    
     setIsGeneratingPrediction(true);
     try {
-      // Usar el nuevo método con intervalos
-      await loadPredictionsWithIntervals(
-        activeBrain,
+      console.log('🔄 Generando predicción con intervalos...', {
+        pair: selectedPair,
+        brain: activeBrain,
+        style: selectedStyle,
+        isValidTime: isValidPredictionTime
+      });
+      
+      // Usar el mismo método de generación pero con validación de intervalos
+      const response = await apiService.generatePrediction(
         selectedPair,
-        selectedStyle,
-        5, // limit
-        subscription?.planType || 'starter'
+        activeBrain,
+        selectedStyle
       );
+      
+      if (response.success && response.prediction) {
+        setCurrentPrediction(response.prediction);
+        console.log('✅ Predicción generada exitosamente con intervalos:', response.prediction);
+      } else {
+        console.error('❌ Error en la respuesta de generación:', response);
+      }
       
       // Actualizar límites e historial
       await Promise.all([
         loadPredictionLimits(),
         loadPredictionHistory(),
-        loadUserStats()
+        loadUserStats(),
+        loadIntervalInfo() // Recargar información de intervalos
       ]);
       
     } catch (error) {
@@ -753,6 +772,79 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       console.error('Error cargando historial:', error);
     } finally {
       setIsLoadingHistory(false);
+    }
+  };
+
+  const downloadPredictionHistoryCSV = async () => {
+    try {
+      console.log('📥 Descargando historial completo...');
+      
+      // Obtener historial completo
+      const completeHistory = await apiService.getCompletePredictionHistory();
+      
+      if (completeHistory.length === 0) {
+        alert('No hay predicciones para descargar');
+        return;
+      }
+      
+      // Crear contenido CSV
+      const csvHeaders = [
+        'ID',
+        'Par',
+        'Dirección',
+        'Precio Inicial',
+        'Precio Final',
+        'Confianza',
+        'Precisión',
+        'Win Rate',
+        'Timeframe',
+        'Brain Type',
+        'Fecha Creación',
+        'Fecha Expiración',
+        'Completada',
+        'Éxito',
+        'Porcentaje Éxito',
+        'Razonamiento'
+      ];
+      
+      const csvRows = completeHistory.map(pred => [
+        pred.id,
+        pred.pair,
+        pred.direction,
+        pred.current_price,
+        pred.actual_price_at_expiry || 'N/A',
+        pred.confidence,
+        pred.precision,
+        pred.win_rate,
+        pred.timeframe,
+        pred.brain_type,
+        pred.created_at,
+        pred.expires_at,
+        pred.is_completed ? 'Sí' : 'No',
+        pred.prediction_success === true ? 'Correcta' : pred.prediction_success === false ? 'Incorrecta' : 'Pendiente',
+        pred.success_percentage ? `${pred.success_percentage.toFixed(2)}%` : 'N/A',
+        pred.reasoning ? `"${pred.reasoning.replace(/"/g, '""')}"` : ''
+      ]);
+      
+      const csvContent = [csvHeaders, ...csvRows]
+        .map(row => row.join(','))
+        .join('\n');
+      
+      // Crear y descargar archivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `historial_predicciones_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log(`✅ Historial descargado: ${completeHistory.length} predicciones`);
+    } catch (error) {
+      console.error('Error descargando historial:', error);
+      alert('Error al descargar el historial');
     }
   };
 
@@ -1829,6 +1921,9 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <h4 className="text-lg font-semibold text-gray-800">Historial de Predicciones</h4>
+                  <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                    Últimas 5 predicciones
+                  </span>
                   {realMetrics && realMetrics.total_predictions > 0 && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
@@ -1840,22 +1935,30 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      await completeExpiredWithRealResults();
-                      await refetchRealMetrics();
-                      await loadPredictionHistory();
-                    } catch (error) {
-                      console.error('Error completing predictions:', error);
-                    }
-                  }}
-                  disabled={realMetricsLoading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-                >
-                  {realMetricsLoading ? '🔄' : '🔄'}
-                  Actualizar Métricas
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await completeExpiredWithRealResults();
+                        await refetchRealMetrics();
+                        await loadPredictionHistory();
+                      } catch (error) {
+                        console.error('Error completing predictions:', error);
+                      }
+                    }}
+                    disabled={realMetricsLoading}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {realMetricsLoading ? '🔄' : '🔄'}
+                    Actualizar Métricas
+                  </button>
+                  <button
+                    onClick={downloadPredictionHistoryCSV}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    📥 Descargar CSV
+                  </button>
+                </div>
               </div>
               {isLoadingHistory ? (
                 <div className="text-center py-8">

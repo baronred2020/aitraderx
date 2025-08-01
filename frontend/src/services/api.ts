@@ -411,12 +411,22 @@ class ApiService {
     }
   }
 
-  async getPredictionHistory(limit: number = 20): Promise<PredictionHistoryItem[]> {
+  async getPredictionHistory(limit: number = 5): Promise<PredictionHistoryItem[]> {
     try {
       const response = await this.request<PredictionHistoryItem[]>(`/api/v1/predictions/history?limit=${limit}`);
       return response || [];
     } catch (error) {
       console.error('Error getting prediction history:', error);
+      return [];
+    }
+  }
+
+  async getCompletePredictionHistory(): Promise<PredictionHistoryItem[]> {
+    try {
+      const response = await this.request<PredictionHistoryItem[]>(`/api/v1/predictions/history?limit=1000`);
+      return response || [];
+    } catch (error) {
+      console.error('Error getting complete prediction history:', error);
       return [];
     }
   }
