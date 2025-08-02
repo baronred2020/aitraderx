@@ -15,9 +15,9 @@ import {
   XCircle
 } from 'lucide-react';
 import { YahooTradingChart } from './YahooTradingChart';
-import { useYahooMarketData } from '../../hooks/useYahooMarketData';
 import Wallet from './Wallet';
-import { useWallet } from '../../hooks/useWallet';
+import { useSimulatedTrading } from '../../hooks/useSimulatedTrading';
+import PerformanceMetrics from './PerformanceMetrics';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const TradingView: React.FC = () => {
@@ -32,28 +32,54 @@ export const TradingView: React.FC = () => {
   const [orderSL, setOrderSL] = useState('');
   const [orderTP, setOrderTP] = useState('');
   const [orderError, setOrderError] = useState('');
+  const [orderSuccess, setOrderSuccess] = useState('');
 
   const { isLoading: authLoading } = useAuth();
   const token = localStorage.getItem('auth_token') || '';
-  const {
-    balance,
-    loading: walletLoading,
-    error: walletError,
-    trade,
-    fetchWallet,
-    refreshTransactions,
-  } = useWallet(token);
 
-  // Log de depuración
-  console.log('TOKEN en TradingView:', token);
-  console.log('BALANCE en TradingView:', balance);
+  // Hook principal de trading simulado
+  const {
+    marketData,
+    marketLoading,
+    marketError,
+    balance,
+    fetchWallet,
+    openPositions,
+    recentOrders,
+    placeOrder,
+    closePosition,
+    cancelOrder,
+    performanceStats
+  } = useSimulatedTrading(token);
+
+  // Variables adicionales para el estado de la wallet y mercado
+  const walletLoading = marketLoading; // Usar marketLoading como proxy para walletLoading
+  const walletError = marketError; // Usar marketError como proxy para walletError
+  
+  // Función para detectar si el mercado está abierto
+  const isMarketOpen = (): boolean => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Domingo, 6 = Sábado
+    const hour = now.getHours();
+    
+    // Fin de semana - mercado cerrado
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return false;
+    }
+    
+    // Para Forex, el mercado está abierto 24/5 (Lunes-Viernes)
+    // Para simplificar, consideramos que está abierto de lunes a viernes
+    return dayOfWeek >= 1 && dayOfWeek <= 5;
+  };
+  
+  const marketStatus = isMarketOpen() ? 'open' : 'closed';
 
   // Llamar a fetchWallet al montar el componente
   useEffect(() => {
     if (token) fetchWallet();
   }, [token, fetchWallet]);
 
-  // Definir símbolos base sin precios hardcodeados
+  // Definir símbolos base
   const baseSymbols = [
     { pair: 'EURUSD', label: 'EUR/USD' },
     { pair: 'GBPUSD', label: 'GBP/USD' },
@@ -61,10 +87,6 @@ export const TradingView: React.FC = () => {
     { pair: 'AUDUSD', label: 'AUD/USD' },
     { pair: 'USDCAD', label: 'USD/CAD' },
   ];
-
-  // Obtener datos de mercado reales
-  const symbolList = baseSymbols.map(s => s.pair);
-  const { data: marketData, loading: marketLoading, error: marketError, marketStatus } = useYahooMarketData(symbolList);
 
   // Combinar datos base con datos de mercado reales
   const symbols = baseSymbols.map(baseSymbol => {
@@ -91,19 +113,6 @@ export const TradingView: React.FC = () => {
 
   const timeframes = ['1M', '5M', '15M', '1H', '4H', '1D', '1W'];
 
-  const recentOrders = [
-    { id: 1, pair: 'EURUSD', type: 'BUY', amount: '10,000', price: '1.0854', time: '14:32:15', status: 'filled' },
-    { id: 2, pair: 'GBPUSD', type: 'SELL', amount: '5,000', price: '1.2654', time: '14:28:42', status: 'pending' },
-    { id: 3, pair: 'USDJPY', type: 'BUY', amount: '15,000', price: '148.23', time: '14:25:18', status: 'filled' },
-    { id: 4, pair: 'AUDUSD', type: 'SELL', amount: '8,000', price: '0.6543', time: '14:22:05', status: 'cancelled' },
-  ];
-
-  const openPositions = [
-    { id: 1, pair: 'EURUSD', type: 'BUY', amount: '10,000', openPrice: '1.0854', currentPrice: '1.0925', pnl: '+$71', pnlPercent: '+0.65%' },
-    { id: 2, pair: 'GBPUSD', type: 'SELL', amount: '5,000', openPrice: '1.2654', currentPrice: '1.2630', pnl: '+$12', pnlPercent: '+0.19%' },
-    { id: 3, pair: 'USDJPY', type: 'BUY', amount: '15,000', openPrice: '148.23', currentPrice: '148.45', pnl: '+$22', pnlPercent: '+0.15%' },
-  ];
-
   // Validaciones y resumen
   const isBuy = orderSide === 'buy';
   const priceNum = parseFloat(orderPrice);
@@ -124,9 +133,6 @@ export const TradingView: React.FC = () => {
   const orderSummary = `${orderSide === 'buy' ? 'Comprar' : 'Vender'} ${orderAmount} ${selectedSymbol} a ${orderPrice}` +
     (orderSL ? ` | SL: ${orderSL}` : '') + (orderTP ? ` | TP: ${orderTP}` : '');
 
-  // Feedback visual
-  const [orderSuccess, setOrderSuccess] = useState('');
-
   const handleAddFunds = (amount: number) => {
     // This function is now handled by useWallet, but keeping it for now
     // as it might be re-introduced or refactored later.
@@ -138,14 +144,32 @@ export const TradingView: React.FC = () => {
       setOrderError(!hasFunds ? 'Saldo insuficiente para operar.' : 'Verifica los datos de la orden (SL/TP, cantidad, precio).');
       return;
     }
+    
     setOrderError('');
     setOrderSuccess('');
-    const ok = await trade(estimatedCost, `Orden ${orderSide} ${orderAmount} ${selectedSymbol} a ${orderPrice}`);
-    if (ok) {
-      setOrderSuccess('¡Orden colocada exitosamente!');
-      fetchWallet();
-      refreshTransactions();
-    } else {
+    
+    try {
+      const result = await placeOrder(
+        selectedSymbol,
+        orderType,
+        orderSide,
+        parseFloat(orderAmount),
+        parseFloat(orderPrice),
+        orderSL ? parseFloat(orderSL) : undefined,
+        orderTP ? parseFloat(orderTP) : undefined,
+        `Orden ${orderSide.toUpperCase()} ${orderAmount} ${selectedSymbol}`
+      );
+      
+      if (result.success) {
+        setOrderSuccess(result.message);
+        // Limpiar formulario
+        setOrderAmount('10000');
+        setOrderSL('');
+        setOrderTP('');
+      } else {
+        setOrderError(result.message);
+      }
+    } catch (error) {
       setOrderError('Error al colocar la orden.');
     }
   };
@@ -157,6 +181,8 @@ export const TradingView: React.FC = () => {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-400" />;
       case 'cancelled':
+        return <XCircle className="w-4 h-4 text-red-400" />;
+      case 'rejected':
         return <XCircle className="w-4 h-4 text-red-400" />;
       default:
         return <AlertTriangle className="w-4 h-4 text-gray-400" />;
@@ -174,7 +200,7 @@ export const TradingView: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
           {/* Estado del mercado */}
           <div className={`flex items-center space-x-2 border rounded-lg px-3 py-2 ${
-            marketStatus === 'open' 
+            marketStatus === 'open'
               ? 'bg-green-500/20 border-green-500/30' 
               : 'bg-red-500/20 border-red-500/30'
           }`}>
@@ -214,8 +240,11 @@ export const TradingView: React.FC = () => {
       {/* Layout principal - Responsive */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         {/* Gráfico principal - Ocupa 2/3 partes */}
-        <div className="xl:col-span-2 order-1">
+        <div className="xl:col-span-2 order-1 space-y-4 sm:space-y-6">
           <YahooTradingChart symbol={selectedSymbol} />
+          
+          {/* P&L y Rendimiento - Ahora debajo del gráfico */}
+          <PerformanceMetrics stats={performanceStats} balance={balance} />
         </div>
 
         {/* Panel lateral - Ocupa 1/3 parte */}
@@ -418,35 +447,66 @@ export const TradingView: React.FC = () => {
           <div className="trading-card p-3 sm:p-4">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Posiciones Abiertas</h3>
             <div className="space-y-2 sm:space-y-3">
-              {openPositions.map((position) => (
-                <div key={position.id} className="bg-gray-800/50 rounded-lg p-2 sm:p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${
-                        position.type === 'BUY' ? 'bg-green-400' : 'bg-red-400'
-                      }`} />
-                      <span className="text-sm sm:text-base font-semibold text-white">{position.pair}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        position.type === 'BUY' 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : 'bg-red-500/20 text-red-400'
+              {openPositions.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No hay posiciones abiertas</p>
+                  <p className="text-sm">Coloca tu primera orden para comenzar</p>
+                </div>
+              ) : (
+                openPositions.map((position) => (
+                  <div key={position.id} className="bg-gray-800/50 rounded-lg p-2 sm:p-3 border border-gray-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          position.type === 'BUY' ? 'bg-green-400' : 'bg-red-400'
+                        }`} />
+                        <span className="text-sm sm:text-base font-semibold text-white">{position.symbol}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          position.type === 'BUY' 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {position.type}
+                        </span>
+                      </div>
+                      <span className={`text-sm font-semibold ${
+                        position.pnl > 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {position.type}
+                        ${position.pnl.toFixed(2)}
                       </span>
                     </div>
-                    <span className={`text-sm font-semibold ${
-                      position.pnl.startsWith('+') ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {position.pnl}
-                    </span>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mb-2">
+                      <div>
+                        <span>Precio Apertura:</span>
+                        <div className="text-white font-medium">{position.openPrice.toFixed(4)}</div>
+                      </div>
+                      <div>
+                        <span>Precio Actual:</span>
+                        <div className="text-white font-medium">{position.currentPrice.toFixed(4)}</div>
+                      </div>
+                      <div>
+                        <span>Cantidad:</span>
+                        <div className="text-white font-medium">{position.amount.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <span>P&L %:</span>
+                        <div className={`font-medium ${position.pnlPercent > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {position.pnlPercent > 0 ? '+' : ''}{position.pnlPercent.toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => closePosition(position.id)}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded hover:bg-red-500/30 transition-colors"
+                      >
+                        Cerrar Posición
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span>{position.amount}</span>
-                    <span>{position.currentPrice}</span>
-                    <span>{position.pnlPercent}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -456,43 +516,64 @@ export const TradingView: React.FC = () => {
       <div className="trading-card p-4 sm:p-6">
         <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Órdenes Recientes</h3>
         <div className="overflow-x-auto">
-          <table className="w-full trading-table">
-            <thead>
-              <tr>
-                <th className="text-left p-2 sm:p-4">Par</th>
-                <th className="text-left p-2 sm:p-4">Tipo</th>
-                <th className="text-left p-2 sm:p-4 hidden sm:table-cell">Cantidad</th>
-                <th className="text-left p-2 sm:p-4 hidden md:table-cell">Precio</th>
-                <th className="text-left p-2 sm:p-4 hidden lg:table-cell">Hora</th>
-                <th className="text-left p-2 sm:p-4">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((order) => (
-                <tr key={order.id}>
-                  <td className="font-semibold text-white p-2 sm:p-4">{order.pair}</td>
-                  <td className="p-2 sm:p-4">
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      order.type === 'BUY' 
-                        ? 'bg-green-500/20 text-green-400' 
-                        : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {order.type}
-                    </span>
-                  </td>
-                  <td className="text-gray-300 p-2 sm:p-4 hidden sm:table-cell">{order.amount}</td>
-                  <td className="text-gray-300 p-2 sm:p-4 hidden md:table-cell">{order.price}</td>
-                  <td className="text-gray-400 p-2 sm:p-4 hidden lg:table-cell">{order.time}</td>
-                  <td className="p-2 sm:p-4">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(order.status)}
-                      <span className="text-sm capitalize">{order.status}</span>
-                    </div>
-                  </td>
+          {recentOrders.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No hay órdenes recientes</p>
+              <p className="text-sm">Coloca tu primera orden para comenzar</p>
+            </div>
+          ) : (
+            <table className="w-full trading-table">
+              <thead>
+                <tr>
+                  <th className="text-left p-2 sm:p-4">Par</th>
+                  <th className="text-left p-2 sm:p-4">Tipo</th>
+                  <th className="text-left p-2 sm:p-4 hidden sm:table-cell">Cantidad</th>
+                  <th className="text-left p-2 sm:p-4 hidden md:table-cell">Precio</th>
+                  <th className="text-left p-2 sm:p-4 hidden lg:table-cell">Hora</th>
+                  <th className="text-left p-2 sm:p-4">Estado</th>
+                  <th className="text-left p-2 sm:p-4">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td className="font-semibold text-white p-2 sm:p-4">{order.symbol}</td>
+                    <td className="p-2 sm:p-4">
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        order.side === 'buy' 
+                          ? 'bg-green-500/20 text-green-400' 
+                          : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {order.side.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="text-gray-300 p-2 sm:p-4 hidden sm:table-cell">{order.amount.toLocaleString()}</td>
+                    <td className="text-gray-300 p-2 sm:p-4 hidden md:table-cell">{order.price.toFixed(4)}</td>
+                    <td className="text-gray-400 p-2 sm:p-4 hidden lg:table-cell">
+                      {order.createdAt.toLocaleTimeString()}
+                    </td>
+                    <td className="p-2 sm:p-4">
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(order.status)}
+                        <span className="text-sm capitalize">{order.status}</span>
+                      </div>
+                    </td>
+                    <td className="p-2 sm:p-4">
+                      {order.status === 'pending' && (
+                        <button
+                          onClick={() => cancelOrder(order.id)}
+                          className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded hover:bg-red-500/30 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
