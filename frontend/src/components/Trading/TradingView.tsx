@@ -19,6 +19,8 @@ import Wallet from './Wallet';
 import { useSimulatedTrading } from '../../hooks/useSimulatedTrading';
 import PerformanceMetrics from './PerformanceMetrics';
 import { useAuth } from '../../contexts/AuthContext';
+import TradingConfigModal from './TradingConfigModal';
+import { useTradingConfig } from '../../hooks/useTradingConfig';
 
 export const TradingView: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('EURUSD');
@@ -33,9 +35,11 @@ export const TradingView: React.FC = () => {
   const [orderTP, setOrderTP] = useState('');
   const [orderError, setOrderError] = useState('');
   const [orderSuccess, setOrderSuccess] = useState('');
+  const [showConfigModal, setShowConfigModal] = useState(false);
 
   const { isLoading: authLoading } = useAuth();
   const token = localStorage.getItem('auth_token') || '';
+  const { config: tradingConfig, saveConfig } = useTradingConfig();
 
   // Hook principal de trading simulado
   const {
@@ -230,9 +234,17 @@ export const TradingView: React.FC = () => {
               <span className="text-sm text-red-400 font-medium">Error datos de mercado</span>
             </div>
           )}
-          <button className="trading-button px-4 py-2">
-            <Settings className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Configuración</span>
+          <button 
+            onClick={() => setShowConfigModal(true)}
+            className="relative group bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium px-4 py-2.5 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-cyan-400/30 hover:border-cyan-300/50"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative flex items-center">
+              <Settings className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+              <span className="hidden sm:inline font-semibold">Configuración</span>
+              <span className="sm:hidden font-semibold">Config</span>
+            </div>
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
           </button>
         </div>
       </div>
@@ -574,8 +586,16 @@ export const TradingView: React.FC = () => {
               </tbody>
             </table>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}; 
+                 </div>
+       </div>
+
+       {/* Modal de Configuración */}
+       <TradingConfigModal
+         isOpen={showConfigModal}
+         onClose={() => setShowConfigModal(false)}
+         onSave={saveConfig}
+         currentConfig={tradingConfig}
+       />
+     </div>
+   );
+ }; 
