@@ -658,6 +658,64 @@ async def get_mt4_status():
         "port": 9090
     }
 
+# Wallet endpoints
+@app.get("/wallet")
+async def get_wallet():
+    """Obtiene información de la wallet del usuario"""
+    # TODO: Implementar lógica real con autenticación
+    return {
+        "balance": 10000.0,
+        "transactions": [
+            {
+                "id": 1,
+                "type": "deposit",
+                "amount": 10000.0,
+                "description": "Depósito inicial",
+                "created_at": "2024-01-01T00:00:00Z"
+            }
+        ]
+    }
+
+@app.post("/wallet/recharge")
+async def recharge_wallet(amount: float):
+    """Recarga la wallet del usuario"""
+    # TODO: Implementar lógica real con autenticación
+    return {
+        "balance": 10000.0 + amount,
+        "message": f"Wallet recargada con ${amount}"
+    }
+
+@app.post("/wallet/trade")
+async def trade_wallet(amount: float, description: str = ""):
+    """Realiza una operación de trading en la wallet"""
+    # TODO: Implementar lógica real con autenticación
+    return {
+        "balance": 10000.0 - amount,
+        "message": f"Operación realizada: {description}",
+        "amount": amount
+    }
+
+@app.get("/wallet/transactions")
+async def get_wallet_transactions():
+    """Obtiene el historial de transacciones de la wallet"""
+    # TODO: Implementar lógica real con autenticación
+    return [
+        {
+            "id": 1,
+            "type": "deposit",
+            "amount": 10000.0,
+            "description": "Depósito inicial",
+            "created_at": "2024-01-01T00:00:00Z"
+        },
+        {
+            "id": 2,
+            "type": "trade",
+            "amount": -500.0,
+            "description": "Compra EURUSD",
+            "created_at": "2024-01-02T10:30:00Z"
+        }
+    ]
+
 @app.get("/api/assets", response_model=List[Asset])
 async def get_recommended_assets():
     """Obtiene activos recomendados por la IA"""

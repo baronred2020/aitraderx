@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Target, Activity, BarChart3, Bell, Settings, Save } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Target, Activity, BarChart3, Bell } from 'lucide-react';
 import { AnalysisResult } from '../../hooks/useIntelligentAnalysis';
 
 interface AnalysisResultsProps {
@@ -8,8 +9,58 @@ interface AnalysisResultsProps {
 }
 
 export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, onClose }) => {
-  const [isApplying, setIsApplying] = useState(false);
-  const [appliedConfig, setAppliedConfig] = useState<any>(null);
+
+  const [isClosing, setIsClosing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Asegurar que el componente esté montado antes de renderizar
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  // Manejador para cerrar con Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isClosing) {
+        setIsClosing(true);
+        setTimeout(() => {
+          onClose();
+        }, 100);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose, isClosing]);
+
+  // Prevenir que el clic en el modal se propague
+  const handleModalClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  // Manejador para cerrar el modal solo con clic directo
+  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
+    // Solo cerrar si el clic es directamente en el overlay y no estamos cerrando ya
+    if (e.target === overlayRef.current && !isClosing) {
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+      }, 100);
+    }
+  }, [onClose, isClosing]);
+
+  // Manejador optimizado para el botón de cerrar
+  const handleCloseClick = useCallback(() => {
+    if (!isClosing) {
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+      }, 100);
+    }
+  }, [onClose, isClosing]);
 
   const getRiskLevelColor = (riskLevel: string) => {
     switch (riskLevel) {
@@ -59,45 +110,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, onClos
     }
   };
 
-  const applyRecommendations = async () => {
-    setIsApplying(true);
-    
-    try {
-      // Simular proceso de aplicación
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Configurar parámetros de trading basados en el análisis
-      const config = {
-        symbol: 'EURUSD', // Obtener del contexto
-        tradingType: result.tradingType,
-        stopLoss: result.technicalAnalysis?.currentPrice ? 
-          result.technicalAnalysis.currentPrice * (result.riskLevel === 'high' ? 0.98 : 0.99) : null,
-        takeProfit: result.technicalAnalysis?.currentPrice ? 
-          result.technicalAnalysis.currentPrice * (result.riskLevel === 'high' ? 1.02 : 1.01) : null,
-        positionSize: result.riskLevel === 'high' ? 0.5 : result.riskLevel === 'medium' ? 1 : 2,
-        alerts: generateAlerts(result),
-        timestamp: new Date(),
-        confidence: result.confidence,
-        riskLevel: result.riskLevel
-      };
-      
-      // Guardar configuración en localStorage
-      const savedConfigs = JSON.parse(localStorage.getItem('tradingConfigs') || '[]');
-      savedConfigs.push(config);
-      localStorage.setItem('tradingConfigs', JSON.stringify(savedConfigs));
-      
-      setAppliedConfig(config);
-      
-      // Mostrar notificación de éxito
-      alert(`✅ Configuración aplicada exitosamente!\n\n• Stop Loss: ${config.stopLoss?.toFixed(4)}\n• Take Profit: ${config.takeProfit?.toFixed(4)}\n• Tamaño de posición: ${config.positionSize}x\n• Alertas configuradas: ${config.alerts.length}`);
-      
-    } catch (error) {
-      console.error('Error aplicando recomendaciones:', error);
-      alert('❌ Error aplicando recomendaciones. Inténtalo de nuevo.');
-    } finally {
-      setIsApplying(false);
-    }
-  };
+
 
   const generateAlerts = (analysis: AnalysisResult) => {
     const alerts = [];
@@ -170,9 +183,39 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, onClos
     return alerts;
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+  // Crear el contenido del modal
+  const modalContent = (
+    <div 
+      ref={overlayRef}
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 select-none ${isClosing ? 'pointer-events-none' : ''}`}
+      onClick={handleOverlayClick}
+      style={{ 
+        backdropFilter: 'blur(2px)',
+        WebkitBackdropFilter: 'blur(2px)',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
+    >
+      <div 
+        ref={modalRef}
+        className={`bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-200 ${isClosing ? 'pointer-events-none' : ''}`}
+        onClick={handleModalClick}
+        style={{ 
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none'
+        }}
+      >
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -193,8 +236,9 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, onClos
               </div>
             </div>
             <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              onClick={handleCloseClick}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              title="Cerrar (ESC)"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -401,88 +445,31 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ result, onClos
             </div>
           </div>
 
-          {/* Configuración que se aplicará */}
-          {result.technicalAnalysis && (
-            <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
-              <h4 className="text-sm font-semibold text-white mb-3 flex items-center space-x-2">
-                <Settings className="w-4 h-4" />
-                <span>Configuración que se Aplicará</span>
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="bg-gray-800/50 rounded p-3">
-                  <div className="text-gray-400 mb-1">Stop Loss Sugerido</div>
-                  <div className="text-red-400 font-semibold">
-                    {(result.technicalAnalysis.currentPrice * (result.riskLevel === 'high' ? 0.98 : 0.99)).toFixed(4)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    -{(((result.riskLevel === 'high' ? 0.98 : 0.99) - 1) * 100).toFixed(1)}% riesgo
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 rounded p-3">
-                  <div className="text-gray-400 mb-1">Take Profit Sugerido</div>
-                  <div className="text-green-400 font-semibold">
-                    {(result.technicalAnalysis.currentPrice * (result.riskLevel === 'high' ? 1.02 : 1.01)).toFixed(4)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    +{(((result.riskLevel === 'high' ? 1.02 : 1.01) - 1) * 100).toFixed(1)}% beneficio
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 rounded p-3">
-                  <div className="text-gray-400 mb-1">Tamaño de Posición</div>
-                  <div className="text-blue-400 font-semibold">
-                    {result.riskLevel === 'high' ? '0.5x' : result.riskLevel === 'medium' ? '1x' : '2x'}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Basado en nivel de riesgo
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 p-3 bg-blue-900/20 rounded border border-blue-500/30">
-                <div className="flex items-center space-x-2 text-blue-300">
-                  <Bell className="w-4 h-4" />
-                  <span className="text-sm font-medium">Alertas Automáticas</span>
-                </div>
-                <div className="text-xs text-gray-400 mt-1">
-                  Se configurarán {generateAlerts(result).length} alertas basadas en el análisis técnico
-                </div>
-              </div>
-            </div>
-          )}
+          
 
-          {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-gray-700">
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
-              >
-                Cerrar
-              </button>
-              <button
-                onClick={applyRecommendations}
-                disabled={isApplying}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center space-x-2 ${
-                  isApplying 
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
-                }`}
-              >
-                {isApplying ? (
-                  <>
-                    <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Aplicando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>Aplicar Recomendaciones</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+                     {/* Footer */}
+           <div className="mt-6 pt-4 border-t border-gray-700">
+             <div className="flex items-center justify-between">
+               <p className="text-xs text-gray-500">
+                 💡 Haz clic fuera del modal o presiona ESC para cerrar
+               </p>
+               <div className="flex space-x-3">
+                 <button
+                   onClick={handleCloseClick}
+                   className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                 >
+                   Cerrar
+                 </button>
+               </div>
+             </div>
+           </div>
+                 </div>
+       </div>
+     </div>
+   );
+
+  // Renderizar usando portal para evitar problemas con contenedores padre
+  if (!isMounted) return null;
+  
+  return createPortal(modalContent, document.body);
 }; 

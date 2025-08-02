@@ -26,8 +26,25 @@ export function useWallet(token: string) {
     setError(null);
     
     // Verificar si hay token
-    if (!token || token === 'dev-token') {
+    if (!token) {
       setError('No hay token de autenticación válido');
+      setLoading(false);
+      return;
+    }
+    
+    // Para modo desarrollo, usar datos simulados
+    if (token === 'dev-token') {
+      setBalance(10000.0);
+      setTransactions([
+        {
+          id: 1,
+          type: 'deposit',
+          amount: 10000.0,
+          description: 'Depósito inicial (Demo)',
+          created_at: new Date().toISOString()
+        }
+      ]);
+      setError(null);
       setLoading(false);
       return;
     }
@@ -67,10 +84,29 @@ export function useWallet(token: string) {
     setError(null);
     
     // Verificar si hay token
-    if (!token || token === 'dev-token') {
+    if (!token) {
       setError('No hay token de autenticación válido');
       setLoading(false);
       return false;
+    }
+    
+    // Para modo desarrollo, simular recarga
+    if (token === 'dev-token') {
+      const newBalance = (balance || 0) + amount;
+      setBalance(newBalance);
+      setTransactions(prev => [
+        {
+          id: Date.now(),
+          type: 'deposit',
+          amount: amount,
+          description: 'Recarga (Demo)',
+          created_at: new Date().toISOString()
+        },
+        ...prev
+      ]);
+      setError(null);
+      setLoading(false);
+      return true;
     }
     
     try {
@@ -108,10 +144,34 @@ export function useWallet(token: string) {
     setError(null);
     
     // Verificar si hay token
-    if (!token || token === 'dev-token') {
+    if (!token) {
       setError('No hay token de autenticación válido');
       setLoading(false);
       return false;
+    }
+    
+    // Para modo desarrollo, simular operación
+    if (token === 'dev-token') {
+      const newBalance = (balance || 0) - amount;
+      if (newBalance < 0) {
+        setError('Saldo insuficiente');
+        setLoading(false);
+        return false;
+      }
+      setBalance(newBalance);
+      setTransactions(prev => [
+        {
+          id: Date.now(),
+          type: 'trade',
+          amount: -amount,
+          description: description || 'Operación (Demo)',
+          created_at: new Date().toISOString()
+        },
+        ...prev
+      ]);
+      setError(null);
+      setLoading(false);
+      return true;
     }
     
     try {

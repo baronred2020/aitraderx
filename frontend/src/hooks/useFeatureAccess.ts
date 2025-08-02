@@ -86,6 +86,10 @@ const featureConfig: FeatureAccessConfig = {
   'monitoring_config': {
     requiredPlan: 'expert',
     feature: 'monitoring_config'
+  },
+  'intelligent_analysis_modal': {
+    requiredPlan: 'trader',
+    feature: 'intelligent_analysis_modal'
   }
 };
 

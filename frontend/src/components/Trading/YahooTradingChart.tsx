@@ -33,6 +33,8 @@ import {
 import { useCandles } from '../../hooks/useCandles';
 import { useMarketData } from '../../hooks/useMarketData';
 import { useIntelligentAnalysis, TradingType } from '../../hooks/useIntelligentAnalysis';
+import { useFeatureAccess } from '../../hooks/useFeatureAccess';
+import { UpgradeModal } from '../Common/UpgradeModal';
 import { AnalysisResults } from './AnalysisResults';
 
 // Tipos simples para lightweight-charts
@@ -260,6 +262,9 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
   const [isTouching, setIsTouching] = useState(false);
   const [showSmartAnalysis, setShowSmartAnalysis] = useState(true);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  
+  // Hook para verificar acceso al modal de análisis inteligente
+  const { requireAccess, showUpgradeModal, upgradeInfo, closeUpgradeModal } = useFeatureAccess();
 
   // Función para mapear timeframe de trading type a intervalo del backend
   const mapTimeframeToInterval = (timeframe: string): string => {
@@ -1743,6 +1748,11 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
                 </div>
                 <button
                   onClick={async () => {
+                    // Verificar acceso al modal de análisis inteligente
+                    if (!requireAccess('intelligent_analysis_modal')) {
+                      return; // El modal de upgrade se mostrará automáticamente
+                    }
+                    
                     try {
                       const result = await executeAnalysis(tradingType, symbol);
                       if (result) {
@@ -1982,6 +1992,17 @@ export const YahooTradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
         <AnalysisResults 
           result={lastAnalysis} 
           onClose={() => setShowAnalysisModal(false)} 
+        />
+      )}
+
+      {/* Modal de Upgrade */}
+      {showUpgradeModal && upgradeInfo && (
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          currentPlan={upgradeInfo.currentPlan}
+          requiredPlan={upgradeInfo.requiredPlan}
+          feature={upgradeInfo.feature}
+          onClose={closeUpgradeModal}
         />
       )}
     </div>
