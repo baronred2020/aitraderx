@@ -106,7 +106,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
       // Buscar la configuración de la característica
       const featureConfig = {
         'ai-monitor': { requiredPlan: 'expert', feature: 'ai-monitor' },
-        'rl': { requiredPlan: 'expert', feature: 'rl' },
+        'rl': { requiredPlan: 'premium', feature: 'reinforcement_learning' },
         'reports': { requiredPlan: 'expert', feature: 'reports' },
         'alerts': { requiredPlan: 'trader', feature: 'alerts' },
         'mt4_integration': { requiredPlan: 'expert', feature: 'mt4_integration' },

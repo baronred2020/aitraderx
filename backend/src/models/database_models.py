@@ -257,4 +257,50 @@ class WalletTransaction(Base):
     amount = Column(Numeric(precision=12, scale=2), nullable=False)
     description = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    wallet = relationship("VirtualWallet", back_populates="transactions") 
+    wallet = relationship("VirtualWallet", back_populates="transactions")
+
+class RLTrainingSession(Base):
+    """Modelo para sesiones de entrenamiento de Reinforcement Learning"""
+    __tablename__ = "rl_training_sessions"
+    
+    # Identificación
+    session_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
+    
+    # Configuración del entrenamiento
+    episodes = Column(Integer, nullable=False)
+    algorithm = Column(String(20), default="dqn")  # dqn, ppo, a2c
+    trading_pair = Column(String(10), default="EURUSD")
+    timeframe = Column(String(10), default="1h")
+    
+    # Estado del entrenamiento
+    status = Column(String(20), default="running")  # running, completed, failed, cancelled
+    progress = Column(Float, default=0.0)  # 0.0 a 1.0
+    current_episode = Column(Integer, default=0)
+    total_episodes = Column(Integer, nullable=False)
+    
+    # Resultados del entrenamiento
+    final_reward = Column(Float, nullable=True)
+    win_rate = Column(Float, nullable=True)
+    sharpe_ratio = Column(Float, nullable=True)
+    max_drawdown = Column(Float, nullable=True)
+    
+    # Archivos generados
+    model_path = Column(String(500), nullable=True)
+    training_log_path = Column(String(500), nullable=True)
+    
+    # Tiempo estimado y real
+    estimated_duration_minutes = Column(Integer, nullable=True)
+    actual_duration_minutes = Column(Integer, nullable=True)
+    
+    # Mensajes de error (si aplica)
+    error_message = Column(Text, nullable=True)
+    
+    # Timestamps
+    started_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relaciones
+    user = relationship("User") 

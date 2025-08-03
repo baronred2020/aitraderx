@@ -32,8 +32,8 @@ const featureConfig: FeatureAccessConfig = {
     feature: 'ai-monitor'
   },
   'rl': {
-    requiredPlan: 'expert',
-    feature: 'rl'
+    requiredPlan: 'premium',
+    feature: 'reinforcement_learning'
   },
   'reports': {
     requiredPlan: 'expert',

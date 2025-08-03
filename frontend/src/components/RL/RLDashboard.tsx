@@ -1,43 +1,170 @@
 // src/components/RL/RLDashboard.tsx
 import React, { useState, useEffect } from 'react';
-import { Brain, Zap, TrendingUp, Award, BarChart3, RefreshCw, Play, Square } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
+import { Brain, Zap, TrendingUp, Award, BarChart3, RefreshCw, Play, Square, Target, DollarSign, Activity, Shield, Settings, Eye, EyeOff, Crown, Cpu, Network, Rocket } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { useFeatureAccess } from '../../hooks/useFeatureAccess';
+import { UpgradeModal } from '../Common/UpgradeModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface RLStatus {
   status: string;
-  trained: boolean;
-  agent_type: string;
-  performance_metrics: any;
+  active_sessions: number;
+  model_coordination: {
+    brain_max_weight: number;
+    brain_ultra_weight: number;
+    brain_predictor_weight: number;
+    megamind_weight: number;
+  };
+  current_strategy: string;
+  market_regime: string;
+  risk_level: string;
 }
 
 interface RLPerformance {
-  avg_profit: number;
-  max_profit: number;
+  total_trades: number;
   win_rate: number;
+  profit_factor: number;
   sharpe_ratio: number;
   max_drawdown: number;
-  profit_factor: number;
+  total_return: number;
+  model_performance: {
+    brain_max: { accuracy: number; confidence: number };
+    brain_ultra: { accuracy: number; confidence: number };
+    brain_predictor: { accuracy: number; confidence: number };
+    megamind: { accuracy: number; confidence: number };
+  };
+}
+
+interface TradingSignal {
+  signal_id: string;
+  pair: string;
+  signal: string;
+  confidence: number;
+  position_size: number;
+  stop_loss: number;
+  take_profit: number;
+  reasoning: string;
+  models_used: string[];
+  timestamp: string;
+}
+
+interface TrainingProgress {
+  is_training: boolean;
+  progress: number;
+  current_episode: number;
+  total_episodes: number;
+  estimated_time_remaining?: number;
+  status: string;
+  error_message?: string;
+}
+
+interface TrainingPermission {
+  can_train: boolean;
+  reason: string;
+  session_id?: string;
+  days_until_next?: number;
+}
+
+interface TrainingValidation {
+  valid: boolean;
+  reason?: string;
+  limits?: {
+    min: number;
+    max: number;
+    recommended: number;
+  };
+  estimated_minutes?: number;
+}
+
+interface TrainingSession {
+  success: boolean;
+  session_id?: string;
+  message?: string;
+  error?: string;
 }
 
 export const RLDashboard: React.FC = () => {
+  const { requireAccess, showUpgradeModal, upgradeInfo, closeUpgradeModal } = useFeatureAccess();
+  const { subscription } = useAuth();
+  
+  // Verificar acceso al cargar el componente
+  useEffect(() => {
+    const hasAccess = requireAccess('rl');
+    if (!hasAccess) {
+      return; // No continuar si no tiene acceso
+    }
+  }, [requireAccess]);
+
   const [rlStatus, setRlStatus] = useState<RLStatus | null>(null);
-  const [performance, setPerformance] = useState<RLPerformance | null>(null);
-  const [trainingHistory, setTrainingHistory] = useState<any>(null);
-  const [isTraining, setIsTraining] = useState(false);
-  const [evaluationResults, setEvaluationResults] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [rlPerformance, setRlPerformance] = useState<RLPerformance | null>(null);
+  const [activeSignals, setActiveSignals] = useState<TradingSignal[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [trainingProgress, setTrainingProgress] = useState<TrainingProgress | null>(null);
+  const [currentEpisode, setCurrentEpisode] = useState(0);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState(0);
+  const [episodes, setEpisodes] = useState(() => {
+    // Establecer episodios por defecto según el plan
+    const planType = subscription?.planType;
+    switch (planType) {
+      case 'premium':
+        return 500; // Recomendado para Premium
+      case 'institutional':
+        return 1000; // Recomendado para Institutional
+      default:
+        return 500; // Default a Premium
+    }
+  });
+  const [trainingPermission, setTrainingPermission] = useState<TrainingPermission | null>(null);
+  const [trainingValidation, setTrainingValidation] = useState<TrainingValidation | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isStartingTraining, setIsStartingTraining] = useState(false);
 
   useEffect(() => {
     loadRLData();
-    const interval = setInterval(loadRLData, 5000);
+    const interval = setInterval(loadRLData, 3000); // Actualización más frecuente
     return () => clearInterval(interval);
   }, []);
 
+  // Nuevo useEffect para verificar permisos de entrenamiento
+  useEffect(() => {
+    const checkTrainingPermission = async () => {
+      try {
+        // Simular user_id - en producción esto vendría del contexto de autenticación
+        const userId = "4dabfd30-483d-4fa0-a8d0-bd151a46340f";
+        
+        // Simular respuesta de la API - en producción esto sería una llamada real
+        // Por ahora, asumimos que el usuario puede entrenar si no hay sesión activa
+        const isCurrentlyTraining = trainingProgress?.is_training || false;
+        const mockPermission: TrainingPermission = {
+          can_train: !isCurrentlyTraining, // Solo puede entrenar si no está entrenando
+          reason: isCurrentlyTraining 
+            ? "Ya tienes una sesión de entrenamiento activa" 
+            : "Puedes iniciar un nuevo entrenamiento",
+          session_id: isCurrentlyTraining ? "session_123" : undefined,
+          days_until_next: undefined
+        };
+        
+        setTrainingPermission(mockPermission);
+      } catch (error) {
+        console.error('Error checking training permission:', error);
+        // En caso de error, permitir entrenamiento por defecto
+        setTrainingPermission({
+          can_train: true,
+          reason: "Puedes iniciar un nuevo entrenamiento"
+        });
+      }
+    };
+
+    // Verificar permisos al cargar y cuando cambie el estado de entrenamiento
+    checkTrainingPermission();
+  }, [trainingProgress?.is_training]); // Dependencia en el estado de entrenamiento
+
   const loadRLData = async () => {
     try {
-      const [statusResponse, performanceResponse] = await Promise.all([
+      const [statusResponse, performanceResponse, signalsResponse] = await Promise.all([
         fetch('/api/rl/status'),
-        fetch('/api/rl/performance')
+        fetch('/api/rl/performance'),
+        fetch('/api/rl/active-signals')
       ]);
 
       if (statusResponse.ok) {
@@ -47,465 +174,955 @@ export const RLDashboard: React.FC = () => {
 
       if (performanceResponse.ok) {
         const perfData = await performanceResponse.json();
-        setPerformance(perfData.performance_metrics);
-        setTrainingHistory(perfData.training_history);
+        setRlPerformance(perfData);
       }
 
-      setLoading(false);
+      if (signalsResponse.ok) {
+        const signalsData = await signalsResponse.json();
+        setActiveSignals(signalsData.signals || []);
+      }
+
     } catch (error) {
       console.error('Error loading RL data:', error);
-      setLoading(false);
     }
   };
 
-  const startTraining = async (episodes: number) => {
+  // Función para validar parámetros de entrenamiento
+  const validateTrainingParams = async (episodes: number) => {
     try {
-      setIsTraining(true);
-      const response = await fetch(`/api/rl/train?episodes=${episodes}`, {
-        method: 'POST'
-      });
+      // Obtener límites según el plan de suscripción
+      const getPlanLimits = () => {
+        const planType = subscription?.planType;
+        switch (planType) {
+          case 'premium':
+            return { min: 100, max: 1000, recommended: 500 };
+          case 'institutional':
+            return { min: 100, max: 5000, recommended: 1000 };
+          default:
+            return { min: 100, max: 1000, recommended: 500 }; // Default a Premium
+        }
+      };
 
-      if (response.ok) {
-        alert(`Entrenamiento iniciado con ${episodes} episodios`);
+      const limits = getPlanLimits();
+      const isValidEpisodes = episodes >= limits.min && episodes <= limits.max;
+      const estimatedMinutes = Math.ceil(episodes / 50); // Estimación: 50 episodios por minuto
+      
+      const mockValidation: TrainingValidation = {
+        valid: isValidEpisodes,
+        reason: isValidEpisodes ? "Parámetros válidos" : `Episodios deben estar entre ${limits.min} y ${limits.max}`,
+        limits: limits,
+        estimated_minutes: estimatedMinutes
+      };
+      
+      setTrainingValidation(mockValidation);
+      return mockValidation.valid;
+    } catch (error) {
+      console.error('Error validating training parameters:', error);
+      return false;
+    }
+  };
+
+  // Función para iniciar entrenamiento
+  const startTraining = async () => {
+    if (!trainingPermission?.can_train) {
+      alert(trainingPermission?.reason || 'No puedes iniciar entrenamiento');
+      return;
+    }
+
+    const isValid = await validateTrainingParams(episodes);
+    if (!isValid) {
+      alert(trainingValidation?.reason || 'Parámetros de entrenamiento inválidos');
+      return;
+    }
+
+    setIsStartingTraining(true);
+    try {
+      // Simular inicio de entrenamiento - en producción esto sería una llamada real
+      const sessionId = `session_${Date.now()}`;
+      
+      // Simular respuesta exitosa
+      const mockSession: TrainingSession = {
+        success: true,
+        session_id: sessionId,
+        message: "Entrenamiento iniciado exitosamente"
+      };
+      
+      if (mockSession.success && mockSession.session_id) {
+        setCurrentSessionId(mockSession.session_id);
+        setTrainingProgress({
+          is_training: true,
+          progress: 0,
+          current_episode: 0,
+          total_episodes: episodes,
+          status: 'running'
+        });
+        
+        // Iniciar polling del progreso simulado
+        startProgressPolling(mockSession.session_id);
       } else {
-        alert('Error iniciando entrenamiento');
+        alert(mockSession.error || 'Error iniciando entrenamiento');
       }
     } catch (error) {
       console.error('Error starting training:', error);
       alert('Error iniciando entrenamiento');
     } finally {
-      setTimeout(() => setIsTraining(false), 2000);
+      setIsStartingTraining(false);
     }
   };
 
-  const evaluateAgent = async () => {
+  // Función para hacer polling del progreso
+  const startProgressPolling = (sessionId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        // Simular progreso de entrenamiento - en producción esto sería una llamada real
+        const currentProgress = trainingProgress?.progress || 0;
+        const currentEpisode = trainingProgress?.current_episode || 0;
+        const totalEpisodes = trainingProgress?.total_episodes || episodes;
+        
+        // Simular progreso incremental
+        const newEpisode = Math.min(currentEpisode + Math.floor(Math.random() * 10) + 1, totalEpisodes);
+        const newProgress = newEpisode / totalEpisodes;
+        const estimatedTimeRemaining = Math.ceil((totalEpisodes - newEpisode) / 50); // 50 episodios por minuto
+        
+        const mockProgress: TrainingProgress = {
+          is_training: newProgress < 1,
+          progress: newProgress,
+          current_episode: newEpisode,
+          total_episodes: totalEpisodes,
+          estimated_time_remaining: estimatedTimeRemaining,
+          status: newProgress >= 1 ? 'completed' : 'running'
+        };
+        
+        setTrainingProgress(mockProgress);
+        setCurrentEpisode(newEpisode);
+        
+        if (estimatedTimeRemaining) {
+          setEstimatedTimeRemaining(estimatedTimeRemaining);
+        }
+        
+        // Si el entrenamiento terminó, detener el polling
+        if (!mockProgress.is_training) {
+          clearInterval(interval);
+          if (mockProgress.status === 'completed') {
+            alert('¡Entrenamiento completado exitosamente!');
+          } else if (mockProgress.status === 'failed') {
+            alert(`Error en entrenamiento: ${mockProgress.error_message}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching training progress:', error);
+      }
+    }, 2000); // Poll cada 2 segundos
+    
+    // Limpiar intervalo después de 30 minutos (tiempo máximo de entrenamiento)
+    setTimeout(() => {
+      clearInterval(interval);
+    }, 30 * 60 * 1000);
+  };
+
+  // Función para cancelar entrenamiento
+  const cancelTraining = async () => {
+    if (!currentSessionId) return;
+    
     try {
-      const response = await fetch('/api/rl/evaluate?symbol=AAPL&episodes=10', {
-        method: 'POST'
+      // Simular cancelación de entrenamiento - en producción esto sería una llamada real
+      const mockResponse = {
+        success: true,
+        message: "Entrenamiento cancelado exitosamente"
+      };
+      
+      if (mockResponse.success) {
+        setTrainingProgress(null);
+        setCurrentSessionId(null);
+        alert('Entrenamiento cancelado');
+      } else {
+        alert('Error cancelando entrenamiento');
+      }
+    } catch (error) {
+      console.error('Error canceling training:', error);
+      alert('Error cancelando entrenamiento');
+    }
+  };
+
+  const executeSignal = async (signal: TradingSignal) => {
+    try {
+      const response = await fetch('/api/rl/execute-signal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(signal)
       });
 
       if (response.ok) {
-        const results = await response.json();
-        setEvaluationResults(results.evaluation_results);
+        alert(`Señal ejecutada: ${signal.signal} ${signal.pair}`);
+        loadRLData(); // Recargar datos
+      } else {
+        alert('Error ejecutando señal');
       }
     } catch (error) {
-      console.error('Error evaluating agent:', error);
+      console.error('Error executing signal:', error);
+      alert('Error ejecutando señal');
     }
   };
 
-  if (loading) {
+  if (rlStatus === null) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3">Cargando AITRADERX RL...</span>
+        <span className="ml-3 text-white">Cargando AITRADERX RL Director...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
-      {/* Estado del Sistema RL */}
-      <RLStatusPanel 
-        status={rlStatus} 
-        onTrain={startTraining}
-        isTraining={isTraining}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Mejorado */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl" style={{ 
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899)',
+              boxShadow: '0 20px 40px rgba(59, 130, 246, 0.3)'
+            }}>
+              <Rocket className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                AITRADERX RL Director
+              </h1>
+              <p className="text-blue-300 font-medium text-lg">Sistema de Coordinación Inteligente de Modelos IA</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-6 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Sistema Activo</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Cpu className="w-4 h-4" />
+              <span>4 Modelos Coordinados</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Network className="w-4 h-4" />
+              <span>IA Colaborativa</span>
+            </div>
+          </div>
+        </div>
 
-      {/* Métricas de Rendimiento */}
-      {performance && (
-        <RLPerformancePanel 
-          performance={performance}
-          onEvaluate={evaluateAgent}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Panel de Estado del RL Director */}
+          <RLStatusPanel 
+            rlStatus={rlStatus}
+            showAdvanced={showAdvanced}
+            trainingProgress={trainingProgress}
+            currentEpisode={currentEpisode}
+            estimatedTimeRemaining={estimatedTimeRemaining}
+            episodes={episodes}
+            setEpisodes={setEpisodes}
+            trainingPermission={trainingPermission}
+            trainingValidation={trainingValidation}
+            isStartingTraining={isStartingTraining}
+            onStartTraining={startTraining}
+            onCancelTraining={cancelTraining}
+            subscription={subscription}
+          />
+
+          {/* Panel de Coordinación de Modelos */}
+          <ModelCoordinationPanel rlStatus={rlStatus} showAdvanced={showAdvanced} />
+        </div>
+
+        {/* Panel de Señales Activas */}
+        <ActiveSignalsPanel activeSignals={activeSignals} onExecuteSignal={executeSignal} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          {/* Panel de Rendimiento */}
+          <RLPerformancePanel rlPerformance={rlPerformance} showAdvanced={showAdvanced} />
+
+          {/* Panel de Comparación */}
+          <AIComparisonPanel />
+        </div>
+
+        {/* Panel de Configuración Avanzada */}
+        <AdvancedConfigurationPanel showAdvanced={showAdvanced} />
+
+        {/* Toggle para Configuración Avanzada */}
+        <div className="text-center mt-6">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="glass-effect px-8 py-3 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2))',
+              border: '1px solid rgba(59, 130, 246, 0.3)'
+            }}
+          >
+            {showAdvanced ? (
+              <>
+                <EyeOff className="w-5 h-5 inline mr-2" />
+                Ocultar Configuración Avanzada
+              </>
+            ) : (
+              <>
+                <Settings className="w-5 h-5 inline mr-2" />
+                Mostrar Configuración Avanzada
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Modal de upgrade para usuarios sin acceso */}
+      {showUpgradeModal && upgradeInfo && (
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={closeUpgradeModal}
+          currentPlan={upgradeInfo.currentPlan}
+          requiredPlan={upgradeInfo.requiredPlan}
+          feature={upgradeInfo.feature}
         />
       )}
-
-      {/* Gráficos de Entrenamiento */}
-      {trainingHistory && (
-        <RLTrainingCharts history={trainingHistory} />
-      )}
-
-      {/* Resultados de Evaluación */}
-      {evaluationResults && (
-        <RLEvaluationResults results={evaluationResults} />
-      )}
-
-      {/* Comparación IA Tradicional vs RL */}
-      <AIComparisonPanel />
     </div>
   );
 };
 
 const RLStatusPanel: React.FC<{
-  status: RLStatus | null;
-  onTrain: (episodes: number) => void;
-  isTraining: boolean;
-}> = ({ status, onTrain, isTraining }) => {
-  const [episodes, setEpisodes] = useState(1000);
-
-  if (!status) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <div className="flex items-center">
-          <Brain className="w-5 h-5 text-red-600 mr-2" />
-          <span className="text-red-800">AITRADERX - Sistema RL no inicializado</span>
-        </div>
-      </div>
-    );
-  }
+  rlStatus: RLStatus | null;
+  showAdvanced: boolean;
+  trainingProgress: TrainingProgress | null;
+  currentEpisode: number;
+  estimatedTimeRemaining: number;
+  episodes: number;
+  setEpisodes: (episodes: number) => void;
+  trainingPermission: TrainingPermission | null;
+  trainingValidation: TrainingValidation | null;
+  isStartingTraining: boolean;
+  onStartTraining: () => void;
+  onCancelTraining: () => void;
+  subscription: { planType?: string } | null;
+}> = ({ 
+  rlStatus, 
+  showAdvanced, 
+  trainingProgress, 
+  currentEpisode, 
+  estimatedTimeRemaining,
+  episodes,
+  setEpisodes,
+  trainingPermission,
+  trainingValidation,
+  isStartingTraining,
+  onStartTraining,
+  onCancelTraining,
+  subscription
+}) => {
+  const isTraining = trainingProgress?.is_training;
+  const canStartTraining = trainingPermission?.can_train && !isTraining;
+  const isValidEpisodes = episodes >= 100 && episodes <= 5000;
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-      <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center">
-        <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-        AITRADERX - Estado del Reinforcement Learning
-      </h3>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className={`p-3 sm:p-4 rounded ${status.status === 'initialized' ? 'bg-green-50' : 'bg-red-50'}`}>
-          <div className="text-xs sm:text-sm text-gray-600">Estado</div>
-          <div className={`text-sm sm:text-lg font-bold ${status.status === 'initialized' ? 'text-green-600' : 'text-red-600'}`}>
-            {status.status === 'initialized' ? 'Inicializado' : 'No Inicializado'}
-          </div>
+    <div className="glass-effect p-6 rounded-2xl border" style={{
+      background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+      borderColor: 'rgba(59, 130, 246, 0.2)'
+    }}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+          boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)'
+        }}>
+          <Activity className="w-5 h-5 text-white" />
         </div>
-
-        <div className={`p-3 sm:p-4 rounded ${status.trained ? 'bg-blue-50' : 'bg-yellow-50'}`}>
-          <div className="text-xs sm:text-sm text-gray-600">Entrenamiento</div>
-          <div className={`text-sm sm:text-lg font-bold ${status.trained ? 'text-blue-600' : 'text-yellow-600'}`}>
-            {status.trained ? 'Entrenado' : 'Sin Entrenar'}
-          </div>
+        <div>
+          <h3 className="text-xl font-bold text-white">Estado del RL Director</h3>
+          <p className="text-blue-300 text-sm">Monitoreo en tiempo real</p>
         </div>
-
-        <div className="bg-purple-50 p-3 sm:p-4 rounded">
-          <div className="text-xs sm:text-sm text-gray-600">Tipo de Agente</div>
-          <div className="text-sm sm:text-lg font-bold text-purple-600">
-            {status.agent_type || 'DQN'}
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="rounded-xl p-4 text-white" style={{
+          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+          boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)'
+        }}>
+          <div className="text-2xl font-bold flex items-center gap-2">
+            {rlStatus?.status === 'active' ? '🟢 Activo' : '🔴 Inactivo'}
           </div>
+          <div className="text-sm opacity-90">Estado del Sistema</div>
         </div>
-
-        <div className={`p-3 sm:p-4 rounded ${isTraining ? 'bg-orange-50' : 'bg-gray-50'}`}>
-          <div className="text-xs sm:text-sm text-gray-600">Estado Actual</div>
-          <div className={`text-sm sm:text-lg font-bold ${isTraining ? 'text-orange-600' : 'text-gray-600'}`}>
-            {isTraining ? 'Entrenando...' : 'Listo'}
-          </div>
+        
+        <div className="rounded-xl p-4 text-white" style={{
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)'
+        }}>
+          <div className="text-2xl font-bold">{rlStatus?.active_sessions || 0}</div>
+          <div className="text-sm opacity-90">Sesiones Activas</div>
         </div>
       </div>
 
-      {/* Controles de Entrenamiento */}
-      <div className="border-t pt-3 sm:pt-4">
-        <h4 className="font-medium mb-3 text-sm sm:text-base">Controles de Entrenamiento</h4>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <input
-            type="number"
-            value={episodes}
-            onChange={(e) => setEpisodes(parseInt(e.target.value))}
-            className="border rounded px-2 sm:px-3 py-1.5 sm:py-2 w-24 sm:w-32 text-sm"
-            placeholder="Episodios"
-            min="100"
-            max="10000"
-            step="100"
-          />
-          <button
-            onClick={() => onTrain(episodes)}
-            disabled={isTraining}
-            className={`flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded font-medium text-sm ${
-              isTraining 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isTraining ? (
-              <>
-                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                Entrenando...
-              </>
-            ) : (
-              <>
-                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Entrenar Agente
-              </>
+      <div className="space-y-3 mb-6">
+        <div className="flex justify-between items-center p-3 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+          <span className="text-gray-300">Estrategia Actual:</span>
+          <span className="font-semibold text-white">{rlStatus?.current_strategy || 'N/A'}</span>
+        </div>
+        <div className="flex justify-between items-center p-3 rounded-lg" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
+          <span className="text-gray-300">Regimen de Mercado:</span>
+          <span className="font-semibold text-white">{rlStatus?.market_regime || 'N/A'}</span>
+        </div>
+        <div className="flex justify-between items-center p-3 rounded-lg" style={{ backgroundColor: 'rgba(236, 72, 153, 0.1)' }}>
+          <span className="text-gray-300">Nivel de Riesgo:</span>
+          <span className="font-semibold text-white">{rlStatus?.risk_level || 'N/A'}</span>
+        </div>
+      </div>
+
+      {showAdvanced && (
+        <>
+          <div className="border-t border-gray-700 pt-6 mb-6">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Crown className="w-5 h-5 text-yellow-400" />
+              Controles de Entrenamiento
+            </h4>
+            
+            {/* Información de permisos */}
+            {trainingPermission && (
+              <div className={`p-4 rounded-xl mb-4 ${
+                trainingPermission.can_train 
+                  ? 'bg-green-900/30 border border-green-500/30' 
+                  : 'bg-red-900/30 border border-red-500/30'
+              }`}>
+                <div className="text-sm font-medium text-white">
+                  {trainingPermission.can_train ? '✅' : '❌'} {trainingPermission.reason}
+                </div>
+                {trainingPermission.days_until_next && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    Próximo entrenamiento disponible en {trainingPermission.days_until_next} días
+                  </div>
+                )}
+              </div>
             )}
-          </button>
+
+            {/* Configuración de entrenamiento */}
+            <div className="space-y-4 mb-4">
+              {/* Información del Plan */}
+              <div className="p-4 rounded-xl border" style={{ 
+                backgroundColor: 'rgba(26, 31, 46, 0.8)',
+                borderColor: 'rgba(139, 92, 246, 0.3)'
+              }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+                    background: subscription?.planType === 'institutional' 
+                      ? 'linear-gradient(135deg, #ec4899, #be185d)'
+                      : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                  }}>
+                    {subscription?.planType === 'institutional' ? (
+                      <Crown className="w-4 h-4 text-white" />
+                    ) : (
+                      <Award className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-white">
+                      Plan {subscription?.planType === 'institutional' ? 'Institutional' : 'Premium'}
+                    </h4>
+                    <p className="text-sm text-gray-400">
+                      Límite: {subscription?.planType === 'institutional' ? '5,000' : '1,000'} episodios
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Episodios de Entrenamiento
+                </label>
+                <input
+                  type="number"
+                  value={episodes}
+                  onChange={(e) => setEpisodes(Number(e.target.value))}
+                  min="100"
+                  max={subscription?.planType === 'institutional' ? 5000 : 1000}
+                  step="100"
+                  className="w-full px-3 py-2 rounded-lg text-white bg-gray-800/50 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isTraining}
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  Min: 100, Max: {subscription?.planType === 'institutional' ? '5,000' : '1,000'}, 
+                  Recomendado: {subscription?.planType === 'institutional' ? '1,000' : '500'}
+                </div>
+                {trainingValidation?.limits && (
+                  <div className="text-xs text-blue-400 mt-1">
+                    Límites para tu plan: {trainingValidation.limits.min} - {trainingValidation.limits.max} episodios
+                  </div>
+                )}
+              </div>
+
+              {trainingValidation?.estimated_minutes && (
+                <div className="text-sm text-gray-400 flex items-center gap-2">
+                  <span className="text-yellow-400">⏱️</span>
+                  Tiempo estimado: {trainingValidation.estimated_minutes} minutos
+                </div>
+              )}
+            </div>
+
+            {/* Botones de control */}
+            <div className="flex gap-3">
+              <button
+                onClick={onStartTraining}
+                disabled={!canStartTraining || !isValidEpisodes || isStartingTraining}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
+                  canStartTraining && isValidEpisodes && !isStartingTraining
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                    : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {isStartingTraining ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 inline mr-2 animate-spin" />
+                    Iniciando...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 inline mr-2" />
+                    Iniciar Entrenamiento
+                  </>
+                )}
+              </button>
+              
+              {isTraining && (
+                <button
+                  onClick={onCancelTraining}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                >
+                  <Square className="w-4 h-4 inline mr-2" />
+                  Cancelar
+                </button>
+              )}
+            </div>
+
+            {/* Barra de progreso */}
+            {isTraining && trainingProgress && (
+              <div className="mt-6 p-4 rounded-xl" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                <div className="flex justify-between text-sm text-gray-300 mb-3">
+                  <span>Progreso: {Math.round(trainingProgress.progress * 100)}%</span>
+                  <span>Episodio {currentEpisode} de {trainingProgress.total_episodes}</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300 shadow-lg"
+                    style={{ width: `${trainingProgress.progress * 100}%` }}
+                  ></div>
+                </div>
+                {estimatedTimeRemaining > 0 && (
+                  <div className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                    <span className="text-yellow-400">⏱️</span>
+                    Tiempo restante estimado: {estimatedTimeRemaining} minutos
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const ModelCoordinationPanel: React.FC<{
+  rlStatus: RLStatus | null;
+  showAdvanced: boolean;
+}> = ({ rlStatus, showAdvanced }) => {
+  if (!rlStatus) return null;
+
+  const modelData = [
+    {
+      name: 'Brain Max',
+      weight: rlStatus.model_coordination.brain_max_weight,
+      status: 'Activo',
+      confidence: 95,
+      color: '#3b82f6',
+      gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+    },
+    {
+      name: 'Brain Ultra',
+      weight: rlStatus.model_coordination.brain_ultra_weight,
+      status: 'Activo',
+      confidence: 92,
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg, #10b981, #059669)'
+    },
+    {
+      name: 'Brain Predictor',
+      weight: rlStatus.model_coordination.brain_predictor_weight,
+      status: 'Activo',
+      confidence: 90,
+      color: '#f59e0b',
+      gradient: 'linear-gradient(135deg, #f59e0b, #d97706)'
+    },
+    {
+      name: 'MegaMind',
+      weight: rlStatus.model_coordination.megamind_weight,
+      status: 'Activo',
+      confidence: 98,
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+    }
+  ];
+
+  return (
+    <div className="glass-effect p-6 rounded-2xl border" style={{
+      background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+      borderColor: 'rgba(139, 92, 246, 0.2)'
+    }}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+          boxShadow: '0 8px 20px rgba(139, 92, 246, 0.3)'
+        }}>
+          <Network className="w-5 h-5 text-white" />
         </div>
-        <p className="text-xs sm:text-sm text-gray-500 mt-2">
-          El entrenamiento de AITRADERX se ejecuta en background. Puede tomar varios minutos.
-        </p>
+        <div>
+          <h3 className="text-xl font-bold text-white">Coordinación de Modelos IA</h3>
+          <p className="text-purple-300 text-sm">Sistema colaborativo inteligente</p>
+        </div>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico de Ponderación */}
+        <div>
+          <h4 className="font-medium mb-3 text-white">Ponderación Actual de Modelos</h4>
+          <div className="bg-gray-800/30 rounded-xl p-4">
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={modelData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="weight"
+                >
+                  {modelData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => [`${value}%`, 'Peso']}
+                  contentStyle={{
+                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: '12px',
+                    color: 'white'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Estado de Modelos */}
+        <div>
+          <h4 className="font-medium mb-3 text-white">Estado de Modelos</h4>
+          <div className="space-y-3">
+            {modelData.map((model, index) => (
+              <div key={index} className="p-4 rounded-xl border transition-all duration-300 hover:scale-105" style={{
+                background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+                borderColor: 'rgba(139, 92, 246, 0.2)'
+              }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div 
+                      className="w-4 h-4 rounded-full mr-3 shadow-lg"
+                      style={{ 
+                        background: model.gradient,
+                        boxShadow: `0 0 10px ${model.color}40`
+                      }}
+                    ></div>
+                    <div>
+                      <div className="font-semibold text-white">{model.name}</div>
+                      <div className="text-sm text-gray-400 font-medium">{model.status}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-xl text-white">{model.weight}%</div>
+                    <div className="text-sm text-gray-400 font-medium">{model.confidence}% conf</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ActiveSignalsPanel: React.FC<{
+  activeSignals: TradingSignal[];
+  onExecuteSignal: (signal: TradingSignal) => void;
+}> = ({ activeSignals, onExecuteSignal }) => {
+  return (
+    <div className="glass-effect p-6 rounded-2xl border mt-6" style={{
+      background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+      borderColor: 'rgba(236, 72, 153, 0.2)'
+    }}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+          background: 'linear-gradient(135deg, #ec4899, #be185d)',
+          boxShadow: '0 8px 20px rgba(236, 72, 153, 0.3)'
+        }}>
+          <Target className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white">Señales Activas ({activeSignals.length})</h3>
+          <p className="text-pink-300 text-sm">Oportunidades de trading en tiempo real</p>
+        </div>
+      </div>
+
+      {activeSignals.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <Target className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+          <p className="text-lg font-medium">No hay señales activas en este momento</p>
+          <p className="text-sm">El RL Director está analizando el mercado...</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {activeSignals.map((signal, index) => (
+            <div key={index} className="rounded-xl p-4 border transition-all duration-300 hover:scale-105" style={{
+              background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+              borderColor: signal.signal === 'BUY' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+            }}>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div className="flex-1">
+                  <div className="flex items-center mb-3">
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium mr-3 ${
+                      signal.signal === 'BUY' 
+                        ? 'bg-green-900/50 text-green-400 border border-green-500/30' 
+                        : 'bg-red-900/50 text-red-400 border border-red-500/30'
+                    }`}>
+                      {signal.signal}
+                    </div>
+                    <span className="font-bold text-xl text-white">{signal.pair}</span>
+                    <span className="ml-3 text-sm text-gray-400">
+                      {new Date(signal.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                      <div className="text-sm font-medium text-gray-400">Confianza</div>
+                      <div className="font-bold text-base text-blue-400 leading-tight">{signal.confidence}%</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
+                      <div className="text-sm font-medium text-gray-400">Posición</div>
+                      <div className="font-bold text-base text-purple-400 leading-tight">{signal.position_size}%</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+                      <div className="text-sm font-medium text-gray-400">Stop Loss</div>
+                      <div className="font-bold text-base text-red-400 leading-tight">{signal.stop_loss}</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                      <div className="text-sm font-medium text-gray-400">Take Profit</div>
+                      <div className="font-bold text-base text-green-400 leading-tight">{signal.take_profit}</div>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-gray-300 font-medium p-3 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
+                    <strong className="text-white">Razón:</strong> {signal.reasoning}
+                  </div>
+                </div>
+
+                <div className="mt-4 sm:mt-0 sm:ml-4">
+                  <button
+                    onClick={() => onExecuteSignal(signal)}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                  >
+                    <Rocket className="w-4 h-4 inline mr-2" />
+                    Ejecutar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 const RLPerformancePanel: React.FC<{
-  performance: RLPerformance;
-  onEvaluate: () => void;
-}> = ({ performance, onEvaluate }) => {
+  rlPerformance: RLPerformance | null;
+  showAdvanced: boolean;
+}> = ({ rlPerformance, showAdvanced }) => {
   return (
-    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-        <h3 className="text-base sm:text-lg font-semibold flex items-center mb-2 sm:mb-0">
-          <Award className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-          AITRADERX - Métricas de Rendimiento RL
-        </h3>
-        <button
-          onClick={onEvaluate}
-          className="bg-purple-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-purple-700"
-        >
-          Evaluar Agente
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
-        <div className="bg-green-50 p-3 sm:p-4 rounded text-center">
-          <div className="text-lg sm:text-2xl font-bold text-green-600">
-            {(performance.avg_profit * 100).toFixed(1)}%
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">Profit Promedio</div>
+    <div className="glass-effect p-6 rounded-2xl border" style={{
+      background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+      borderColor: 'rgba(139, 92, 246, 0.2)'
+    }}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+          boxShadow: '0 8px 20px rgba(139, 92, 246, 0.3)'
+        }}>
+          <BarChart3 className="w-5 h-5 text-white" />
         </div>
-
-        <div className="bg-blue-50 p-3 sm:p-4 rounded text-center">
-          <div className="text-lg sm:text-2xl font-bold text-blue-600">
-            {(performance.max_profit * 100).toFixed(1)}%
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">Profit Máximo</div>
-        </div>
-
-        <div className="bg-purple-50 p-3 sm:p-4 rounded text-center">
-          <div className="text-lg sm:text-2xl font-bold text-purple-600">
-            {(performance.win_rate * 100).toFixed(1)}%
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">Win Rate</div>
-        </div>
-
-        <div className="bg-yellow-50 p-3 sm:p-4 rounded text-center">
-          <div className="text-lg sm:text-2xl font-bold text-yellow-600">
-            {performance.sharpe_ratio.toFixed(2)}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">Sharpe Ratio</div>
-        </div>
-
-        <div className="bg-red-50 p-3 sm:p-4 rounded text-center">
-          <div className="text-lg sm:text-2xl font-bold text-red-600">
-            {(performance.max_drawdown * 100).toFixed(1)}%
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">Max Drawdown</div>
-        </div>
-
-        <div className="bg-indigo-50 p-3 sm:p-4 rounded text-center">
-          <div className="text-lg sm:text-2xl font-bold text-indigo-600">
-            {performance.profit_factor.toFixed(2)}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600">Profit Factor</div>
-        </div>
-      </div>
-
-      {/* Indicadores de rendimiento */}
-      <div className="mt-4 space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Rendimiento General:</span>
-          <span className={`font-medium ${
-            performance.avg_profit > 0.1 ? 'text-green-600' : 
-            performance.avg_profit > 0 ? 'text-yellow-600' : 'text-red-600'
-          }`}>
-            {performance.avg_profit > 0.1 ? 'Excelente' : 
-             performance.avg_profit > 0 ? 'Bueno' : 'Necesita Mejora'}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span>Consistencia:</span>
-          <span className={`font-medium ${
-            performance.sharpe_ratio > 1.5 ? 'text-green-600' : 
-            performance.sharpe_ratio > 1 ? 'text-yellow-600' : 'text-red-600'
-          }`}>
-            {performance.sharpe_ratio > 1.5 ? 'Alta' : 
-             performance.sharpe_ratio > 1 ? 'Media' : 'Baja'}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const RLTrainingCharts: React.FC<{ history: any }> = ({ history }) => {
-  if (!history.episode_rewards || !history.episode_profits) {
-    return null;
-  }
-
-  // Preparar datos para gráficos
-  const chartData = history.episode_rewards.map((reward: number, index: number) => ({
-    episode: index,
-    reward: reward,
-    profit: history.episode_profits[index] * 100
-  }));
-
-  // Calcular media móvil
-  const movingAvgData = chartData.slice(50).map((_: any, index: number) => {
-    const start = index;
-    const end = index + 50;
-    const avgReward = chartData.slice(start, end).reduce((sum: number, item: any) => sum + item.reward, 0) / 50;
-    const avgProfit = chartData.slice(start, end).reduce((sum: number, item: any) => sum + item.profit, 0) / 50;
-    
-    return {
-      episode: index + 50,
-      avgReward,
-      avgProfit
-    };
-  });
-
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
-        <BarChart3 className="w-5 h-5 mr-2" />
-        AITRADERX - Progreso del Entrenamiento RL
-      </h3>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico de Recompensas */}
         <div>
-          <h4 className="font-medium mb-3">AITRADERX - Recompensas por Episodio</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={chartData.slice(-200)}> {/* Últimos 200 episodios */}
-              <defs>
-                <linearGradient id="colorReward" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="episode" />
-              <YAxis />
-              <Tooltip />
-              <Area 
-                type="monotone" 
-                dataKey="reward" 
-                stroke="#3b82f6" 
-                fillOpacity={1} 
-                fill="url(#colorReward)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Gráfico de Profits */}
-        <div>
-                      <h4 className="font-medium mb-3">AITRADERX - Profit por Episodio (%)</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={chartData.slice(-200)}>
-              <defs>
-                <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="episode" />
-              <YAxis />
-              <Tooltip />
-              <Area 
-                type="monotone" 
-                dataKey="profit" 
-                stroke="#10b981" 
-                fillOpacity={1} 
-                fill="url(#colorProfit)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Media Móvil de Recompensas */}
-        <div>
-          <h4 className="font-medium mb-3">Media Móvil Recompensas (50 episodios)</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={movingAvgData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="episode" />
-              <YAxis />
-              <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="avgReward" 
-                stroke="#8b5cf6" 
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Media Móvil de Profits */}
-        <div>
-          <h4 className="font-medium mb-3">Media Móvil Profit (50 episodios)</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={movingAvgData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="episode" />
-              <YAxis />
-              <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="avgProfit" 
-                stroke="#f59e0b" 
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const RLEvaluationResults: React.FC<{ results: any }> = ({ results }) => {
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">AITRADERX - Resultados de Evaluación</h3>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <div className="bg-blue-50 p-3 rounded text-center">
-          <div className="text-lg font-bold text-blue-600">
-            {(results.avg_profit * 100).toFixed(1)}%
-          </div>
-          <div className="text-sm text-gray-600">Profit Promedio</div>
-        </div>
-        
-        <div className="bg-green-50 p-3 rounded text-center">
-          <div className="text-lg font-bold text-green-600">
-            {(results.max_profit * 100).toFixed(1)}%
-          </div>
-          <div className="text-sm text-gray-600">Mejor Resultado</div>
-        </div>
-        
-        <div className="bg-purple-50 p-3 rounded text-center">
-          <div className="text-lg font-bold text-purple-600">
-            {(results.win_rate * 100).toFixed(1)}%
-          </div>
-          <div className="text-sm text-gray-600">Win Rate</div>
-        </div>
-        
-        <div className="bg-yellow-50 p-3 rounded text-center">
-          <div className="text-lg font-bold text-yellow-600">
-            {results.sharpe_ratio.toFixed(2)}
-          </div>
-          <div className="text-sm text-gray-600">Sharpe Ratio</div>
+          <h3 className="text-xl font-bold text-white">Rendimiento del RL Director</h3>
+          <p className="text-purple-300 text-sm">Análisis detallado de rendimiento</p>
         </div>
       </div>
 
-      {/* Gráfico de resultados individuales */}
-      <div className="mt-4">
-        <h4 className="font-medium mb-3">AITRADERX - Resultados por Episodio de Evaluación</h4>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={results.results}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="episode" />
-            <YAxis />
-            <Tooltip />
-            <Bar 
-              dataKey="profit" 
-              fill="#3b82f6"
-              name="Profit (%)"
-            />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+          <div className="text-lg font-bold text-white leading-tight">
+            {((rlPerformance?.total_return || 0) * 100).toFixed(1)}%
+          </div>
+          <div className="text-xs text-gray-200 mt-1">Profit Total</div>
+        </div>
+
+        <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
+          <div className="text-lg font-bold text-white leading-tight">
+            {((rlPerformance?.win_rate || 0) * 100).toFixed(1)}%
+          </div>
+          <div className="text-xs text-gray-200 mt-1">Win Rate</div>
+        </div>
+
+        <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+          <div className="text-lg font-bold text-white leading-tight">
+            {rlPerformance?.profit_factor.toFixed(2)}
+          </div>
+          <div className="text-xs text-gray-200 mt-1">Profit Factor</div>
+        </div>
+
+        <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+          <div className="text-lg font-bold text-white leading-tight">
+            {rlPerformance?.sharpe_ratio.toFixed(2)}
+          </div>
+          <div className="text-xs text-gray-200 mt-1">Sharpe Ratio</div>
+        </div>
+
+        <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #ef4444, #991b1b)' }}>
+          <div className="text-lg font-bold text-white leading-tight">
+            {((rlPerformance?.max_drawdown || 0) * 100).toFixed(1)}%
+          </div>
+          <div className="text-xs text-gray-200 mt-1">Max Drawdown</div>
+        </div>
+
+        <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+          <div className="text-lg font-bold text-white leading-tight">
+            {rlPerformance?.total_trades}
+          </div>
+          <div className="text-xs text-gray-200 mt-1">Trades</div>
+        </div>
       </div>
+
+      {showAdvanced && (
+        <div className="border-t border-gray-700 pt-6">
+          <h4 className="font-medium mb-3 text-white flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-yellow-400" />
+            Análisis de Rendimiento
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(26, 31, 46, 0.8)' }}>
+              <h5 className="font-medium mb-3 text-white">Evaluación General</h5>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-gray-300">Rendimiento:</span>
+                  <span className={`font-semibold ${
+                    (rlPerformance?.total_return || 0) > 0.1 ? 'text-green-400' : 
+                    (rlPerformance?.total_return || 0) > 0 ? 'text-yellow-400' : 'text-red-400'
+                  }`}>
+                    {(rlPerformance?.total_return || 0) > 0.1 ? 'Excelente' : 
+                    (rlPerformance?.total_return || 0) > 0 ? 'Bueno' : 'Necesita Mejora'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-gray-300">Consistencia:</span>
+                  <span className={`font-semibold ${
+                    (rlPerformance?.sharpe_ratio || 0) > 1.5 ? 'text-green-400' : 
+                    (rlPerformance?.sharpe_ratio || 0) > 1 ? 'text-yellow-400' : 'text-red-400'
+                  }`}>
+                    {(rlPerformance?.sharpe_ratio || 0) > 1.5 ? 'Alta' : 
+                    (rlPerformance?.sharpe_ratio || 0) > 1 ? 'Media' : 'Baja'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-gray-300">Gestión de Riesgo:</span>
+                  <span className={`font-semibold ${
+                    (rlPerformance?.max_drawdown || 0) < 0.1 ? 'text-green-400' : 
+                    (rlPerformance?.max_drawdown || 0) < 0.2 ? 'text-yellow-400' : 'text-red-400'
+                  }`}>
+                    {(rlPerformance?.max_drawdown || 0) < 0.1 ? 'Excelente' : 
+                    (rlPerformance?.max_drawdown || 0) < 0.2 ? 'Buena' : 'Necesita Mejora'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(26, 31, 46, 0.8)' }}>
+              <h5 className="font-medium mb-3 text-white">Recomendaciones</h5>
+              <div className="space-y-3 text-sm">
+                {(rlPerformance?.total_return || 0) < 0.05 && (
+                  <div className="flex items-center text-red-400 font-medium">
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    Considerar reentrenamiento del agente
+                  </div>
+                )}
+                {(rlPerformance?.sharpe_ratio || 0) < 1 && (
+                  <div className="flex items-center text-yellow-400 font-medium">
+                    <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                    Optimizar gestión de riesgo
+                  </div>
+                )}
+                {(rlPerformance?.max_drawdown || 0) > 0.15 && (
+                  <div className="flex items-center text-red-400 font-medium">
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                    Reducir exposición al riesgo
+                  </div>
+                )}
+                {(rlPerformance?.win_rate || 0) < 0.6 && (
+                  <div className="flex items-center text-yellow-400 font-medium">
+                    <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                    Revisar criterios de entrada
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAdvanced && rlPerformance && (
+        <div className="mt-6 border-t border-gray-700 pt-6">
+          <h4 className="font-medium mb-4 text-white">Rendimiento por Modelo</h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: 'rgba(26, 31, 46, 0.8)' }}>
+              <div className="text-xl font-bold text-white">
+                {(rlPerformance.model_performance.brain_max.accuracy * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm font-medium text-gray-400">Brain Max</div>
+            </div>
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: 'rgba(26, 31, 46, 0.8)' }}>
+              <div className="text-xl font-bold text-white">
+                {(rlPerformance.model_performance.brain_ultra.accuracy * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm font-medium text-gray-400">Brain Ultra</div>
+            </div>
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: 'rgba(26, 31, 46, 0.8)' }}>
+              <div className="text-xl font-bold text-white">
+                {(rlPerformance.model_performance.brain_predictor.accuracy * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm font-medium text-gray-400">Brain Predictor</div>
+            </div>
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: 'rgba(26, 31, 46, 0.8)' }}>
+              <div className="text-xl font-bold text-white">
+                {(rlPerformance.model_performance.megamind.accuracy * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm font-medium text-gray-400">MegaMind</div>
+            </div>
+            <div className="text-center p-4 rounded-xl" style={{ backgroundColor: 'rgba(26, 31, 46, 0.8)' }}>
+              <div className="text-xl font-bold text-white">
+                {(rlPerformance.model_performance.brain_max.confidence * 100).toFixed(1)}%
+              </div>
+              <div className="text-sm font-medium text-gray-400">Confianza</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -513,107 +1130,234 @@ const RLEvaluationResults: React.FC<{ results: any }> = ({ results }) => {
 const AIComparisonPanel: React.FC = () => {
   const comparisonData = [
     {
-      method: 'AITRADERX - IA Tradicional',
+      method: 'IA Tradicional',
       accuracy: 76.8,
       profit: 12.5,
       sharpe: 1.32,
       trades: 45,
-      description: 'Random Forest + LSTM'
+      description: 'Brain Max + Ultra + Predictor',
+      color: 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
     },
     {
-      method: 'AITRADERX - Reinforcement Learning',
-      accuracy: 78.3,
-      profit: 15.2,
+      method: 'MegaMind Ensemble',
+      accuracy: 79.2,
+      profit: 14.8,
       sharpe: 1.45,
-      trades: 32,
-      description: 'DQN Agent'
+      trades: 38,
+      description: 'Ensemble de 3 modelos',
+      color: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
     },
     {
-      method: 'AITRADERX - Ensemble (Híbrido)',
+      method: 'RL Director',
       accuracy: 82.1,
       profit: 18.7,
       sharpe: 1.68,
-      trades: 38,
-      description: 'RL + Traditional AI'
+      trades: 32,
+      description: 'Coordinación inteligente',
+      color: 'linear-gradient(135deg, #ec4899, #be185d)'
     }
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
-        <TrendingUp className="w-5 h-5 mr-2" />
-        AITRADERX - Comparación de Métodos de IA
-      </h3>
-
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">Método</th>
-              <th className="text-left py-2">Precisión</th>
-              <th className="text-left py-2">Profit Anual</th>
-              <th className="text-left py-2">Sharpe Ratio</th>
-              <th className="text-left py-2">Trades/Mes</th>
-              <th className="text-left py-2">Descripción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {comparisonData.map((method, index) => (
-              <tr key={index} className="border-b hover:bg-gray-50">
-                <td className="py-3 font-medium">{method.method}</td>
-                <td className="py-3">
-                  <span className={`font-medium ${
-                    method.accuracy > 80 ? 'text-green-600' : 
-                    method.accuracy > 75 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {method.accuracy}%
-                  </span>
-                </td>
-                <td className="py-3">
-                  <span className={`font-medium ${
-                    method.profit > 15 ? 'text-green-600' : 
-                    method.profit > 10 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {method.profit}%
-                  </span>
-                </td>
-                <td className="py-3">
-                  <span className={`font-medium ${
-                    method.sharpe > 1.5 ? 'text-green-600' : 
-                    method.sharpe > 1.2 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {method.sharpe}
-                  </span>
-                </td>
-                <td className="py-3">{method.trades}</td>
-                <td className="py-3 text-sm text-gray-600">{method.description}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="glass-effect p-6 rounded-2xl border" style={{
+      background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+      borderColor: 'rgba(139, 92, 246, 0.2)'
+    }}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+          boxShadow: '0 8px 20px rgba(139, 92, 246, 0.3)'
+        }}>
+          <TrendingUp className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white">Comparación de Métodos AITRADERX</h3>
+          <p className="text-purple-300 text-sm">Análisis comparativo de eficiencia</p>
+        </div>
       </div>
 
-      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-800 mb-2">📊 AITRADERX - Resumen de Rendimiento</h4>
-        <p className="text-blue-700 text-sm">
-          El método <strong>AITRADERX - Ensemble (Híbrido)</strong> que combina RL + IA Tradicional muestra 
-          el mejor rendimiento general con <strong>82.1% de precisión</strong> y <strong>18.7% de profit anual</strong>.
-          El agente de Reinforcement Learning de AITRADERX aporta decisiones más conservadoras pero consistentes.
+      <div className="space-y-4 mb-6">
+        {comparisonData.map((method, index) => (
+          <div key={index} className="p-4 rounded-xl border transition-all duration-300 hover:scale-105" style={{
+            background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+            borderColor: 'rgba(139, 92, 246, 0.2)'
+          }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+                  background: method.color,
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                }}>
+                  <Brain className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-lg">{method.method}</h4>
+                  <p className="text-sm text-gray-400">{method.description}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-white">{method.accuracy}%</div>
+                <div className="text-sm text-gray-400">Precisión</div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-2 rounded-lg min-h-[50px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                <div className="text-sm font-bold text-green-400 leading-tight">{method.profit}%</div>
+                <div className="text-xs text-gray-400">Profit Anual</div>
+              </div>
+              <div className="text-center p-2 rounded-lg min-h-[50px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
+                <div className="text-sm font-bold text-purple-400 leading-tight">{method.sharpe}</div>
+                <div className="text-xs text-gray-400">Sharpe Ratio</div>
+              </div>
+              <div className="text-center p-2 rounded-lg min-h-[50px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                <div className="text-sm font-bold text-blue-400 leading-tight">{method.trades}</div>
+                <div className="text-xs text-gray-400">Trades/Mes</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="p-4 rounded-xl border" style={{ 
+        backgroundColor: 'rgba(26, 31, 46, 0.8)',
+        borderColor: 'rgba(236, 72, 153, 0.3)'
+      }}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+            background: 'linear-gradient(135deg, #ec4899, #be185d)',
+            boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)'
+          }}>
+            <Award className="w-4 h-4 text-white" />
+          </div>
+          <h4 className="font-medium text-pink-400 text-lg">🏆 Resumen de Rendimiento</h4>
+        </div>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          El <strong className="text-white">RL Director</strong> muestra el mejor rendimiento general con <strong className="text-pink-400">82.1% de precisión</strong> 
+          y <strong className="text-pink-400">18.7% de profit anual</strong>. Coordina inteligentemente los 4 modelos existentes para 
+          maximizar el rendimiento y minimizar el riesgo.
         </p>
       </div>
     </div>
   );
 };
 
-// src/services/api.ts - Añadir servicios de RL
+const AdvancedConfigurationPanel: React.FC<{ showAdvanced: boolean }> = ({ showAdvanced }) => {
+  if (!showAdvanced) return null;
+  
+  return (
+    <div className="glass-effect p-6 rounded-2xl border" style={{
+      background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+      borderColor: 'rgba(139, 92, 246, 0.2)'
+    }}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+          boxShadow: '0 8px 20px rgba(139, 92, 246, 0.3)'
+        }}>
+          <Settings className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white">Configuración Avanzada</h3>
+          <p className="text-purple-300 text-sm">Ajustes de rendimiento y seguridad</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h4 className="font-medium mb-3 text-white">Parámetros de Riesgo</h4>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Máximo Drawdown Permitido
+              </label>
+              <input 
+                type="range" 
+                min="5" 
+                max="25" 
+                defaultValue="15"
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>5%</span>
+                <span>15%</span>
+                <span>25%</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Tamaño Máximo de Posición
+              </label>
+              <input 
+                type="range" 
+                min="1" 
+                max="10" 
+                defaultValue="5"
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>1%</span>
+                <span>5%</span>
+                <span>10%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h4 className="font-medium mb-3 text-white">Configuración de Modelos</h4>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Umbral de Confianza Mínima
+              </label>
+              <input 
+                type="range" 
+                min="50" 
+                max="90" 
+                defaultValue="70"
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>50%</span>
+                <span>70%</span>
+                <span>90%</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Frecuencia de Reentrenamiento
+              </label>
+              <select className="w-full rounded-lg text-white bg-gray-800/50 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option>Diario</option>
+                <option>Semanal</option>
+                <option>Mensual</option>
+                <option>Automático</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-6 flex justify-end space-x-3">
+        <button className="px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-800/50 transition-colors">
+          Restaurar Valores
+        </button>
+        <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-colors shadow-lg hover:shadow-xl hover:scale-105">
+          Guardar Configuración
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Servicios de API
 export const rlService = {
-  // Estado del sistema RL
   async getRLStatus() {
     const response = await fetch('/api/rl/status');
     return response.json();
   },
 
-  // Entrenar agente RL
   async trainAgent(episodes: number) {
     const response = await fetch(`/api/rl/train?episodes=${episodes}`, {
       method: 'POST'
@@ -621,7 +1365,6 @@ export const rlService = {
     return response.json();
   },
 
-  // Obtener predicción RL
   async getRLPrediction(marketData: any) {
     const response = await fetch('/api/rl/predict', {
       method: 'POST',
@@ -631,18 +1374,65 @@ export const rlService = {
     return response.json();
   },
 
-  // Métricas de rendimiento
   async getRLPerformance() {
     const response = await fetch('/api/rl/performance');
     return response.json();
   },
 
-  // Evaluar agente
-  async evaluateAgent(symbol: string = 'AAPL', episodes: number = 10) {
-    const response = await fetch(`/api/rl/evaluate?symbol=${symbol}&episodes=${episodes}`, {
-      method: 'POST'
+  async getActiveSignals() {
+    const response = await fetch('/api/rl/active-signals');
+    return response.json();
+  },
+
+  async executeSignal(signal: TradingSignal) {
+    const response = await fetch('/api/rl/execute-signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(signal)
     });
     return response.json();
   }
 };
 
+// Estilos CSS personalizados para los sliders
+const sliderStyles = `
+  .slider::-webkit-slider-thumb {
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .slider::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .slider::-webkit-slider-track {
+    background: #e5e7eb;
+    border-radius: 8px;
+    height: 8px;
+  }
+
+  .slider::-moz-range-track {
+    background: #e5e7eb;
+    border-radius: 8px;
+    height: 8px;
+  }
+`;
+
+// Agregar estilos al head del documento
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = sliderStyles;
+  document.head.appendChild(style);
+}

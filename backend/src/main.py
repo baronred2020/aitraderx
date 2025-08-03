@@ -62,6 +62,57 @@ try:
 except ImportError:
     from .config.database_config import db_config
 
+# Importar funciones de RL Trading Agent
+try:
+    from rl_trading_agent import (
+        get_rl_status as get_rl_status_imported,
+        get_rl_performance as get_rl_performance_imported,
+        get_active_signals as get_active_signals_imported,
+        execute_signal as execute_signal_imported,
+        get_training_progress as get_training_progress_imported,
+        can_user_start_training as can_user_start_training_imported,
+        validate_training_parameters as validate_training_parameters_imported,
+        start_rl_training as start_rl_training_imported,
+        get_training_progress_by_session as get_training_progress_by_session_imported,
+        cancel_rl_training as cancel_rl_training_imported,
+        get_user_training_history as get_user_training_history_imported
+    )
+except ImportError as e:
+    logger.warning(f"RL Trading Agent not available: {e}")
+    # Funciones fallback
+    def get_rl_status_imported():
+        return {"status": "inactive", "error": "Service not available"}
+    
+    def get_rl_performance_imported():
+        return {"error": "Service not available"}
+    
+    def get_active_signals_imported():
+        return []
+    
+    def execute_signal_imported(signal):
+        return {"success": False, "error": "Service not available"}
+    
+    def get_training_progress_imported():
+        return {"is_training": False, "error": "Service not available"}
+    
+    def can_user_start_training_imported(user_id):
+        return {"can_train": False, "reason": "Service not available"}
+    
+    def validate_training_parameters_imported(episodes, user_plan="starter"):
+        return {"valid": False, "reason": "Service not available"}
+    
+    async def start_rl_training_imported(user_id, episodes, algorithm="dqn", trading_pair="EURUSD", timeframe="1h"):
+        return {"success": False, "error": "Service not available"}
+    
+    def get_training_progress_by_session_imported(session_id):
+        return {"is_training": False, "error": "Service not available"}
+    
+    def cancel_rl_training_imported(session_id, user_id):
+        return {"success": False, "error": "Service not available"}
+    
+    def get_user_training_history_imported(user_id, limit=10):
+        return []
+
 # Importar sistema de suscripciones y autenticación
 try:
     # Importaciones de rutas
@@ -640,13 +691,103 @@ async def get_model_status():
 
 @app.get("/api/rl/status")
 async def get_rl_status():
-    """Estado del sistema de Reinforcement Learning"""
-    # TODO: Implementar lógica real
-    return {
-        "status": "not_trained",
-        "agent_type": "DQN",
-        "performance_metrics": {}
-    }
+    """Obtiene el estado del RL Director"""
+    try:
+        return globals()['get_rl_status_imported']()
+    except NameError:
+        return {"status": "inactive", "error": "Service not available"}
+
+# Rutas adicionales de RL
+@app.get("/api/rl/performance")
+async def get_rl_performance():
+    """Obtiene el rendimiento del RL Director"""
+    try:
+        return globals()['get_rl_performance_imported']()
+    except NameError:
+        return {"error": "Service not available"}
+
+@app.get("/api/rl/active-signals")
+async def get_active_signals():
+    """Obtiene señales activas del RL Director"""
+    try:
+        return globals()['get_active_signals_imported']()
+    except NameError:
+        return []
+
+@app.post("/api/rl/execute-signal")
+async def execute_signal(signal: dict):
+    """Ejecuta una señal de trading"""
+    try:
+        return globals()['execute_signal_imported'](signal)
+    except NameError:
+        return {"success": False, "error": "Service not available"}
+
+@app.get("/api/rl/training-progress")
+async def get_training_progress():
+    """Obtiene el progreso del entrenamiento actual"""
+    try:
+        return globals()['get_training_progress_imported']()
+    except NameError:
+        return {"is_training": False, "error": "Service not available"}
+
+# Nuevos endpoints para el sistema de entrenamiento
+@app.get("/api/rl/can-train/{user_id}")
+async def can_user_train(user_id: str):
+    """Verifica si un usuario puede iniciar entrenamiento"""
+    try:
+        return globals()['can_user_start_training_imported'](user_id)
+    except NameError:
+        return {"can_train": False, "reason": "Service not available"}
+
+@app.post("/api/rl/validate-params")
+async def validate_training_params(request: dict):
+    """Valida los parámetros de entrenamiento"""
+    try:
+        episodes = request.get("episodes", 100)
+        user_plan = request.get("user_plan", "starter")
+        return globals()['validate_training_parameters_imported'](episodes, user_plan)
+    except NameError:
+        return {"valid": False, "reason": "Service not available"}
+
+@app.post("/api/rl/start-training")
+async def start_training(request: dict):
+    """Inicia un entrenamiento de RL"""
+    try:
+        user_id = request.get("user_id")
+        episodes = request.get("episodes", 100)
+        algorithm = request.get("algorithm", "dqn")
+        trading_pair = request.get("trading_pair", "EURUSD")
+        timeframe = request.get("timeframe", "1h")
+        
+        return await globals()['start_rl_training_imported'](
+            user_id, episodes, algorithm, trading_pair, timeframe
+        )
+    except NameError:
+        return {"success": False, "error": "Service not available"}
+
+@app.get("/api/rl/training-progress/{session_id}")
+async def get_session_progress(session_id: str):
+    """Obtiene el progreso de una sesión específica"""
+    try:
+        return globals()['get_training_progress_by_session_imported'](session_id)
+    except NameError:
+        return {"is_training": False, "error": "Service not available"}
+
+@app.post("/api/rl/cancel-training/{session_id}")
+async def cancel_training(session_id: str, user_id: str):
+    """Cancela un entrenamiento en curso"""
+    try:
+        return globals()['cancel_rl_training_imported'](session_id, user_id)
+    except NameError:
+        return {"success": False, "error": "Service not available"}
+
+@app.get("/api/rl/training-history/{user_id}")
+async def get_training_history(user_id: str, limit: int = 10):
+    """Obtiene el historial de entrenamientos del usuario"""
+    try:
+        return globals()['get_user_training_history_imported'](user_id, limit)
+    except NameError:
+        return []
 
 @app.get("/api/mt4/status")
 async def get_mt4_status():
