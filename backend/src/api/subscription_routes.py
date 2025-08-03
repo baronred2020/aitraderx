@@ -131,18 +131,48 @@ async def get_user_subscription(
         if not user:
             raise HTTPException(status_code=401, detail="Usuario no autenticado")
         
-        # Obtener información del plan
-        plan_type = user.get('plan_type', 'starter')
+        # Obtener suscripción activa del usuario desde la base de datos
+        user_id = user.get('user_id')
         
-        # Crear respuesta de suscripción real
-        subscription_data = {
-            "id": f"sub_{user.get('user_id')}",
-            "planType": plan_type,
-            "status": "active",
-            "startDate": user.get('created_at', datetime.now()).isoformat(),
-            "endDate": (datetime.now().replace(year=datetime.now().year + 1)).isoformat(),
-            "isTrial": plan_type == "starter"
-        }
+        # Consultar suscripción activa
+        with db_config.get_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Obtener suscripción activa
+            subscription_query = """
+                SELECT us.subscription_id, us.plan_type, us.status, us.start_date, us.end_date, us.is_trial,
+                       sp.name as plan_name
+                FROM user_subscriptions us
+                LEFT JOIN subscription_plans sp ON us.plan_id = sp.plan_id
+                WHERE us.user_id = %s AND us.status = 'active'
+                ORDER BY us.created_at DESC
+                LIMIT 1
+            """
+            cursor.execute(subscription_query, (user_id,))
+            subscription = cursor.fetchone()
+            
+            if subscription:
+                # Usar datos reales de la suscripción
+                subscription_data = {
+                    "id": subscription['subscription_id'],
+                    "planType": subscription['plan_type'],
+                    "status": subscription['status'],
+                    "startDate": subscription['start_date'].isoformat() if subscription['start_date'] else datetime.now().isoformat(),
+                    "endDate": subscription['end_date'].isoformat() if subscription['end_date'] else (datetime.now().replace(year=datetime.now().year + 1)).isoformat(),
+                    "isTrial": subscription['is_trial']
+                }
+            else:
+                # Fallback: crear suscripción por defecto
+                subscription_data = {
+                    "id": f"sub_{user_id}",
+                    "planType": "starter",
+                    "status": "active",
+                    "startDate": user.get('created_at', datetime.now()).isoformat(),
+                    "endDate": (datetime.now().replace(year=datetime.now().year + 1)).isoformat(),
+                    "isTrial": True
+                }
+            
+            cursor.close()
         
         return {
             "subscription": subscription_data,

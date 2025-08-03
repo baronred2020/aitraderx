@@ -41,11 +41,13 @@ interface TradingSignal {
   signal: string;
   confidence: number;
   position_size: number;
+  entry_price: number;  // Precio de entrada real
   stop_loss: number;
   take_profit: number;
   reasoning: string;
   models_used: string[];
   timestamp: string;
+  current_market_price?: number;  // Precio actual de mercado
 }
 
 interface TrainingProgress {
@@ -93,6 +95,9 @@ export const RLDashboard: React.FC = () => {
     if (!hasAccess) {
       return; // No continuar si no tiene acceso
     }
+    
+    // Cargar datos iniciales
+    loadRLData();
   }, [requireAccess]);
 
   const [rlStatus, setRlStatus] = useState<RLStatus | null>(null);
@@ -125,32 +130,29 @@ export const RLDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Nuevo useEffect para verificar permisos de entrenamiento
+  // Verificar permisos de entrenamiento
   useEffect(() => {
     const checkTrainingPermission = async () => {
       try {
-        // Simular user_id - en producción esto vendría del contexto de autenticación
-        const userId = "4dabfd30-483d-4fa0-a8d0-bd151a46340f";
+        // Obtener user_id del contexto de autenticación
+        const userId = "4dabfd30-483d-4fa0-a8d0-bd151a46340f"; // TODO: Obtener del contexto de auth
         
-        // Simular respuesta de la API - en producción esto sería una llamada real
-        // Por ahora, asumimos que el usuario puede entrenar si no hay sesión activa
-        const isCurrentlyTraining = trainingProgress?.is_training || false;
-        const mockPermission: TrainingPermission = {
-          can_train: !isCurrentlyTraining, // Solo puede entrenar si no está entrenando
-          reason: isCurrentlyTraining 
-            ? "Ya tienes una sesión de entrenamiento activa" 
-            : "Puedes iniciar un nuevo entrenamiento",
-          session_id: isCurrentlyTraining ? "session_123" : undefined,
-          days_until_next: undefined
-        };
-        
-        setTrainingPermission(mockPermission);
+        const response = await fetch(`/api/rl/can-train/${userId}`);
+        if (response.ok) {
+          const permission = await response.json();
+          setTrainingPermission(permission);
+        } else {
+          console.error('Error checking training permission:', response.status);
+          setTrainingPermission({
+            can_train: false,
+            reason: "Error verificando permisos"
+          });
+        }
       } catch (error) {
         console.error('Error checking training permission:', error);
-        // En caso de error, permitir entrenamiento por defecto
         setTrainingPermission({
-          can_train: true,
-          reason: "Puedes iniciar un nuevo entrenamiento"
+          can_train: false,
+          reason: "Error de conexión"
         });
       }
     };
@@ -170,16 +172,22 @@ export const RLDashboard: React.FC = () => {
       if (statusResponse.ok) {
         const statusData = await statusResponse.json();
         setRlStatus(statusData);
+      } else {
+        console.error('Error loading RL status:', statusResponse.status);
       }
 
       if (performanceResponse.ok) {
         const perfData = await performanceResponse.json();
         setRlPerformance(perfData);
+      } else {
+        console.error('Error loading RL performance:', performanceResponse.status);
       }
 
       if (signalsResponse.ok) {
         const signalsData = await signalsResponse.json();
-        setActiveSignals(signalsData.signals || []);
+        setActiveSignals(signalsData.signals || signalsData || []);
+      } else {
+        console.error('Error loading active signals:', signalsResponse.status);
       }
 
     } catch (error) {
@@ -190,34 +198,35 @@ export const RLDashboard: React.FC = () => {
   // Función para validar parámetros de entrenamiento
   const validateTrainingParams = async (episodes: number) => {
     try {
-      // Obtener límites según el plan de suscripción
-      const getPlanLimits = () => {
-        const planType = subscription?.planType;
-        switch (planType) {
-          case 'premium':
-            return { min: 100, max: 1000, recommended: 500 };
-          case 'institutional':
-            return { min: 100, max: 5000, recommended: 1000 };
-          default:
-            return { min: 100, max: 1000, recommended: 500 }; // Default a Premium
-        }
-      };
+      const response = await fetch('/api/rl/validate-params', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          episodes: episodes,
+          user_plan: subscription?.planType || "premium"
+        })
+      });
 
-      const limits = getPlanLimits();
-      const isValidEpisodes = episodes >= limits.min && episodes <= limits.max;
-      const estimatedMinutes = Math.ceil(episodes / 50); // Estimación: 50 episodios por minuto
-      
-      const mockValidation: TrainingValidation = {
-        valid: isValidEpisodes,
-        reason: isValidEpisodes ? "Parámetros válidos" : `Episodios deben estar entre ${limits.min} y ${limits.max}`,
-        limits: limits,
-        estimated_minutes: estimatedMinutes
-      };
-      
-      setTrainingValidation(mockValidation);
-      return mockValidation.valid;
+      if (response.ok) {
+        const validation = await response.json();
+        setTrainingValidation(validation);
+        return validation.valid;
+      } else {
+        console.error('Error validating parameters:', response.status);
+        setTrainingValidation({
+          valid: false,
+          reason: "Error validando parámetros"
+        });
+        return false;
+      }
     } catch (error) {
       console.error('Error validating training parameters:', error);
+      setTrainingValidation({
+        valid: false,
+        reason: "Error de conexión"
+      });
       return false;
     }
   };
@@ -237,30 +246,43 @@ export const RLDashboard: React.FC = () => {
 
     setIsStartingTraining(true);
     try {
-      // Simular inicio de entrenamiento - en producción esto sería una llamada real
-      const sessionId = `session_${Date.now()}`;
+      const userId = "4dabfd30-483d-4fa0-a8d0-bd151a46340f"; // TODO: Obtener del contexto de auth
       
-      // Simular respuesta exitosa
-      const mockSession: TrainingSession = {
-        success: true,
-        session_id: sessionId,
-        message: "Entrenamiento iniciado exitosamente"
-      };
-      
-      if (mockSession.success && mockSession.session_id) {
-        setCurrentSessionId(mockSession.session_id);
-        setTrainingProgress({
-          is_training: true,
-          progress: 0,
-          current_episode: 0,
-          total_episodes: episodes,
-          status: 'running'
-        });
+      const response = await fetch('/api/rl/start-training', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          episodes: episodes,
+          algorithm: "dqn",
+          trading_pair: "EURUSD",
+          timeframe: "1h"
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
         
-        // Iniciar polling del progreso simulado
-        startProgressPolling(mockSession.session_id);
+        if (result.success && result.session_id) {
+          setCurrentSessionId(result.session_id);
+          setTrainingProgress({
+            is_training: true,
+            progress: 0,
+            current_episode: 0,
+            total_episodes: episodes,
+            status: 'running'
+          });
+          
+          // Iniciar polling del progreso
+          startProgressPolling(result.session_id);
+        } else {
+          alert(result.error || 'Error iniciando entrenamiento');
+        }
       } else {
-        alert(mockSession.error || 'Error iniciando entrenamiento');
+        console.error('Error starting training:', response.status);
+        alert('Error iniciando entrenamiento');
       }
     } catch (error) {
       console.error('Error starting training:', error);
@@ -274,40 +296,29 @@ export const RLDashboard: React.FC = () => {
   const startProgressPolling = (sessionId: string) => {
     const interval = setInterval(async () => {
       try {
-        // Simular progreso de entrenamiento - en producción esto sería una llamada real
-        const currentProgress = trainingProgress?.progress || 0;
-        const currentEpisode = trainingProgress?.current_episode || 0;
-        const totalEpisodes = trainingProgress?.total_episodes || episodes;
+        const response = await fetch(`/api/rl/training-progress/${sessionId}`);
         
-        // Simular progreso incremental
-        const newEpisode = Math.min(currentEpisode + Math.floor(Math.random() * 10) + 1, totalEpisodes);
-        const newProgress = newEpisode / totalEpisodes;
-        const estimatedTimeRemaining = Math.ceil((totalEpisodes - newEpisode) / 50); // 50 episodios por minuto
-        
-        const mockProgress: TrainingProgress = {
-          is_training: newProgress < 1,
-          progress: newProgress,
-          current_episode: newEpisode,
-          total_episodes: totalEpisodes,
-          estimated_time_remaining: estimatedTimeRemaining,
-          status: newProgress >= 1 ? 'completed' : 'running'
-        };
-        
-        setTrainingProgress(mockProgress);
-        setCurrentEpisode(newEpisode);
-        
-        if (estimatedTimeRemaining) {
-          setEstimatedTimeRemaining(estimatedTimeRemaining);
-        }
-        
-        // Si el entrenamiento terminó, detener el polling
-        if (!mockProgress.is_training) {
-          clearInterval(interval);
-          if (mockProgress.status === 'completed') {
-            alert('¡Entrenamiento completado exitosamente!');
-          } else if (mockProgress.status === 'failed') {
-            alert(`Error en entrenamiento: ${mockProgress.error_message}`);
+        if (response.ok) {
+          const progress = await response.json();
+          
+          setTrainingProgress(progress);
+          setCurrentEpisode(progress.current_episode || 0);
+          
+          if (progress.estimated_time_remaining) {
+            setEstimatedTimeRemaining(progress.estimated_time_remaining);
           }
+          
+          // Si el entrenamiento terminó, detener el polling
+          if (!progress.is_training) {
+            clearInterval(interval);
+            if (progress.status === 'completed') {
+              alert('¡Entrenamiento completado exitosamente!');
+            } else if (progress.status === 'failed') {
+              alert(`Error en entrenamiento: ${progress.error_message}`);
+            }
+          }
+        } else {
+          console.error('Error fetching training progress:', response.status);
         }
       } catch (error) {
         console.error('Error fetching training progress:', error);
@@ -325,17 +336,24 @@ export const RLDashboard: React.FC = () => {
     if (!currentSessionId) return;
     
     try {
-      // Simular cancelación de entrenamiento - en producción esto sería una llamada real
-      const mockResponse = {
-        success: true,
-        message: "Entrenamiento cancelado exitosamente"
-      };
+      const userId = "4dabfd30-483d-4fa0-a8d0-bd151a46340f"; // TODO: Obtener del contexto de auth
       
-      if (mockResponse.success) {
-        setTrainingProgress(null);
-        setCurrentSessionId(null);
-        alert('Entrenamiento cancelado');
+      const response = await fetch(`/api/rl/cancel-training/${currentSessionId}?user_id=${userId}`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (result.success) {
+          setTrainingProgress(null);
+          setCurrentSessionId(null);
+          alert('Entrenamiento cancelado');
+        } else {
+          alert(result.error || 'Error cancelando entrenamiento');
+        }
       } else {
+        console.error('Error canceling training:', response.status);
         alert('Error cancelando entrenamiento');
       }
     } catch (error) {
@@ -353,9 +371,15 @@ export const RLDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        alert(`Señal ejecutada: ${signal.signal} ${signal.pair}`);
-        loadRLData(); // Recargar datos
+        const result = await response.json();
+        if (result.success) {
+          alert(`Señal ejecutada: ${signal.signal} ${signal.pair}`);
+          loadRLData(); // Recargar datos
+        } else {
+          alert(`Error ejecutando señal: ${result.error}`);
+        }
       } else {
+        console.error('Error executing signal:', response.status);
         alert('Error ejecutando señal');
       }
     } catch (error) {
@@ -885,15 +909,15 @@ const ActiveSignalsPanel: React.FC<{
           {activeSignals.map((signal, index) => (
             <div key={index} className="rounded-xl p-4 border transition-all duration-300 hover:scale-105" style={{
               background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
-              borderColor: signal.signal === 'BUY' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+              borderColor: signal.signal === 'BUY' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'
             }}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <div className="flex-1">
                   <div className="flex items-center mb-3">
                     <div className={`px-3 py-1 rounded-full text-xs font-medium mr-3 ${
                       signal.signal === 'BUY' 
-                        ? 'bg-green-900/50 text-green-400 border border-green-500/30' 
-                        : 'bg-red-900/50 text-red-400 border border-red-500/30'
+                        ? 'bg-green-600/80 text-white border border-green-400/50' 
+                        : 'bg-red-600/80 text-white border border-red-400/50'
                     }`}>
                       {signal.signal}
                     </div>
@@ -903,22 +927,26 @@ const ActiveSignalsPanel: React.FC<{
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
                     <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
-                      <div className="text-sm font-medium text-gray-400">Confianza</div>
-                      <div className="font-bold text-base text-blue-400 leading-tight">{signal.confidence}%</div>
+                      <div className="text-sm font-medium text-gray-400">Precio Entrada</div>
+                      <div className="font-bold text-base text-blue-400 leading-tight">{signal.entry_price?.toFixed(5) || 'N/A'}</div>
                     </div>
                     <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
+                      <div className="text-sm font-medium text-gray-400">Confianza</div>
+                      <div className="font-bold text-base text-purple-400 leading-tight">{signal.confidence}%</div>
+                    </div>
+                    <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(236, 72, 153, 0.1)' }}>
                       <div className="text-sm font-medium text-gray-400">Posición</div>
-                      <div className="font-bold text-base text-purple-400 leading-tight">{signal.position_size}%</div>
+                      <div className="font-bold text-base text-pink-400 leading-tight">{signal.position_size}%</div>
                     </div>
                     <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
                       <div className="text-sm font-medium text-gray-400">Stop Loss</div>
-                      <div className="font-bold text-base text-red-400 leading-tight">{signal.stop_loss}</div>
+                      <div className="font-bold text-base text-red-400 leading-tight">{signal.stop_loss?.toFixed(5) || 'N/A'}</div>
                     </div>
                     <div className="text-center p-2 rounded-lg min-h-[60px] flex flex-col justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
                       <div className="text-sm font-medium text-gray-400">Take Profit</div>
-                      <div className="font-bold text-base text-green-400 leading-tight">{signal.take_profit}</div>
+                      <div className="font-bold text-base text-green-400 leading-tight">{signal.take_profit?.toFixed(5) || 'N/A'}</div>
                     </div>
                   </div>
 
@@ -1242,9 +1270,164 @@ const AIComparisonPanel: React.FC = () => {
   );
 };
 
+// Interfaces para la configuración RL
+interface RLConfigurationLimits {
+  max_drawdown_percentage: {
+    min: number;
+    max: number;
+    default: number;
+    step: number;
+  };
+  max_position_size_percentage: {
+    min: number;
+    max: number;
+    default: number;
+    step: number;
+  };
+  min_confidence_threshold: {
+    min: number;
+    max: number;
+    default: number;
+    step: number;
+  };
+  retraining_frequency: {
+    options: Array<{ value: string; label: string }>;
+    default: string | null;
+    available: boolean;
+  };
+  retraining_enabled: {
+    default: boolean;
+    available: boolean;
+  };
+  user_subscription: string;
+}
+
+interface RLConfiguration {
+  max_drawdown_percentage: number;
+  max_position_size_percentage: number;
+  min_confidence_threshold: number;
+  retraining_frequency: string;
+  retraining_enabled: boolean;
+}
+
 const AdvancedConfigurationPanel: React.FC<{ showAdvanced: boolean }> = ({ showAdvanced }) => {
+  const { user } = useAuth();
+  const { subscription } = useAuth();
+  const [configLimits, setConfigLimits] = useState<RLConfigurationLimits | null>(null);
+  const [currentConfig, setCurrentConfig] = useState<RLConfiguration | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Obtener límites de configuración
+  useEffect(() => {
+    const loadConfigurationLimits = async () => {
+      try {
+        setLoading(true);
+        const userId = user?.id || "4dabfd30-483d-4fa0-a8d0-bd151a46340f"; // Obtener del contexto de auth
+        
+        const response = await fetch(`/api/rl/config-limits-new`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setConfigLimits(data.limits);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading configuration limits:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Cargar configuración actual del usuario
+    const loadCurrentConfiguration = async () => {
+      try {
+        const userId = user?.id || "4dabfd30-483d-4fa0-a8d0-bd151a46340f"; // Obtener del contexto de auth
+        
+        const response = await fetch(`/api/rl/configuration/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setCurrentConfig(data.configuration);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading current configuration:', error);
+      }
+    };
+
+    if (showAdvanced) {
+      loadConfigurationLimits();
+      loadCurrentConfiguration();
+    }
+  }, [showAdvanced]);
+
+  const handleSaveConfiguration = async () => {
+    if (!currentConfig) return;
+    
+    try {
+      setSaving(true);
+      const userId = user?.id || "4dabfd30-483d-4fa0-a8d0-bd151a46340f"; // Obtener del contexto de auth
+      
+      const response = await fetch(`/api/rl/configuration/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(currentConfig),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Mostrar mensaje de éxito
+          console.log('Configuración guardada exitosamente');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving configuration:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResetConfiguration = async () => {
+    try {
+      setSaving(true);
+      const userId = user?.id || "4dabfd30-483d-4fa0-a8d0-bd151a46340f"; // Obtener del contexto de auth
+      
+      const response = await fetch(`/api/rl/configuration/${userId}/reset`, {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCurrentConfig(data.configuration);
+        }
+      }
+    } catch (error) {
+      console.error('Error resetting configuration:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!showAdvanced) return null;
   
+  if (loading) {
+    return (
+      <div className="glass-effect p-6 rounded-2xl border" style={{
+        background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
+        borderColor: 'rgba(139, 92, 246, 0.2)'
+      }}>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-white">Cargando configuración...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-effect p-6 rounded-2xl border" style={{
       background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
@@ -1273,15 +1456,17 @@ const AdvancedConfigurationPanel: React.FC<{ showAdvanced: boolean }> = ({ showA
               </label>
               <input 
                 type="range" 
-                min="5" 
-                max="25" 
-                defaultValue="15"
+                min={configLimits?.max_drawdown_percentage.min || 5} 
+                max={configLimits?.max_drawdown_percentage.max || 25} 
+                step={configLimits?.max_drawdown_percentage.step || 1}
+                value={currentConfig?.max_drawdown_percentage || configLimits?.max_drawdown_percentage.default || 15}
+                onChange={(e) => setCurrentConfig(prev => prev ? {...prev, max_drawdown_percentage: parseFloat(e.target.value)} : null)}
                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
               />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>5%</span>
-                <span>15%</span>
-                <span>25%</span>
+                <span>{configLimits?.max_drawdown_percentage.min || 5}%</span>
+                <span>{currentConfig?.max_drawdown_percentage || configLimits?.max_drawdown_percentage.default || 15}%</span>
+                <span>{configLimits?.max_drawdown_percentage.max || 25}%</span>
               </div>
             </div>
             <div>
@@ -1290,15 +1475,17 @@ const AdvancedConfigurationPanel: React.FC<{ showAdvanced: boolean }> = ({ showA
               </label>
               <input 
                 type="range" 
-                min="1" 
-                max="10" 
-                defaultValue="5"
+                min={configLimits?.max_position_size_percentage.min || 1} 
+                max={configLimits?.max_position_size_percentage.max || 10} 
+                step={configLimits?.max_position_size_percentage.step || 0.5}
+                value={currentConfig?.max_position_size_percentage || configLimits?.max_position_size_percentage.default || 5}
+                onChange={(e) => setCurrentConfig(prev => prev ? {...prev, max_position_size_percentage: parseFloat(e.target.value)} : null)}
                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
               />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>1%</span>
-                <span>5%</span>
-                <span>10%</span>
+                <span>{configLimits?.max_position_size_percentage.min || 1}%</span>
+                <span>{currentConfig?.max_position_size_percentage || configLimits?.max_position_size_percentage.default || 5}%</span>
+                <span>{configLimits?.max_position_size_percentage.max || 10}%</span>
               </div>
             </div>
           </div>
@@ -1313,38 +1500,81 @@ const AdvancedConfigurationPanel: React.FC<{ showAdvanced: boolean }> = ({ showA
               </label>
               <input 
                 type="range" 
-                min="50" 
-                max="90" 
-                defaultValue="70"
+                min={configLimits?.min_confidence_threshold.min || 50} 
+                max={configLimits?.min_confidence_threshold.max || 90} 
+                step={configLimits?.min_confidence_threshold.step || 5}
+                value={currentConfig?.min_confidence_threshold || configLimits?.min_confidence_threshold.default || 70}
+                onChange={(e) => setCurrentConfig(prev => prev ? {...prev, min_confidence_threshold: parseFloat(e.target.value)} : null)}
                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
               />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>50%</span>
-                <span>70%</span>
-                <span>90%</span>
+                <span>{configLimits?.min_confidence_threshold.min || 50}%</span>
+                <span>{currentConfig?.min_confidence_threshold || configLimits?.min_confidence_threshold.default || 70}%</span>
+                <span>{configLimits?.min_confidence_threshold.max || 90}%</span>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Frecuencia de Reentrenamiento
-              </label>
-              <select className="w-full rounded-lg text-white bg-gray-800/50 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option>Diario</option>
-                <option>Semanal</option>
-                <option>Mensual</option>
-                <option>Automático</option>
-              </select>
-            </div>
+            
+            {configLimits?.retraining_frequency.available && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Frecuencia de Reentrenamiento
+                  </label>
+                  <select 
+                    value={currentConfig?.retraining_frequency || configLimits?.retraining_frequency.default || ''}
+                    onChange={(e) => setCurrentConfig(prev => prev ? {...prev, retraining_frequency: e.target.value} : null)}
+                    className="w-full rounded-lg text-white bg-gray-800/50 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {configLimits.retraining_frequency.options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox"
+                      checked={currentConfig?.retraining_enabled || configLimits?.retraining_enabled.default || false}
+                      onChange={(e) => setCurrentConfig(prev => prev ? {...prev, retraining_enabled: e.target.checked} : null)}
+                      className="rounded border-gray-600 bg-gray-800/50 text-blue-500 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-300">
+                      Activar Reentrenamiento Automático
+                    </span>
+                  </label>
+                </div>
+              </>
+            )}
+            
+            {!configLimits?.retraining_frequency.available && (
+              <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-yellow-300 text-sm">
+                  ⚠️ El reentrenamiento automático no está disponible en tu plan actual. 
+                  {subscription?.planType === 'premium' ? ' Actualiza a Institutional para acceder a más opciones.' : ' Actualiza tu suscripción para acceder a esta función.'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
       
       <div className="mt-6 flex justify-end space-x-3">
-        <button className="px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-800/50 transition-colors">
-          Restaurar Valores
+        <button 
+          onClick={handleResetConfiguration}
+          disabled={saving}
+          className="px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-800/50 transition-colors disabled:opacity-50"
+        >
+          {saving ? 'Restaurando...' : 'Restaurar Valores'}
         </button>
-        <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-colors shadow-lg hover:shadow-xl hover:scale-105">
-          Guardar Configuración
+        <button 
+          onClick={handleSaveConfiguration}
+          disabled={saving || !currentConfig}
+          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-colors shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? 'Guardando...' : 'Guardar Configuración'}
         </button>
       </div>
     </div>

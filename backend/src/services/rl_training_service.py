@@ -38,10 +38,26 @@ class RLTrainingService:
     def can_user_train(self, user_id: str, db: Session) -> Dict[str, any]:
         """
         Verifica si un usuario puede iniciar un entrenamiento
-        - Máximo 1 entrenamiento por semana
+        - Plan Premium: Máximo 1 entrenamiento por mes (30 días)
+        - Plan Institutional: Máximo 1 entrenamiento por semana (7 días) o mes (30 días)
         - Límites de episodios según el plan
         """
         try:
+            # Limpiar sesiones huérfanas (más de 1 hora en estado running)
+            self._cleanup_orphaned_sessions(db)
+            
+            # Obtener el plan del usuario desde la suscripción activa
+            from models.database_models import UserSubscription
+            active_subscription = db.query(UserSubscription).filter(
+                and_(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.status == "active",
+                    UserSubscription.end_date > datetime.utcnow()
+                )
+            ).first()
+            
+            user_plan = active_subscription.plan_type if active_subscription else "starter"
+            
             # Verificar si hay una sesión activa
             active_session = db.query(RLTrainingSession).filter(
                 and_(
@@ -51,29 +67,66 @@ class RLTrainingService:
             ).first()
             
             if active_session:
-                return {
-                    "can_train": False,
-                    "reason": "Ya tienes una sesión de entrenamiento activa",
-                    "session_id": active_session.session_id
-                }
+                # Verificar si la sesión está realmente activa (no huérfana)
+                if active_session.started_at:
+                    time_diff = datetime.utcnow() - active_session.started_at
+                    if time_diff.total_seconds() > 3600:  # Más de 1 hora
+                        # Marcar como fallida y permitir nuevo entrenamiento
+                        active_session.status = "failed"
+                        active_session.error_message = "Sesión huérfana detectada"
+                        db.commit()
+                        logger.info(f"Sesión huérfana limpiada para usuario {user_id}")
+                    else:
+                        return {
+                            "can_train": False,
+                            "reason": "Ya tienes una sesión de entrenamiento activa",
+                            "session_id": active_session.session_id
+                        }
             
-            # Verificar entrenamiento de la última semana
-            week_ago = datetime.utcnow() - timedelta(days=7)
+            # Determinar el período de espera según el plan
+            if user_plan == "premium":
+                # Plan Premium: 1 entrenamiento por mes
+                period_days = 30
+                period_name = "mes"
+            elif user_plan == "institutional":
+                # Plan Institutional: 1 entrenamiento por semana (configurable)
+                period_days = 7
+                period_name = "semana"
+            else:
+                # Planes básicos: 1 entrenamiento por semana
+                period_days = 7
+                period_name = "semana"
+            
+            # Verificar entrenamiento del período correspondiente
+            period_ago = datetime.utcnow() - timedelta(days=period_days)
             recent_session = db.query(RLTrainingSession).filter(
                 and_(
                     RLTrainingSession.user_id == user_id,
-                    RLTrainingSession.started_at >= week_ago,
+                    RLTrainingSession.started_at >= period_ago,
                     RLTrainingSession.status.in_(["completed", "failed"])
                 )
             ).order_by(desc(RLTrainingSession.started_at)).first()
             
             if recent_session:
-                days_until_next = 7 - (datetime.utcnow() - recent_session.started_at).days
-                return {
-                    "can_train": False,
-                    "reason": f"Ya realizaste un entrenamiento esta semana. Puedes entrenar nuevamente en {days_until_next} días",
-                    "days_until_next": days_until_next
-                }
+                days_until_next = period_days - (datetime.utcnow() - recent_session.started_at).days
+                if user_plan == "premium":
+                    return {
+                        "can_train": False,
+                        "reason": f"Ya realizaste un entrenamiento este mes. Puedes entrenar nuevamente en {days_until_next} días",
+                        "days_until_next": days_until_next
+                    }
+                elif user_plan == "institutional":
+                    return {
+                        "can_train": False,
+                        "reason": f"Ya realizaste un entrenamiento esta semana. Puedes entrenar nuevamente en {days_until_next} días",
+                        "days_until_next": days_until_next
+                    }
+                else:
+                    return {
+                        "can_train": False,
+                        "reason": f"Ya realizaste un entrenamiento esta semana. Puedes entrenar nuevamente en {days_until_next} días",
+                        "days_until_next": days_until_next
+                    }
             
             return {"can_train": True, "reason": "Puedes iniciar entrenamiento"}
             
@@ -361,4 +414,33 @@ class RLTrainingService:
             logger.error(f"Error obteniendo historial: {e}")
             return []
         finally:
-            db.close() 
+            db.close()
+    
+    def _cleanup_orphaned_sessions(self, db: Session):
+        """Limpia sesiones huérfanas que están en estado running por más de 1 hora"""
+        try:
+            one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+            
+            orphaned_sessions = db.query(RLTrainingSession).filter(
+                and_(
+                    RLTrainingSession.status == "running",
+                    RLTrainingSession.started_at < one_hour_ago
+                )
+            ).all()
+            
+            for session in orphaned_sessions:
+                session.status = "failed"
+                session.error_message = "Sesión huérfana limpiada automáticamente"
+                session.completed_at = datetime.utcnow()
+                
+                # Remover de sesiones activas en memoria
+                if session.session_id in self.active_sessions:
+                    del self.active_sessions[session.session_id]
+            
+            if orphaned_sessions:
+                db.commit()
+                logger.info(f"Limpieza automática: {len(orphaned_sessions)} sesiones huérfanas")
+                
+        except Exception as e:
+            logger.error(f"Error limpiando sesiones huérfanas: {e}")
+            db.rollback() 

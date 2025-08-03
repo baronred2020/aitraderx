@@ -45,6 +45,7 @@ class User(Base):
     
     # Relaciones
     subscriptions = relationship("UserSubscription", back_populates="user")
+    rl_configurations = relationship("RLUserConfiguration", back_populates="user")
 
 class SubscriptionPlan(Base):
     """Modelo para planes de suscripción en MySQL"""
@@ -304,3 +305,40 @@ class RLTrainingSession(Base):
     
     # Relaciones
     user = relationship("User") 
+
+class RLUserConfiguration(Base):
+    """Configuración avanzada de RL para cada usuario"""
+    __tablename__ = "rl_user_configurations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False, index=True)
+    
+    # Parámetros de Riesgo
+    max_drawdown_percentage = Column(Float, default=15.0)  # Máximo drawdown permitido
+    max_position_size_percentage = Column(Float, default=5.0)  # Tamaño máximo de posición
+    
+    # Configuración de Modelos
+    min_confidence_threshold = Column(Float, default=70.0)  # Umbral de confianza mínima
+    retraining_frequency = Column(String(50), default="monthly")  # Frecuencia de reentrenamiento
+    retraining_enabled = Column(Boolean, default=False)  # Si el reentrenamiento está activado
+    
+    # Metadatos
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relación con usuario
+    user = relationship("User", back_populates="rl_configurations")
+    
+    def to_dict(self):
+        """Convierte la configuración a diccionario"""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "max_drawdown_percentage": self.max_drawdown_percentage,
+            "max_position_size_percentage": self.max_position_size_percentage,
+            "min_confidence_threshold": self.min_confidence_threshold,
+            "retraining_frequency": self.retraining_frequency,
+            "retraining_enabled": self.retraining_enabled,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        } 

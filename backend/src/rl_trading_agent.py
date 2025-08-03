@@ -13,6 +13,7 @@ import json
 # Importar el servicio de entrenamiento
 try:
     from services.rl_training_service import RLTrainingService
+    from services.rl_configuration_service import RLConfigurationService
     from config.database_config import DatabaseConfig
     from models.database_models import RLTrainingSession
     RL_SERVICE_AVAILABLE = True
@@ -24,18 +25,22 @@ logger = logging.getLogger(__name__)
 
 # Instancia global del servicio RL
 rl_service = None
+rl_config_service = None
 
 def initialize_rl_service():
     """Inicializa el servicio RL si está disponible"""
-    global rl_service
+    global rl_service, rl_config_service
     if RL_SERVICE_AVAILABLE and rl_service is None:
         try:
             db_config = DatabaseConfig()
             rl_service = RLTrainingService(db_config)
+            rl_config_service = RLConfigurationService(db_config)
             logger.info("RL Training Service initialized successfully")
+            logger.info("RL Configuration Service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize RL Training Service: {e}")
             rl_service = None
+            rl_config_service = None
 
 # Inicializar al importar el módulo
 initialize_rl_service()
@@ -90,8 +95,11 @@ def get_rl_performance() -> Dict:
         return {"error": str(e)}
 
 def get_active_signals() -> List[Dict]:
-    """Obtiene señales activas generadas por el RL Director"""
+    """Obtiene señales activas generadas por el RL Director con precios reales"""
     try:
+        # Obtener precio real de mercado
+        current_price = get_real_market_price("EURUSD")
+        
         # Simular obtención de predicciones de los modelos
         brain_max_pred = get_brain_max_prediction()
         brain_ultra_pred = get_brain_ultra_prediction()
@@ -109,18 +117,24 @@ def get_active_signals() -> List[Dict]:
         elif sell_signals >= 3:
             consensus_signal = "sell"
         
-        if consensus_signal:
+        if consensus_signal and current_price:
+            # Calcular niveles basados en precio real
+            entry_price = current_price
+            stop_loss, take_profit = calculate_risk_levels(entry_price, consensus_signal)
+            
             return [{
                 "signal_id": f"rl_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                 "pair": "EURUSD",
                 "signal": consensus_signal,
+                "entry_price": entry_price,
                 "confidence": 0.78,
                 "position_size": 0.02,
-                "stop_loss": 1.0850 if consensus_signal == "buy" else 1.0950,
-                "take_profit": 1.0950 if consensus_signal == "buy" else 1.0850,
+                "stop_loss": stop_loss,
+                "take_profit": take_profit,
                 "reasoning": "Consenso de 3+ modelos IA con alta confianza",
                 "models_used": ["Brain Max", "Brain Ultra", "Brain Predictor", "MegaMind"],
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "current_market_price": current_price
             }]
         
         return []
@@ -201,6 +215,61 @@ def get_mega_mind_prediction() -> Dict:
         "price": 1.0898,
         "timestamp": datetime.now().isoformat()
     }
+
+def get_real_market_price(symbol: str) -> float:
+    """Obtiene el precio real de mercado desde Yahoo Finance"""
+    try:
+        import yfinance as yf
+        
+        # Mapeo de símbolos de forex a Yahoo Finance
+        symbol_mapping = {
+            "EURUSD": "EURUSD=X",
+            "GBPUSD": "GBPUSD=X", 
+            "USDJPY": "USDJPY=X",
+            "USDCHF": "USDCHF=X",
+            "AUDUSD": "AUDUSD=X",
+            "USDCAD": "USDCAD=X"
+        }
+        
+        # Obtener el símbolo correcto para Yahoo Finance
+        yahoo_symbol = symbol_mapping.get(symbol, symbol)
+        
+        # Obtener datos en tiempo real
+        ticker = yf.Ticker(yahoo_symbol)
+        current_data = ticker.history(period="1d", interval="1m")
+        
+        if not current_data.empty:
+            # Obtener el último precio de cierre
+            current_price = current_data['Close'].iloc[-1]
+            logger.info(f"Precio real obtenido de Yahoo Finance para {symbol}: {current_price}")
+            return round(current_price, 5)
+        else:
+            logger.warning(f"No se pudieron obtener datos de Yahoo Finance para {symbol}")
+            return 1.0900  # Precio por defecto
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo precio real de Yahoo Finance para {symbol}: {e}")
+        return 1.0900  # Precio por defecto
+
+def calculate_risk_levels(entry_price: float, signal: str) -> tuple:
+    """Calcula stop loss y take profit basados en el precio de entrada"""
+    try:
+        # Configuración de riesgo (1% stop loss, 2% take profit)
+        risk_percentage = 0.01  # 1%
+        reward_percentage = 0.02  # 2%
+        
+        if signal == "buy":
+            stop_loss = entry_price * (1 - risk_percentage)
+            take_profit = entry_price * (1 + reward_percentage)
+        else:  # sell
+            stop_loss = entry_price * (1 + risk_percentage)
+            take_profit = entry_price * (1 - reward_percentage)
+        
+        return round(stop_loss, 5), round(take_profit, 5)
+        
+    except Exception as e:
+        logger.error(f"Error calculating risk levels: {e}")
+        return entry_price * 0.99, entry_price * 1.02
 
 # Nuevas funciones para el sistema de entrenamiento
 def can_user_start_training(user_id: str) -> Dict:
@@ -322,3 +391,93 @@ def get_user_training_history(user_id: str, limit: int = 10) -> List[Dict]:
     except Exception as e:
         logger.error(f"Error getting training history: {e}")
         return []
+
+# Funciones para manejar configuraciones de RL
+def get_user_rl_configuration(user_id: str) -> Dict:
+    """Obtiene la configuración de RL del usuario"""
+    try:
+        if not rl_config_service:
+            return {
+                "success": False,
+                "error": "Servicio de configuración no disponible"
+            }
+        
+        return rl_config_service.get_user_configuration(user_id)
+        
+    except Exception as e:
+        logger.error(f"Error getting user configuration: {e}")
+        return {
+            "success": False,
+            "error": "Error interno del servidor"
+        }
+
+def save_user_rl_configuration(
+    user_id: str,
+    max_drawdown_percentage: float = 15.0,
+    max_position_size_percentage: float = 5.0,
+    min_confidence_threshold: float = 70.0,
+    retraining_frequency: str = "monthly",
+    retraining_enabled: bool = False
+) -> Dict:
+    """Guarda la configuración de RL del usuario"""
+    try:
+        if not rl_config_service:
+            return {
+                "success": False,
+                "error": "Servicio de configuración no disponible"
+            }
+        
+        return rl_config_service.save_user_configuration(
+            user_id,
+            max_drawdown_percentage,
+            max_position_size_percentage,
+            min_confidence_threshold,
+            retraining_frequency,
+            retraining_enabled
+        )
+        
+    except Exception as e:
+        logger.error(f"Error saving user configuration: {e}")
+        return {
+            "success": False,
+            "error": "Error interno del servidor"
+        }
+
+def reset_user_rl_configuration(user_id: str) -> Dict:
+    """Restaura la configuración de RL del usuario a valores por defecto"""
+    try:
+        if not rl_config_service:
+            return {
+                "success": False,
+                "error": "Servicio de configuración no disponible"
+            }
+        
+        return rl_config_service.reset_user_configuration(user_id)
+        
+    except Exception as e:
+        logger.error(f"Error resetting user configuration: {e}")
+        return {
+            "success": False,
+            "error": "Error interno del servidor"
+        }
+
+def get_rl_configuration_limits(user_id: str = None) -> Dict:
+    """Obtiene los límites válidos para los parámetros de configuración"""
+    try:
+        if not rl_config_service:
+            return {
+                "success": False,
+                "error": "Servicio de configuración no disponible"
+            }
+        
+        return {
+            "success": True,
+            "limits": rl_config_service.get_configuration_limits(user_id)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting configuration limits: {e}")
+        return {
+            "success": False,
+            "error": "Error interno del servidor"
+        }

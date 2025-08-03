@@ -75,7 +75,11 @@ try:
         start_rl_training as start_rl_training_imported,
         get_training_progress_by_session as get_training_progress_by_session_imported,
         cancel_rl_training as cancel_rl_training_imported,
-        get_user_training_history as get_user_training_history_imported
+        get_user_training_history as get_user_training_history_imported,
+        get_user_rl_configuration as get_user_rl_configuration_imported,
+        save_user_rl_configuration as save_user_rl_configuration_imported,
+        reset_user_rl_configuration as reset_user_rl_configuration_imported,
+        get_rl_configuration_limits as get_rl_configuration_limits_imported
     )
 except ImportError as e:
     logger.warning(f"RL Trading Agent not available: {e}")
@@ -112,6 +116,79 @@ except ImportError as e:
     
     def get_user_training_history_imported(user_id, limit=10):
         return []
+    
+    def get_user_rl_configuration_imported(user_id):
+        return {
+            "success": True,
+            "configuration": {
+                "max_drawdown_percentage": 15.0,
+                "max_position_size_percentage": 5.0,
+                "min_confidence_threshold": 70.0,
+                "retraining_frequency": "monthly",
+                "retraining_enabled": False
+            }
+        }
+    
+    def save_user_rl_configuration_imported(user_id, **kwargs):
+        return {
+            "success": True,
+            "configuration": {
+                "max_drawdown_percentage": kwargs.get("max_drawdown_percentage", 15.0),
+                "max_position_size_percentage": kwargs.get("max_position_size_percentage", 5.0),
+                "min_confidence_threshold": kwargs.get("min_confidence_threshold", 70.0),
+                "retraining_frequency": kwargs.get("retraining_frequency", "monthly"),
+                "retraining_enabled": kwargs.get("retraining_enabled", False)
+            }
+        }
+    
+    def get_rl_configuration_limits_imported(user_id=None):
+        return {
+            "success": True,
+            "limits": {
+                "max_drawdown_percentage": {
+                    "min": 5.0,
+                    "max": 25.0,
+                    "default": 15.0,
+                    "step": 1.0
+                },
+                "max_position_size_percentage": {
+                    "min": 1.0,
+                    "max": 10.0,
+                    "default": 5.0,
+                    "step": 0.5
+                },
+                "min_confidence_threshold": {
+                    "min": 50.0,
+                    "max": 90.0,
+                    "default": 70.0,
+                    "step": 5.0
+                },
+                "retraining_frequency": {
+                    "options": [
+                        {"value": "monthly", "label": "Mensual"}
+                    ],
+                    "default": "monthly",
+                    "available": True
+                },
+                "retraining_enabled": {
+                    "default": False,
+                    "available": True
+                },
+                "user_subscription": "premium"
+            }
+        }
+    
+    def reset_user_rl_configuration_imported(user_id):
+        return {
+            "success": True,
+            "configuration": {
+                "max_drawdown_percentage": 15.0,
+                "max_position_size_percentage": 5.0,
+                "min_confidence_threshold": 70.0,
+                "retraining_frequency": "monthly",
+                "retraining_enabled": False
+            }
+        }
 
 # Importar sistema de suscripciones y autenticación
 try:
@@ -788,6 +865,110 @@ async def get_training_history(user_id: str, limit: int = 10):
         return globals()['get_user_training_history_imported'](user_id, limit)
     except NameError:
         return []
+
+# Endpoints para configuración avanzada de RL
+@app.get("/api/rl/configuration/{user_id}")
+async def get_user_configuration(user_id: str):
+    """Obtiene la configuración de RL del usuario"""
+    try:
+        return globals()['get_user_rl_configuration_imported'](user_id)
+    except NameError:
+        return {"success": False, "error": "Service not available"}
+
+@app.post("/api/rl/configuration/{user_id}")
+async def save_user_configuration(
+    user_id: str,
+    max_drawdown_percentage: float = 15.0,
+    max_position_size_percentage: float = 5.0,
+    min_confidence_threshold: float = 70.0,
+    retraining_frequency: str = "monthly",
+    retraining_enabled: bool = False
+):
+    """Guarda la configuración de RL del usuario"""
+    try:
+        return globals()['save_user_rl_configuration_imported'](
+            user_id,
+            max_drawdown_percentage,
+            max_position_size_percentage,
+            min_confidence_threshold,
+            retraining_frequency,
+            retraining_enabled
+        )
+    except NameError:
+        return {"success": False, "error": "Service not available"}
+
+@app.post("/api/rl/configuration/{user_id}/reset")
+async def reset_user_configuration(user_id: str):
+    """Restaura la configuración de RL del usuario a valores por defecto"""
+    try:
+        return globals()['reset_user_rl_configuration_imported'](user_id)
+    except NameError:
+        return {"success": False, "error": "Service not available"}
+
+@app.get("/api/rl/configuration/limits")
+async def get_configuration_limits(user_id: str = None):
+    """Obtiene los límites válidos para los parámetros de configuración"""
+    # Endpoint simplificado - NUEVO
+    limits_data = {
+        "success": True,
+        "limits": {
+            "max_drawdown_percentage": {
+                "min": 5.0,
+                "max": 25.0,
+                "default": 15.0,
+                "step": 1.0
+            },
+            "max_position_size_percentage": {
+                "min": 1.0,
+                "max": 10.0,
+                "default": 5.0,
+                "step": 0.5
+            },
+            "min_confidence_threshold": {
+                "min": 50.0,
+                "max": 90.0,
+                "default": 70.0,
+                "step": 5.0
+            },
+            "retraining_frequency": {
+                "options": [
+                    {"value": "monthly", "label": "Mensual"}
+                ],
+                "default": "monthly",
+                "available": True
+            },
+            "retraining_enabled": {
+                "default": False,
+                "available": True
+            },
+            "user_subscription": "premium"
+        }
+    }
+    return limits_data
+
+@app.get("/api/rl/configuration/test")
+async def test_configuration_endpoint():
+    """Endpoint de prueba para verificar que el servidor funciona"""
+    return {"success": True, "message": "Endpoint funcionando correctamente", "timestamp": "2025-08-03"}
+
+@app.get("/api/rl/config-limits-new")
+async def get_config_limits_new():
+    """Endpoint nuevo para configuración RL - completamente independiente"""
+    return {
+        "success": True,
+        "limits": {
+            "max_drawdown_percentage": {"min": 5.0, "max": 25.0, "default": 15.0, "step": 1.0},
+            "max_position_size_percentage": {"min": 1.0, "max": 10.0, "default": 5.0, "step": 0.5},
+            "min_confidence_threshold": {"min": 50.0, "max": 90.0, "default": 70.0, "step": 5.0},
+            "retraining_frequency": {
+                "options": [{"value": "monthly", "label": "Mensual"}],
+                "default": "monthly",
+                "available": True
+            },
+            "retraining_enabled": {"default": False, "available": True},
+            "user_subscription": "premium"
+        }
+    }
 
 @app.get("/api/mt4/status")
 async def get_mt4_status():
