@@ -755,7 +755,8 @@ const ModelCoordinationPanel: React.FC<{
   const modelData = [
     {
       name: 'Brain Max',
-      weight: rlStatus.model_coordination.brain_max_weight,
+      weight: rlStatus.model_coordination.brain_max_weight * 100,
+      weightDisplay: (rlStatus.model_coordination.brain_max_weight * 100).toFixed(1),
       status: 'Activo',
       confidence: 95,
       color: '#3b82f6',
@@ -763,7 +764,8 @@ const ModelCoordinationPanel: React.FC<{
     },
     {
       name: 'Brain Ultra',
-      weight: rlStatus.model_coordination.brain_ultra_weight,
+      weight: rlStatus.model_coordination.brain_ultra_weight * 100,
+      weightDisplay: (rlStatus.model_coordination.brain_ultra_weight * 100).toFixed(1),
       status: 'Activo',
       confidence: 92,
       color: '#10b981',
@@ -771,7 +773,8 @@ const ModelCoordinationPanel: React.FC<{
     },
     {
       name: 'Brain Predictor',
-      weight: rlStatus.model_coordination.brain_predictor_weight,
+      weight: rlStatus.model_coordination.brain_predictor_weight * 100,
+      weightDisplay: (rlStatus.model_coordination.brain_predictor_weight * 100).toFixed(1),
       status: 'Activo',
       confidence: 90,
       color: '#f59e0b',
@@ -779,7 +782,8 @@ const ModelCoordinationPanel: React.FC<{
     },
     {
       name: 'MegaMind',
-      weight: rlStatus.model_coordination.megamind_weight,
+      weight: rlStatus.model_coordination.megamind_weight * 100,
+      weightDisplay: (rlStatus.model_coordination.megamind_weight * 100).toFixed(1),
       status: 'Activo',
       confidence: 98,
       color: '#8b5cf6',
@@ -863,7 +867,7 @@ const ModelCoordinationPanel: React.FC<{
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-xl text-white">{model.weight}%</div>
+                    <div className="font-bold text-xl text-white">{model.weightDisplay}%</div>
                     <div className="text-sm text-gray-400 font-medium">{model.confidence}% conf</div>
                   </div>
                 </div>
@@ -909,13 +913,13 @@ const ActiveSignalsPanel: React.FC<{
           {activeSignals.map((signal, index) => (
             <div key={index} className="rounded-xl p-4 border transition-all duration-300 hover:scale-105" style={{
               background: 'linear-gradient(135deg, rgba(26, 31, 46, 0.8), rgba(45, 55, 72, 0.8))',
-              borderColor: signal.signal === 'BUY' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'
+              borderColor: signal.signal.toUpperCase() === 'BUY' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'
             }}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <div className="flex-1">
                   <div className="flex items-center mb-3">
                     <div className={`px-3 py-1 rounded-full text-xs font-medium mr-3 ${
-                      signal.signal === 'BUY' 
+                      signal.signal.toUpperCase() === 'BUY' 
                         ? 'bg-green-600/80 text-white border border-green-400/50' 
                         : 'bg-red-600/80 text-white border border-red-400/50'
                     }`}>
@@ -1012,14 +1016,14 @@ const RLPerformancePanel: React.FC<{
 
         <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
           <div className="text-lg font-bold text-white leading-tight">
-            {rlPerformance?.profit_factor.toFixed(2)}
+            {(rlPerformance?.profit_factor || 0).toFixed(2)}
           </div>
           <div className="text-xs text-gray-200 mt-1">Profit Factor</div>
         </div>
 
         <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
           <div className="text-lg font-bold text-white leading-tight">
-            {rlPerformance?.sharpe_ratio.toFixed(2)}
+            {(rlPerformance?.sharpe_ratio || 0).toFixed(2)}
           </div>
           <div className="text-xs text-gray-200 mt-1">Sharpe Ratio</div>
         </div>
@@ -1033,7 +1037,7 @@ const RLPerformancePanel: React.FC<{
 
         <div className="rounded-xl p-3 text-white shadow-lg min-h-[80px] flex flex-col justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
           <div className="text-lg font-bold text-white leading-tight">
-            {rlPerformance?.total_trades}
+            {rlPerformance?.total_trades || 0}
           </div>
           <div className="text-xs text-gray-200 mt-1">Trades</div>
         </div>
