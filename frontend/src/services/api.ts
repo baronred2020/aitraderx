@@ -228,10 +228,10 @@ export interface RealMetrics {
 }
 
 class ApiService {
-  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  private async request<T>(endpoint: string, options?: RequestInit, baseUrl?: string): Promise<T> {
     // Asegurar que el endpoint no comience con /api/v1 para evitar duplicación
     const cleanEndpoint = endpoint.startsWith('/api/v1') ? endpoint.substring(7) : endpoint;
-    const url = `${API_BASE_URL}${cleanEndpoint}`;
+    const url = baseUrl ? `${baseUrl}${cleanEndpoint}` : `${API_BASE_URL}${cleanEndpoint}`;
     
     try {
       const response = await fetch(url, {
@@ -255,6 +255,21 @@ class ApiService {
   // Brain Trader APIs
   async getAvailableBrains(planType: string = 'starter'): Promise<{ available_brains: string[]; default_brain: string }> {
     return this.request(`/brain-trader/available-brains?plan_type=${planType}`);
+  }
+
+  async getAvailablePairs(planType: string = 'starter'): Promise<{
+    plan_type: string;
+    available_pairs: Array<{
+      symbol: string;
+      name: string;
+      category: string;
+      spread: number;
+      description: string;
+    }>;
+    total_pairs: number;
+    categories: { Major: number; Minor: number };
+  }> {
+    return this.request(`/brain-trader/available-pairs?plan_type=${planType}`);
   }
 
   async getPredictions(
@@ -322,24 +337,24 @@ class ApiService {
     if (severity) params.append('severity', severity);
     params.append('limit', limit.toString());
     
-    return this.request(`/brain-trader/monitoring/alerts?${params.toString()}`);
+    return this.request(`/brain-trader/monitoring/alerts?${params.toString()}`, {}, 'http://localhost:8000');
   }
 
   // Marcar alerta como leída
   async markAlertAsRead(alert_id: string): Promise<{ success: boolean }> {
     return this.request(`/brain-trader/monitoring/alerts/${alert_id}/read`, {
       method: 'PUT'
-    });
+    }, 'http://localhost:8000');
   }
 
   // Obtener estado del sistema de monitoreo
   async getMonitoringSystemStatus(): Promise<MonitoringSystemStatus> {
-    return this.request('/brain-trader/monitoring/status');
+    return this.request('/brain-trader/monitoring/status', {}, 'http://localhost:8000');
   }
 
   // Obtener configuración de monitoreo
   async getMonitoringConfig(): Promise<MonitoringConfig> {
-    return this.request('/brain-trader/monitoring/config');
+    return this.request('/brain-trader/monitoring/config', {}, 'http://localhost:8000');
   }
 
   // Actualizar configuración de monitoreo
@@ -347,7 +362,7 @@ class ApiService {
     return this.request('/brain-trader/monitoring/config', {
       method: 'PUT',
       body: JSON.stringify(config)
-    });
+    }, 'http://localhost:8000');
   }
 
   // Iniciar monitoreo para un par específico
@@ -357,14 +372,14 @@ class ApiService {
     
     return this.request(`/brain-trader/monitoring/start?${params.toString()}`, {
       method: 'POST'
-    });
+    }, 'http://localhost:8000');
   }
 
   // Detener monitoreo para un par específico
   async stopMonitoring(pair: string): Promise<{ success: boolean; message: string }> {
     return this.request(`/brain-trader/monitoring/stop?pair=${pair}`, {
       method: 'POST'
-    });
+    }, 'http://localhost:8000');
   }
 
   // ===== FIN AGENTES DE MONITOREO APIs =====

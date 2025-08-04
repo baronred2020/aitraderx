@@ -29,9 +29,12 @@ import {
   Network,
   HardDrive,
   Wifi,
-  WifiOff
+  WifiOff,
+  DollarSign,
+  TrendingUp as TrendingUpIcon
 } from 'lucide-react';
 import { useMonitoringAgents } from '../../hooks/useMonitoringAgents';
+import { useAvailablePairs } from '../../hooks/useAvailablePairs';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import { MonitoringAlert, MonitoringAgentStatus } from '../../services/api';
@@ -68,6 +71,19 @@ const MonitoringAgents: React.FC<MonitoringAgentsProps> = ({
     isMonitoringAvailable,
     getSubscriptionLimits
   } = useMonitoringAgents();
+
+  const {
+    pairs: availablePairs,
+    loading: pairsLoading,
+    error: pairsError,
+    categories,
+    getPairsByCategory,
+    getPairBySymbol,
+    getDefaultPair
+  } = useAvailablePairs();
+
+  const [selectedPair, setSelectedPair] = useState(currentPair);
+  const [selectedBrain, setSelectedBrain] = useState(currentBrain);
 
   const [selectedAgent, setSelectedAgent] = useState<string>('all');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
@@ -308,10 +324,91 @@ const MonitoringAgents: React.FC<MonitoringAgentsProps> = ({
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h4 className="text-md font-semibold text-white mb-4">Controles de Monitoreo</h4>
         
+        {/* Selector de activos */}
+        <div className="mb-6">
+          <div className="flex items-center space-x-2 mb-3">
+            <DollarSign className="w-5 h-5 text-blue-400" />
+            <h5 className="text-sm font-medium text-white">Seleccionar Activo para Monitoreo</h5>
+          </div>
+          
+          {pairsLoading ? (
+            <div className="flex items-center space-x-2 text-gray-400">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span>Cargando activos disponibles...</span>
+            </div>
+          ) : pairsError ? (
+            <div className="text-red-400 text-sm">{pairsError}</div>
+          ) : (
+            <div className="space-y-4">
+              {/* Selector de par */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Par de Divisas
+                </label>
+                <select
+                  value={selectedPair}
+                  onChange={(e) => setSelectedPair(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                >
+                  {availablePairs.map((pair) => (
+                    <option key={pair.symbol} value={pair.symbol}>
+                      {pair.symbol} - {pair.name} ({pair.category})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Información del par seleccionado */}
+              {selectedPair && (
+                <div className="bg-gray-700/50 rounded-lg p-3">
+                  {(() => {
+                    const pairInfo = getPairBySymbol(selectedPair);
+                    return pairInfo ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-white">{pairInfo.name}</span>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            pairInfo.category === 'Major' 
+                              ? 'bg-blue-500/20 text-blue-400' 
+                              : 'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {pairInfo.category}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400">{pairInfo.description}</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-400">
+                          <span>Spread: {pairInfo.spread} pips</span>
+                          <span>•</span>
+                          <span>Plan: {subscription?.planType || 'starter'}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-400">Información no disponible</div>
+                    );
+                  })()}
+                </div>
+              )}
+              
+              {/* Estadísticas de categorías */}
+              <div className="flex space-x-4 text-xs">
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-gray-400">Major: {categories.Major}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-gray-400">Minor: {categories.Minor}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Botones de control */}
         <div className="flex flex-wrap gap-4">
           <button
-            onClick={() => startMonitoring(currentPair, currentBrain)}
-            disabled={loading.startMonitoring}
+            onClick={() => startMonitoring(selectedPair, selectedBrain)}
+            disabled={loading.startMonitoring || pairsLoading}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
           >
             <Play className="w-4 h-4" />
@@ -319,7 +416,7 @@ const MonitoringAgents: React.FC<MonitoringAgentsProps> = ({
           </button>
           
           <button
-            onClick={() => stopMonitoring(currentPair)}
+            onClick={() => stopMonitoring(selectedPair)}
             disabled={loading.stopMonitoring}
             className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
           >

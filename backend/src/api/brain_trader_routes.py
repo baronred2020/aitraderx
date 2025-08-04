@@ -234,6 +234,71 @@ async def get_available_brains(plan_type: str = "starter"):
         logger.error(f"Error getting available brains: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/available-pairs")
+async def get_available_pairs(plan_type: str = "starter"):
+    """Obtiene los pares de divisas disponibles según el plan de suscripción"""
+    try:
+        # Configuración de pares por plan
+        pairs_by_plan = {
+            "starter": [
+                {"symbol": "EURUSD", "name": "Euro/Dólar", "category": "Major", "spread": 1.5, "description": "Par más líquido del mercado"}
+            ],
+            "trader": [
+                {"symbol": "EURUSD", "name": "Euro/Dólar", "category": "Major", "spread": 1.5, "description": "Par más líquido del mercado"},
+                {"symbol": "GBPUSD", "name": "Libra/Dólar", "category": "Major", "spread": 1.8, "description": "Par volátil, sensible a noticias"},
+                {"symbol": "USDJPY", "name": "Dólar/Yen", "category": "Major", "spread": 1.2, "description": "Par seguro, bajo spread"},
+                {"symbol": "AUDUSD", "name": "Dólar Australiano/Dólar", "category": "Major", "spread": 1.6, "description": "Sensible a commodities"},
+                {"symbol": "USDCAD", "name": "Dólar/Dólar Canadiense", "category": "Major", "spread": 1.7, "description": "Sensible al petróleo"}
+            ],
+            "expert": [
+                {"symbol": "EURUSD", "name": "Euro/Dólar", "category": "Major", "spread": 1.5, "description": "Par más líquido del mercado"},
+                {"symbol": "GBPUSD", "name": "Libra/Dólar", "category": "Major", "spread": 1.8, "description": "Par volátil, sensible a noticias"},
+                {"symbol": "USDJPY", "name": "Dólar/Yen", "category": "Major", "spread": 1.2, "description": "Par seguro, bajo spread"},
+                {"symbol": "AUDUSD", "name": "Dólar Australiano/Dólar", "category": "Major", "spread": 1.6, "description": "Sensible a commodities"},
+                {"symbol": "USDCAD", "name": "Dólar/Dólar Canadiense", "category": "Major", "spread": 1.7, "description": "Sensible al petróleo"},
+                {"symbol": "EURGBP", "name": "Euro/Libra", "category": "Minor", "spread": 2.1, "description": "Par cruzado europeo"},
+                {"symbol": "GBPJPY", "name": "Libra/Yen", "category": "Minor", "spread": 2.3, "description": "Alta volatilidad"},
+                {"symbol": "EURJPY", "name": "Euro/Yen", "category": "Minor", "spread": 2.0, "description": "Par cruzado estable"}
+            ],
+            "premium": [
+                {"symbol": "EURUSD", "name": "Euro/Dólar", "category": "Major", "spread": 1.5, "description": "Par más líquido del mercado"},
+                {"symbol": "GBPUSD", "name": "Libra/Dólar", "category": "Major", "spread": 1.8, "description": "Par volátil, sensible a noticias"},
+                {"symbol": "USDJPY", "name": "Dólar/Yen", "category": "Major", "spread": 1.2, "description": "Par seguro, bajo spread"},
+                {"symbol": "AUDUSD", "name": "Dólar Australiano/Dólar", "category": "Major", "spread": 1.6, "description": "Sensible a commodities"},
+                {"symbol": "USDCAD", "name": "Dólar/Dólar Canadiense", "category": "Major", "spread": 1.7, "description": "Sensible al petróleo"},
+                {"symbol": "EURGBP", "name": "Euro/Libra", "category": "Minor", "spread": 2.1, "description": "Par cruzado europeo"},
+                {"symbol": "GBPJPY", "name": "Libra/Yen", "category": "Minor", "spread": 2.3, "description": "Alta volatilidad"},
+                {"symbol": "EURJPY", "name": "Euro/Yen", "category": "Minor", "spread": 2.0, "description": "Par cruzado estable"}
+            ],
+            "institutional": [
+                {"symbol": "EURUSD", "name": "Euro/Dólar", "category": "Major", "spread": 1.5, "description": "Par más líquido del mercado"},
+                {"symbol": "GBPUSD", "name": "Libra/Dólar", "category": "Major", "spread": 1.8, "description": "Par volátil, sensible a noticias"},
+                {"symbol": "USDJPY", "name": "Dólar/Yen", "category": "Major", "spread": 1.2, "description": "Par seguro, bajo spread"},
+                {"symbol": "AUDUSD", "name": "Dólar Australiano/Dólar", "category": "Major", "spread": 1.6, "description": "Sensible a commodities"},
+                {"symbol": "USDCAD", "name": "Dólar/Dólar Canadiense", "category": "Major", "spread": 1.7, "description": "Sensible al petróleo"},
+                {"symbol": "EURGBP", "name": "Euro/Libra", "category": "Minor", "spread": 2.1, "description": "Par cruzado europeo"},
+                {"symbol": "GBPJPY", "name": "Libra/Yen", "category": "Minor", "spread": 2.3, "description": "Alta volatilidad"},
+                {"symbol": "EURJPY", "name": "Euro/Yen", "category": "Minor", "spread": 2.0, "description": "Par cruzado estable"}
+            ]
+        }
+        
+        # Obtener pares disponibles para el plan
+        available_pairs = pairs_by_plan.get(plan_type, pairs_by_plan["starter"])
+        
+        return {
+            "plan_type": plan_type,
+            "available_pairs": available_pairs,
+            "total_pairs": len(available_pairs),
+            "categories": {
+                "Major": len([p for p in available_pairs if p["category"] == "Major"]),
+                "Minor": len([p for p in available_pairs if p["category"] == "Minor"])
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting available pairs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/predictions/{brain_type}")
 async def get_predictions(
     brain_type: str,
