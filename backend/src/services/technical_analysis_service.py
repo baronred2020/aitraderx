@@ -187,25 +187,25 @@ class TechnicalAnalysisService:
             stoch_k = indicators['stoch_k'].iloc[-1] if 'stoch_k' in indicators and not indicators['stoch_k'].empty else 50
             adx = indicators['adx'].iloc[-1] if 'adx' in indicators and not indicators['adx'].empty else 25
             
-            for i in range(min(limit, 5)):
-                signal_type, strength, confidence, reasoning = self._analyze_technical_signals(
-                    current_price, rsi, macd, macd_signal, bb_upper, bb_lower, sma_20, sma_50, stoch_k, adx
-                )
-                
-                entry_price = current_price
-                stop_loss = self._calculate_stop_loss(signal_type, current_price, bb_lower, bb_upper)
-                take_profit = self._calculate_take_profit(signal_type, current_price, bb_lower, bb_upper)
-                
-                signal = TechnicalSignal(
-                    signal_type=signal_type,
-                    strength=strength,
-                    confidence=confidence,
-                    entry_price=entry_price,
-                    stop_loss=stop_loss,
-                    take_profit=take_profit,
-                    reasoning=reasoning
-                )
-                signals.append(signal)
+            # Generar solo una señal única basada en el análisis técnico actual
+            signal_type, strength, confidence, reasoning = self._analyze_technical_signals(
+                current_price, rsi, macd, macd_signal, bb_upper, bb_lower, sma_20, sma_50, stoch_k, adx
+            )
+            
+            entry_price = current_price
+            stop_loss = self._calculate_stop_loss(signal_type, current_price, bb_lower, bb_upper)
+            take_profit = self._calculate_take_profit(signal_type, current_price, bb_lower, bb_upper)
+            
+            signal = TechnicalSignal(
+                signal_type=signal_type,
+                strength=strength,
+                confidence=confidence,
+                entry_price=entry_price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                reasoning=reasoning
+            )
+            signals.append(signal)
             
             return signals
             

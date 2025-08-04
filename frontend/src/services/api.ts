@@ -337,24 +337,24 @@ class ApiService {
     if (severity) params.append('severity', severity);
     params.append('limit', limit.toString());
     
-    return this.request(`/brain-trader/monitoring/alerts?${params.toString()}`, {}, 'http://localhost:8000');
+    return this.request(`/brain-trader/monitoring/alerts?${params.toString()}`);
   }
 
   // Marcar alerta como leída
   async markAlertAsRead(alert_id: string): Promise<{ success: boolean }> {
     return this.request(`/brain-trader/monitoring/alerts/${alert_id}/read`, {
       method: 'PUT'
-    }, 'http://localhost:8000');
+    });
   }
 
   // Obtener estado del sistema de monitoreo
   async getMonitoringSystemStatus(): Promise<MonitoringSystemStatus> {
-    return this.request('/brain-trader/monitoring/status', {}, 'http://localhost:8000');
+    return this.request('/brain-trader/monitoring/status');
   }
 
   // Obtener configuración de monitoreo
   async getMonitoringConfig(): Promise<MonitoringConfig> {
-    return this.request('/brain-trader/monitoring/config', {}, 'http://localhost:8000');
+    return this.request('/brain-trader/monitoring/config');
   }
 
   // Actualizar configuración de monitoreo
@@ -362,24 +362,25 @@ class ApiService {
     return this.request('/brain-trader/monitoring/config', {
       method: 'PUT',
       body: JSON.stringify(config)
-    }, 'http://localhost:8000');
+    });
   }
 
   // Iniciar monitoreo para un par específico
   async startMonitoring(pair: string, brain_type?: string): Promise<{ success: boolean; message: string }> {
-    const params = new URLSearchParams({ pair });
-    if (brain_type) params.append('brain_type', brain_type);
-    
-    return this.request(`/brain-trader/monitoring/start?${params.toString()}`, {
-      method: 'POST'
-    }, 'http://localhost:8000');
+    return this.request('/brain-trader/monitoring/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pair, brain_type })
+    });
   }
 
   // Detener monitoreo para un par específico
   async stopMonitoring(pair: string): Promise<{ success: boolean; message: string }> {
-    return this.request(`/brain-trader/monitoring/stop?pair=${pair}`, {
-      method: 'POST'
-    }, 'http://localhost:8000');
+    return this.request('/brain-trader/monitoring/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pair })
+    });
   }
 
   // ===== FIN AGENTES DE MONITOREO APIs =====

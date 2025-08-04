@@ -860,28 +860,69 @@ class BrainTraderService:
             self._validate_brain_type(brain_type)
             self._validate_pair(pair)
             
-            # Usar análisis técnico real en lugar de datos mock
-            technical_signals = await technical_analysis_service.generate_real_signals(pair, limit)
-            
-            # Convertir a formato de respuesta
-            signals = []
-            for signal in technical_signals:
-                signal_dict = {
-                    'pair': signal.pair,
-                    'type': signal.signal_type,
-                    'strength': signal.strength,
-                    'confidence': signal.confidence,
-                    'entry_price': signal.entry_price,
-                    'stop_loss': signal.stop_loss,
-                    'take_profit': signal.take_profit,
-                    'reasoning': signal.reasoning,
-                    'brain_type': brain_type,
-                    'timestamp': signal.timestamp
-                }
-                signals.append(signal_dict)
-            
-            logger.info(f"Generated {len(signals)} real signals for {brain_type}")
-            return signals
+            # Usar servicio de señales de ultra calidad
+            try:
+                from .ultra_quality_signals_service import ultra_quality_service
+                
+                # Generar señal de ultra calidad
+                ultra_signal = await ultra_quality_service.generate_ultra_quality_signal(pair, 'day_trading')
+                
+                if ultra_signal:
+                    # Convertir a formato de respuesta
+                    signal_dict = {
+                        'pair': pair,
+                        'type': ultra_signal.signal_type,
+                        'strength': 'strong' if ultra_signal.quality_score > 85 else 'medium',
+                        'confidence': ultra_signal.confidence,
+                        'entry_price': ultra_signal.entry_price,
+                        'stop_loss': ultra_signal.stop_loss,
+                        'take_profit': ultra_signal.take_profit,
+                        'reasoning': ultra_signal.reasoning,
+                        'brain_type': brain_type,
+                        'timestamp': ultra_signal.timestamp,
+                        'quality_score': ultra_signal.quality_score,
+                        'risk_reward_ratio': ultra_signal.risk_reward_ratio,
+                        'market_conditions': ultra_signal.market_conditions,
+                        'technical_analysis': ultra_signal.technical_analysis,
+                        'ai_consensus': ultra_signal.ai_consensus,
+                        'volatility_analysis': ultra_signal.volatility_analysis,
+                        'volume_analysis': ultra_signal.volume_analysis,
+                        'trend_analysis': ultra_signal.trend_analysis,
+                        'support_resistance': ultra_signal.support_resistance,
+                        'momentum_analysis': ultra_signal.momentum_analysis,
+                        'style': ultra_signal.style
+                    }
+                    
+                    logger.info(f"✅ Generated ultra quality signal: {ultra_signal.signal_type} - {ultra_signal.confidence:.1f}% - Quality: {ultra_signal.quality_score:.1f}%")
+                    return [signal_dict]
+                else:
+                    logger.warning(f"⚠️ No ultra quality signal generated for {brain_type}")
+                    return []
+                    
+            except ImportError:
+                logger.warning("⚠️ Ultra quality service not available, falling back to basic signals")
+                # Fallback a señales básicas
+                technical_signals = await technical_analysis_service.generate_real_signals(pair, limit)
+                
+                # Convertir a formato de respuesta
+                signals = []
+                for signal in technical_signals:
+                    signal_dict = {
+                        'pair': pair,
+                        'type': signal.signal_type,
+                        'strength': signal.strength,
+                        'confidence': signal.confidence,
+                        'entry_price': signal.entry_price,
+                        'stop_loss': signal.stop_loss,
+                        'take_profit': signal.take_profit,
+                        'reasoning': signal.reasoning,
+                        'brain_type': brain_type,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    signals.append(signal_dict)
+                
+                logger.info(f"Generated {len(signals)} basic signals for {brain_type}")
+                return signals
             
         except Exception as e:
             logger.error(f"Error getting signals: {str(e)}")
