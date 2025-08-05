@@ -1,0 +1,12 @@
+2025-08-04 15:17:44,980 - __main__ - INFO - Python 3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)] - OK
+2025-08-04 15:17:44,983 - __main__ - INFO - Directorio creado: logs
+2025-08-04 15:17:44,985 - __main__ - INFO - Directorio creado: data
+2025-08-04 15:17:44,987 - __main__ - INFO - Directorio creado: config
+2025-08-04 15:17:44,990 - __main__ - INFO - Directorio creado: temp
+2025-08-04 15:17:44,991 - __main__ - INFO - Instalando dependencias...
+2025-08-04 15:19:33,381 - __main__ - ERROR - Error instalando dependencias: Command '['C:\\Users\\andre\\AppData\\Local\\Programs\\Python\\Python313\\python.exe', '-m', 'pip', 'install', '-r', 'requirements.txt']' returned non-zero exit status 1.
+2025-08-04 15:19:33,430 - __main__ - WARNING - Continuando sin instalar dependencias...
+2025-08-04 15:19:33,431 - __main__ - INFO - Iniciando servidor backend...
+2025-08-04 15:19:33,478 - __main__ - INFO - Servidor backend iniciado con PID: 26444
+2025-08-04 15:19:33,480 - __main__ - INFO - Bridge de MT4/MT5 no encontrado, continuando sin él
+2025-08-04 15:19:33,481 - __main__ - INFO - Script de scalping no encontrado, continuando sin él

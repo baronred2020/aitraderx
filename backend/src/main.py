@@ -12,6 +12,7 @@ Sistema de trading con inteligencia artificial que incluye:
 
 import sys
 import os
+import uuid
 
 # Agregar el directorio src al path para importaciones
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -28,6 +29,7 @@ from contextlib import asynccontextmanager
 import json
 import random
 from typing import List, Dict, Optional, Any
+from enum import Enum
 import pandas as pd
 import numpy as np
 from pydantic import BaseModel
@@ -81,6 +83,15 @@ try:
         reset_user_rl_configuration as reset_user_rl_configuration_imported,
         get_rl_configuration_limits as get_rl_configuration_limits_imported
     )
+except ImportError as e:
+    logger.warning(f"RL Trading Agent not available: {e}")
+
+# Importar servicios de estrategias
+try:
+    from services.scalping_strategy_service import scalping_service
+except ImportError as e:
+    logger.warning(f"Scalping Strategy Service not available: {e}")
+    scalping_service = None
 except ImportError as e:
     logger.warning(f"RL Trading Agent not available: {e}")
     # Funciones fallback
@@ -375,6 +386,72 @@ class MegaMindPredictionResponse(BaseModel):
     fusion_details: dict
     timestamp: str
     expires_at: str
+
+# ===== AUTOMATED TRADING MODELS =====
+class BrainType(str, Enum):
+    BRAIN_ULTRA = "Brain_Ultra"
+    BRAIN_PRO = "Brain_Pro"
+    BRAIN_BASIC = "Brain_Basic"
+
+class TradingStyle(str, Enum):
+    SCALPING = "scalping"
+    DAY_TRADING = "day_trading"
+    SWING_TRADING = "swing_trading"
+
+class StrategyStatus(str, Enum):
+    ACTIVE = "active"
+    PAUSED = "paused"
+    STOPPED = "stopped"
+
+class StrategyConfig(BaseModel):
+    name: str
+    brainType: BrainType
+    pair: str
+    style: TradingStyle
+    lotSize: float
+    stopLossPips: int
+    takeProfitPips: int
+    minConfidence: float
+    maxPositions: int
+    riskPerTrade: float
+
+class Strategy(BaseModel):
+    id: str
+    name: str
+    brainType: BrainType
+    pair: str
+    style: TradingStyle
+    status: StrategyStatus
+    currentPrice: float
+    totalTrades: int
+    winningTrades: int
+    totalPnL: float
+    openPositions: int
+    lastSignal: str
+    lastSignalTime: str
+    createdAt: str
+    lotSize: float
+    stopLossPips: int
+    takeProfitPips: int
+    minConfidence: float
+    maxPositions: int
+    riskPerTrade: float
+
+class Trade(BaseModel):
+    id: str
+    strategyId: str
+    pair: str
+    type: str  # 'buy' or 'sell'
+    lotSize: float
+    openPrice: float
+    closePrice: Optional[float]
+    stopLoss: float
+    takeProfit: float
+    status: str  # 'open', 'closed', 'cancelled'
+    pnl: float
+    openTime: str
+    closeTime: Optional[str]
+    confidence: float
 
 # Clases del sistema de IA
 class DataCollector:
@@ -1467,6 +1544,265 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+# ===== AUTOMATED TRADING SYSTEM =====
+# Almacenamiento en memoria para estrategias y trades
+strategies_db: Dict[str, Strategy] = {}
+trades_db: Dict[str, Trade] = {}
+active_tasks: Dict[str, asyncio.Task] = {}
+
+# Precios simulados para pares de divisas
+current_prices = {
+    "EUR/USD": 1.0856,
+    "GBP/USD": 1.2654,
+    "USD/JPY": 148.23,
+    "AUD/USD": 0.6589,
+    "USD/CAD": 1.3542
+}
+
+def update_prices():
+    """Simula cambios de precio para los pares de divisas"""
+    for pair in current_prices:
+        # Simular movimiento de precio aleatorio
+        change = np.random.normal(0, 0.0005)  # Cambio pequeño
+        current_prices[pair] += change
+        # Mantener precios realistas
+        if pair == "USD/JPY":
+            current_prices[pair] = max(100, min(200, current_prices[pair]))
+        else:
+            current_prices[pair] = max(0.5, min(2.0, current_prices[pair]))
+
+def generate_signal(strategy: Strategy) -> Optional[Dict[str, Any]]:
+    """Genera señales de trading basadas en la estrategia"""
+    # Simulación simple de señales
+    confidence = np.random.uniform(60, 95)
+    
+    if confidence >= strategy.minConfidence:
+        signal_type = np.random.choice(['buy', 'sell'], p=[0.6, 0.4])
+        return {
+            'type': signal_type,
+            'confidence': confidence,
+            'price': current_prices.get(strategy.pair, 1.0856),
+            'timestamp': datetime.now().isoformat()
+        }
+    return None
+
+async def run_strategy(strategy_id: str):
+    """Ejecuta una estrategia de trading automático"""
+    while strategy_id in active_tasks and strategies_db[strategy_id].status == StrategyStatus.ACTIVE:
+        try:
+            strategy = strategies_db[strategy_id]
+            
+            # Verificar si podemos abrir más posiciones
+            open_positions = len([t for t in trades_db.values() 
+                                if t.strategyId == strategy_id and t.status == 'open'])
+            
+            if open_positions < strategy.maxPositions:
+                # Generar señal
+                signal = generate_signal(strategy)
+                
+                if signal:
+                    # Crear trade
+                    trade = Trade(
+                        id=str(uuid.uuid4()),
+                        strategyId=strategy_id,
+                        pair=strategy.pair,
+                        type=signal['type'],
+                        lotSize=strategy.lotSize,
+                        openPrice=signal['price'],
+                        closePrice=None,
+                        stopLoss=signal['price'] - (strategy.stopLossPips * 0.0001) if signal['type'] == 'buy' 
+                               else signal['price'] + (strategy.stopLossPips * 0.0001),
+                        takeProfit=signal['price'] + (strategy.takeProfitPips * 0.0001) if signal['type'] == 'buy'
+                                 else signal['price'] - (strategy.takeProfitPips * 0.0001),
+                        status='open',
+                        pnl=0.0,
+                        openTime=signal['timestamp'],
+                        closeTime=None,
+                        confidence=signal['confidence']
+                    )
+                    
+                    trades_db[trade.id] = trade
+                    
+                    # Actualizar estrategia
+                    strategies_db[strategy_id].openPositions = open_positions + 1
+                    strategies_db[strategy_id].lastSignal = signal['type']
+                    strategies_db[strategy_id].lastSignalTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Procesar trades abiertos
+            for trade_id, trade in trades_db.items():
+                if trade.strategyId == strategy_id and trade.status == 'open':
+                    current_price = current_prices.get(trade.pair, trade.openPrice)
+                    
+                    # Verificar stop loss y take profit
+                    if trade.type == 'buy':
+                        if current_price <= trade.stopLoss or current_price >= trade.takeProfit:
+                            # Cerrar trade
+                            trade.status = 'closed'
+                            trade.closePrice = current_price
+                            trade.closeTime = datetime.now().isoformat()
+                            trade.pnl = (current_price - trade.openPrice) * trade.lotSize * 100000
+                            
+                            # Actualizar estrategia
+                            strategies_db[strategy_id].totalTrades += 1
+                            if trade.pnl > 0:
+                                strategies_db[strategy_id].winningTrades += 1
+                            strategies_db[strategy_id].totalPnL += trade.pnl
+                            strategies_db[strategy_id].openPositions -= 1
+                    
+                    elif trade.type == 'sell':
+                        if current_price >= trade.stopLoss or current_price <= trade.takeProfit:
+                            # Cerrar trade
+                            trade.status = 'closed'
+                            trade.closePrice = current_price
+                            trade.closeTime = datetime.now().isoformat()
+                            trade.pnl = (trade.openPrice - current_price) * trade.lotSize * 100000
+                            
+                            # Actualizar estrategia
+                            strategies_db[strategy_id].totalTrades += 1
+                            if trade.pnl > 0:
+                                strategies_db[strategy_id].winningTrades += 1
+                            strategies_db[strategy_id].totalPnL += trade.pnl
+                            strategies_db[strategy_id].openPositions -= 1
+            
+            # Actualizar precio actual de la estrategia
+            strategies_db[strategy_id].currentPrice = current_prices.get(strategy.pair, 1.0856)
+            
+            # Esperar antes de la siguiente iteración
+            await asyncio.sleep(30)  # 30 segundos
+            
+        except Exception as e:
+            print(f"Error en estrategia {strategy_id}: {e}")
+            await asyncio.sleep(60)  # Esperar más tiempo si hay error
+
+# ===== AUTOMATED TRADING API ENDPOINTS =====
+@app.get("/api/v1/trading/strategies", response_model=Dict[str, List[Strategy]])
+async def get_strategies():
+    """Obtener todas las estrategias de trading"""
+    return {"strategies": list(strategies_db.values())}
+
+@app.post("/api/v1/trading/strategies", response_model=Dict[str, Strategy])
+async def create_strategy(config: StrategyConfig):
+    """Crear una nueva estrategia de trading"""
+    strategy_id = str(uuid.uuid4())
+    
+    strategy = Strategy(
+        id=strategy_id,
+        name=config.name,
+        brainType=config.brainType,
+        pair=config.pair,
+        style=config.style,
+        status=StrategyStatus.PAUSED,
+        currentPrice=current_prices.get(config.pair, 1.0856),
+        totalTrades=0,
+        winningTrades=0,
+        totalPnL=0.0,
+        openPositions=0,
+        lastSignal="none",
+        lastSignalTime="N/A",
+        createdAt=datetime.now().isoformat(),
+        lotSize=config.lotSize,
+        stopLossPips=config.stopLossPips,
+        takeProfitPips=config.takeProfitPips,
+        minConfidence=config.minConfidence,
+        maxPositions=config.maxPositions,
+        riskPerTrade=config.riskPerTrade
+    )
+    
+    strategies_db[strategy_id] = strategy
+    return {"strategy": strategy}
+
+@app.get("/api/v1/trading/prices")
+async def get_prices():
+    """Obtener precios actuales de los pares de divisas"""
+    # Actualizar precios simulados
+    update_prices()
+    return {"prices": current_prices}
+
+@app.post("/api/v1/trading/strategies/{strategy_id}/start")
+async def start_strategy(strategy_id: str):
+    """Iniciar una estrategia de trading"""
+    if strategy_id not in strategies_db:
+        raise HTTPException(status_code=404, detail="Estrategia no encontrada")
+    
+    strategy = strategies_db[strategy_id]
+    strategy.status = StrategyStatus.ACTIVE
+    
+    # Iniciar tarea en segundo plano
+    if strategy_id not in active_tasks:
+        task = asyncio.create_task(run_strategy(strategy_id))
+        active_tasks[strategy_id] = task
+    
+    return {"message": "Estrategia iniciada", "strategy_id": strategy_id}
+
+@app.post("/api/v1/trading/strategies/{strategy_id}/stop")
+async def stop_strategy(strategy_id: str):
+    """Pausar una estrategia de trading"""
+    if strategy_id not in strategies_db:
+        raise HTTPException(status_code=404, detail="Estrategia no encontrada")
+    
+    strategy = strategies_db[strategy_id]
+    strategy.status = StrategyStatus.PAUSED
+    
+    # Cancelar tarea en segundo plano
+    if strategy_id in active_tasks:
+        active_tasks[strategy_id].cancel()
+        del active_tasks[strategy_id]
+    
+    return {"message": "Estrategia pausada", "strategy_id": strategy_id}
+
+@app.delete("/api/v1/trading/strategies/{strategy_id}")
+async def delete_strategy(strategy_id: str):
+    """Eliminar una estrategia de trading"""
+    if strategy_id not in strategies_db:
+        raise HTTPException(status_code=404, detail="Estrategia no encontrada")
+    
+    # Cancelar tarea en segundo plano si está activa
+    if strategy_id in active_tasks:
+        active_tasks[strategy_id].cancel()
+        del active_tasks[strategy_id]
+    
+    # Eliminar estrategia
+    del strategies_db[strategy_id]
+    
+    # Eliminar trades asociados
+    trades_to_delete = [trade_id for trade_id, trade in trades_db.items() 
+                       if trade.strategyId == strategy_id]
+    for trade_id in trades_to_delete:
+        del trades_db[trade_id]
+    
+    return {"message": "Estrategia eliminada", "strategy_id": strategy_id}
+
+@app.get("/api/v1/trading/trades")
+async def get_trades(strategy_id: Optional[str] = None):
+    """Obtener trades de una estrategia específica o todos"""
+    if strategy_id:
+        trades = [trade for trade in trades_db.values() if trade.strategyId == strategy_id]
+    else:
+        trades = list(trades_db.values())
+    
+    return {"trades": trades}
+
+@app.get("/api/v1/trading/performance/{strategy_id}")
+async def get_strategy_performance(strategy_id: str):
+    """Obtener rendimiento de una estrategia"""
+    if strategy_id not in strategies_db:
+        raise HTTPException(status_code=404, detail="Estrategia no encontrada")
+    
+    strategy = strategies_db[strategy_id]
+    total_trades = strategy.totalTrades
+    winning_trades = strategy.winningTrades
+    
+    win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+    
+    return {
+        "strategy_id": strategy_id,
+        "total_trades": total_trades,
+        "winning_trades": winning_trades,
+        "win_rate": win_rate,
+        "total_pnl": strategy.totalPnL,
+        "open_positions": strategy.openPositions
+    }
+
 # Tareas en segundo plano
 @app.on_event("startup")
 async def startup_event():
@@ -1517,6 +1853,284 @@ def risk_management_check(signal: str, position_size: float, portfolio_value: fl
     
     # Otras reglas de riesgo pueden añadirse aquí
     return True
+
+# ===== MT4/MT5 CONNECTION API ENDPOINTS =====
+import os
+import json
+import time
+from pathlib import Path
+
+# Configuración de archivos compartidos con MT4/MT5
+MT4_COMMANDS_FILE = "C:/Users/andre/AppData/Roaming/MetaQuotes/Terminal/C348917D9E28C59E863914247686464D/MQL4/Files/mt4_commands.txt"
+MT4_RESPONSES_FILE = "C:/Users/andre/AppData/Roaming/MetaQuotes/Terminal/C348917D9E28C59E863914247686464D/MQL4/Files/mt4_responses.txt"
+MT4_STATUS_FILE = "C:/Users/andre/AppData/Roaming/MetaQuotes/Terminal/C348917D9E28C59E863914247686464D/MQL4/Files/mt4_status.txt"
+
+# Crear directorio si no existe
+os.makedirs("C:/Users/andre/AppData/Roaming/MetaQuotes/Terminal/C348917D9E28C59E863914247686464D/MQL4/Files", exist_ok=True)
+
+mt4_connection_status = {
+    "connected": False,
+    "account": None,
+    "last_connected": None,
+    "server": None,
+    "balance": 0.0,
+    "equity": 0.0
+}
+
+def write_mt4_command(command_type, data=None):
+    """Escribe un comando para MT4"""
+    command = {
+        "timestamp": datetime.now().isoformat(),
+        "type": command_type,
+        "data": data or {}
+    }
+    
+    try:
+        with open(MT4_COMMANDS_FILE, 'w') as f:
+            json.dump(command, f)
+        return True
+    except Exception as e:
+        print(f"Error writing MT4 command: {e}")
+        return False
+
+def read_mt4_response():
+    """Lee la respuesta de MT4"""
+    try:
+        if os.path.exists(MT4_RESPONSES_FILE):
+            with open(MT4_RESPONSES_FILE, 'r') as f:
+                response = json.load(f)
+            # Limpiar archivo después de leer
+            os.remove(MT4_RESPONSES_FILE)
+            return response
+    except Exception as e:
+        print(f"Error reading MT4 response: {e}")
+    return None
+
+def check_mt4_status():
+    """Verifica el estado de MT4"""
+    try:
+        if os.path.exists(MT4_STATUS_FILE):
+            with open(MT4_STATUS_FILE, 'r') as f:
+                status = json.load(f)
+            return status
+    except Exception as e:
+        print(f"Error reading MT4 status: {e}")
+    return None
+
+@app.post("/api/v1/trading/mt4/connect")
+async def connect_mt4():
+    """Conectar con MetaTrader 4/5"""
+    try:
+        # Enviar comando de conexión a MT4
+        if write_mt4_command("connect"):
+            # Esperar respuesta
+            time.sleep(1)
+            response = read_mt4_response()
+            
+            if response and response.get("status") == "connected":
+                mt4_connection_status.update({
+                    "connected": True,
+                    "account": response.get("account", "DemoAccount"),
+                    "last_connected": datetime.now().isoformat(),
+                    "server": response.get("server", "Demo Server"),
+                    "balance": response.get("balance", 10000.0),
+                    "equity": response.get("equity", 10000.0)
+                })
+                return {"status": "connected", "account": mt4_connection_status["account"]}
+            else:
+                return {"status": "error", "message": "No se pudo conectar con MT4"}
+        else:
+            return {"status": "error", "message": "Error al enviar comando a MT4"}
+            
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/v1/trading/mt4/disconnect")
+async def disconnect_mt4():
+    """Desconectar de MetaTrader 4/5"""
+    try:
+        write_mt4_command("disconnect")
+        mt4_connection_status["connected"] = False
+        return {"status": "disconnected"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/v1/trading/mt4/status")
+async def mt4_status():
+    """Obtener estado de conexión MT4"""
+    # Verificar estado actual de MT4
+    current_status = check_mt4_status()
+    if current_status:
+        mt4_connection_status.update(current_status)
+    
+    return mt4_connection_status
+
+@app.post("/api/v1/trading/mt4/order")
+async def place_mt4_order(order_data: dict):
+    """Colocar orden en MT4"""
+    if not mt4_connection_status["connected"]:
+        return {"status": "error", "message": "MT4 no está conectado"}
+    
+    try:
+        if write_mt4_command("place_order", order_data):
+            time.sleep(0.5)
+            response = read_mt4_response()
+            return response or {"status": "pending", "message": "Orden enviada"}
+        else:
+            return {"status": "error", "message": "Error al enviar orden"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/v1/trading/mt4/download-ea")
+async def download_ea():
+    """Descargar el Expert Advisor"""
+    try:
+        # Path al archivo EA - usar ruta absoluta
+        import pathlib
+        current_dir = pathlib.Path(__file__).parent.parent
+        ea_file_path = current_dir / "mt4_expert_advisor.mq4"
+        
+        if not os.path.exists(ea_file_path):
+            return {"success": False, "message": f"Archivo EA no encontrado en: {ea_file_path}"}
+        
+        # Leer contenido del archivo EA
+        with open(ea_file_path, 'r', encoding='utf-8') as f:
+            ea_content = f.read()
+        
+        # Retornar el contenido como archivo descargable
+        from fastapi.responses import Response
+        return Response(
+            content=ea_content,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": "attachment; filename=AITRADERX_EA.mq4"
+            }
+        )
+    except Exception as e:
+        return {"success": False, "message": f"Error: {str(e)}"}
+
+# ============================================================================
+# ENDPOINTS PARA ESTRATEGIAS DE SCALPING
+# ============================================================================
+
+@app.get("/api/v1/trading/scalping/strategies")
+async def get_scalping_strategies():
+    """Obtener todas las estrategias de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        result = await scalping_service.get_all_strategies()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo estrategias: {str(e)}")
+
+@app.post("/api/v1/trading/scalping/strategies")
+async def create_scalping_strategy(request: dict):
+    """Crear una nueva estrategia de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        strategy_type = request.get("strategy_type")
+        config = request.get("config", {})
+        
+        if not strategy_type:
+            raise HTTPException(status_code=400, detail="strategy_type es requerido")
+        
+        result = await scalping_service.create_strategy(strategy_type, config)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creando estrategia: {str(e)}")
+
+@app.post("/api/v1/trading/scalping/strategies/{strategy_id}/start")
+async def start_scalping_strategy(strategy_id: str):
+    """Iniciar una estrategia de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        result = await scalping_service.start_strategy(strategy_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error iniciando estrategia: {str(e)}")
+
+@app.post("/api/v1/trading/scalping/strategies/{strategy_id}/stop")
+async def stop_scalping_strategy(strategy_id: str):
+    """Detener una estrategia de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        result = await scalping_service.stop_strategy(strategy_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deteniendo estrategia: {str(e)}")
+
+@app.get("/api/v1/trading/scalping/strategies/{strategy_id}/status")
+async def get_scalping_strategy_status(strategy_id: str):
+    """Obtener el estado de una estrategia de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        result = await scalping_service.get_strategy_status(strategy_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo estado: {str(e)}")
+
+@app.delete("/api/v1/trading/scalping/strategies/{strategy_id}")
+async def delete_scalping_strategy(strategy_id: str):
+    """Eliminar una estrategia de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        result = await scalping_service.delete_strategy(strategy_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error eliminando estrategia: {str(e)}")
+
+@app.post("/api/v1/trading/scalping/strategies/{strategy_id}/signal")
+async def generate_scalping_signal(strategy_id: str, market_data: dict):
+    """Generar señal para una estrategia de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        # Convertir market_data a DataFrame
+        df = pd.DataFrame(market_data)
+        result = await scalping_service.generate_signal(strategy_id, df)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generando señal: {str(e)}")
+
+@app.post("/api/v1/trading/scalping/strategies/{strategy_id}/execute")
+async def execute_scalping_trade(strategy_id: str, signal: dict):
+    """Ejecutar operación para una estrategia de scalping"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        result = await scalping_service.execute_trade(strategy_id, signal)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error ejecutando operación: {str(e)}")
+
+@app.get("/api/v1/trading/scalping/available-types")
+async def get_available_scalping_types():
+    """Obtener tipos de estrategias de scalping disponibles"""
+    try:
+        if not scalping_service:
+            raise HTTPException(status_code=503, detail="Servicio de scalping no disponible")
+        
+        return {
+            "success": True,
+            "strategy_types": list(scalping_service.strategy_configs.keys()),
+            "configs": scalping_service.strategy_configs
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo tipos: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(
