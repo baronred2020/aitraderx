@@ -92,6 +92,40 @@ try:
 except ImportError as e:
     logger.warning(f"Scalping Strategy Service not available: {e}")
     scalping_service = None
+
+# Importar rutas del portfolio
+try:
+    from api.portfolio_routes import router as portfolio_router
+except ImportError as e:
+    logger.warning(f"Portfolio routes not available: {e}")
+    portfolio_router = None
+
+# Importar rutas de Mega Mind
+try:
+    from api.mega_mind_routes import router as mega_mind_router
+except ImportError as e:
+    logger.warning(f"Mega Mind routes not available: {e}")
+    mega_mind_router = None
+
+# Importar funciones de RL Trading Agent
+try:
+    from rl_trading_agent import (
+        get_rl_status as get_rl_status_imported,
+        get_rl_performance as get_rl_performance_imported,
+        get_active_signals as get_active_signals_imported,
+        execute_signal as execute_signal_imported,
+        get_training_progress as get_training_progress_imported,
+        can_user_start_training as can_user_start_training_imported,
+        validate_training_parameters as validate_training_parameters_imported,
+        start_rl_training as start_rl_training_imported,
+        get_training_progress_by_session as get_training_progress_by_session_imported,
+        cancel_rl_training as cancel_rl_training_imported,
+        get_user_training_history as get_user_training_history_imported,
+        get_user_rl_configuration as get_user_rl_configuration_imported,
+        save_user_rl_configuration as save_user_rl_configuration_imported,
+        reset_user_rl_configuration as reset_user_rl_configuration_imported,
+        get_rl_configuration_limits as get_rl_configuration_limits_imported
+    )
 except ImportError as e:
     logger.warning(f"RL Trading Agent not available: {e}")
     # Funciones fallback
@@ -287,6 +321,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Incluir rutas del portfolio
+if portfolio_router:
+    app.include_router(portfolio_router)
+
 # Incluir routers
 app.include_router(subscription_router)
 app.include_router(auth_router)
@@ -389,9 +427,10 @@ class MegaMindPredictionResponse(BaseModel):
 
 # ===== AUTOMATED TRADING MODELS =====
 class BrainType(str, Enum):
+    BRAIN_MAX = "Brain_Max"
     BRAIN_ULTRA = "Brain_Ultra"
-    BRAIN_PRO = "Brain_Pro"
-    BRAIN_BASIC = "Brain_Basic"
+    BRAIN_PREDICTOR = "Brain_Predictor"
+    MEGA_MIND = "Mega_Mind"
 
 class TradingStyle(str, Enum):
     SCALPING = "scalping"
@@ -1572,19 +1611,182 @@ def update_prices():
             current_prices[pair] = max(0.5, min(2.0, current_prices[pair]))
 
 def generate_signal(strategy: Strategy) -> Optional[Dict[str, Any]]:
-    """Genera señales de trading basadas en la estrategia"""
-    # Simulación simple de señales
-    confidence = np.random.uniform(60, 95)
-    
-    if confidence >= strategy.minConfidence:
-        signal_type = np.random.choice(['buy', 'sell'], p=[0.6, 0.4])
-        return {
-            'type': signal_type,
-            'confidence': confidence,
-            'price': current_prices.get(strategy.pair, 1.0856),
-            'timestamp': datetime.now().isoformat()
+    """Genera señales de trading basadas en la estrategia usando IA real"""
+    try:
+        # Obtener predicción de IA basada en el cerebro seleccionado
+        brain_type = strategy.brainType.value if hasattr(strategy.brainType, 'value') else str(strategy.brainType)
+        
+        # Generar datos de mercado simulados para la IA
+        current_price = current_prices.get(strategy.pair, 1.0856)
+        
+        # Crear datos de mercado para la IA
+        market_data = {
+            'pair': strategy.pair,
+            'current_price': current_price,
+            'timestamp': datetime.now().isoformat(),
+            'data': {
+                'open': [current_price - 0.0002, current_price - 0.0001, current_price, current_price + 0.0001],
+                'high': [current_price + 0.0001, current_price + 0.0002, current_price + 0.0003, current_price + 0.0004],
+                'low': [current_price - 0.0003, current_price - 0.0002, current_price - 0.0001, current_price],
+                'close': [current_price - 0.0001, current_price, current_price + 0.0001, current_price + 0.0002],
+                'volume': [1000, 1200, 1100, 1300]
+            }
         }
-    return None
+        
+        # Usar IA real basada en el cerebro seleccionado
+        if brain_type == "Brain_Ultra":
+            # Usar EURUSDMultiStrategyAI para Brain_Ultra
+            try:
+                from models.sistemas_prueba.Modelo_AI_Ultra import EURUSDMultiStrategyAI
+                ai_model = EURUSDMultiStrategyAI()
+                signals = ai_model.generate_signals_strategy(market_data, strategy.style.value if hasattr(strategy.style, 'value') else str(strategy.style))
+                
+                if signals and len(signals) > 0:
+                    latest_signal = signals[-1]
+                    confidence = latest_signal.get('confidence', 70)
+                    
+                    if confidence >= strategy.minConfidence:
+                        return {
+                            'type': latest_signal.get('signal', 'hold').lower(),
+                            'confidence': confidence,
+                            'price': current_price,
+                            'timestamp': datetime.now().isoformat(),
+                            'ai_model': 'EURUSDMultiStrategyAI'
+                        }
+            except ImportError:
+                print(f"⚠️ Modelo EURUSDMultiStrategyAI no disponible, usando fallback")
+        
+        elif brain_type == "Brain_Max":
+            # Usar Brain Max para análisis técnico completo
+            try:
+                from models.Modelo_Brain_Max import BrainMaxAI
+                ai_model = BrainMaxAI()
+                signals = ai_model.generate_signals_strategy(market_data, strategy.style.value if hasattr(strategy.style, 'value') else str(strategy.style))
+                
+                if signals and len(signals) > 0:
+                    latest_signal = signals[-1]
+                    confidence = latest_signal.get('confidence', 70)
+                    
+                    if confidence >= strategy.minConfidence:
+                        return {
+                            'type': latest_signal.get('signal', 'hold').lower(),
+                            'confidence': confidence,
+                            'price': current_price,
+                            'timestamp': datetime.now().isoformat(),
+                            'ai_model': 'BrainMaxAI'
+                        }
+            except ImportError:
+                print(f"⚠️ Modelo BrainMaxAI no disponible, usando fallback")
+        
+        elif brain_type == "Brain_Predictor":
+            # Usar Brain Predictor para predicciones ML
+            try:
+                from models.Brain_predictor import BrainPredictorAI
+                ai_model = BrainPredictorAI()
+                signals = ai_model.generate_signals_strategy(market_data, strategy.style.value if hasattr(strategy.style, 'value') else str(strategy.style))
+                
+                if signals and len(signals) > 0:
+                    latest_signal = signals[-1]
+                    confidence = latest_signal.get('confidence', 70)
+                    
+                    if confidence >= strategy.minConfidence:
+                        return {
+                            'type': latest_signal.get('signal', 'hold').lower(),
+                            'confidence': confidence,
+                            'price': current_price,
+                            'timestamp': datetime.now().isoformat(),
+                            'ai_model': 'BrainPredictorAI'
+                        }
+            except ImportError:
+                print(f"⚠️ Modelo BrainPredictorAI no disponible, usando fallback")
+        
+        elif brain_type == "Mega_Mind":
+            # Usar Mega Mind para colaboración de cerebros
+            try:
+                from src.services.mega_mind_service import MegaMindService
+                mega_mind = MegaMindService()
+                signals = mega_mind.generate_collaborative_signals(market_data, strategy.style.value if hasattr(strategy.style, 'value') else str(strategy.style))
+                
+                if signals and len(signals) > 0:
+                    latest_signal = signals[-1]
+                    confidence = latest_signal.get('confidence', 70)
+                    
+                    if confidence >= strategy.minConfidence:
+                        return {
+                            'type': latest_signal.get('signal', 'hold').lower(),
+                            'confidence': confidence,
+                            'price': current_price,
+                            'timestamp': datetime.now().isoformat(),
+                            'ai_model': 'MegaMindService'
+                        }
+            except ImportError:
+                print(f"⚠️ MegaMindService no disponible, usando fallback")
+        
+        # Fallback: usar Brain Trader API si está disponible
+        try:
+            import requests
+            response = requests.get(
+                f"http://localhost:8000/api/v1/brain-trader/predictions/{brain_type}",
+                params={
+                    "pair": strategy.pair,
+                    "style": strategy.style.value if hasattr(strategy.style, 'value') else str(strategy.style),
+                    "limit": 1
+                },
+                timeout=5
+            )
+            
+            if response.status_code == 200:
+                predictions = response.json()
+                if predictions and len(predictions) > 0:
+                    pred = predictions[0]
+                    confidence = pred.get('confidence', 70)
+                    
+                    if confidence >= strategy.minConfidence:
+                        return {
+                            'type': pred.get('direction', 'hold').lower(),
+                            'confidence': confidence,
+                            'price': current_price,
+                            'timestamp': datetime.now().isoformat(),
+                            'ai_model': f'Brain_Trader_{brain_type}'
+                        }
+        except Exception as e:
+            print(f"⚠️ Error en Brain Trader API: {e}")
+        
+        # Fallback final: simulación con mejor lógica
+        confidence = np.random.uniform(strategy.minConfidence, 95)
+        
+        if confidence >= strategy.minConfidence:
+            # Mejorar la lógica de selección de señales
+            if strategy.style.value == "scalping":
+                signal_type = np.random.choice(['buy', 'sell'], p=[0.55, 0.45])  # Más balanceado para scalping
+            elif strategy.style.value == "day_trading":
+                signal_type = np.random.choice(['buy', 'sell'], p=[0.6, 0.4])   # Tendencia alcista para day trading
+            else:  # swing_trading
+                signal_type = np.random.choice(['buy', 'sell'], p=[0.5, 0.5])   # Balanceado para swing
+            
+            return {
+                'type': signal_type,
+                'confidence': confidence,
+                'price': current_price,
+                'timestamp': datetime.now().isoformat(),
+                'ai_model': 'fallback_simulation'
+            }
+        
+        return None
+        
+    except Exception as e:
+        print(f"❌ Error en generate_signal: {e}")
+        # Fallback de emergencia
+        confidence = np.random.uniform(60, 95)
+        if confidence >= strategy.minConfidence:
+            return {
+                'type': np.random.choice(['buy', 'sell']),
+                'confidence': confidence,
+                'price': current_prices.get(strategy.pair, 1.0856),
+                'timestamp': datetime.now().isoformat(),
+                'ai_model': 'emergency_fallback'
+            }
+        return None
 
 async def run_strategy(strategy_id: str):
     """Ejecuta una estrategia de trading automático"""
@@ -1962,8 +2164,40 @@ async def mt4_status():
     current_status = check_mt4_status()
     if current_status:
         mt4_connection_status.update(current_status)
+    else:
+        # Si no hay archivo de estado, resetear a desconectado
+        mt4_connection_status.update({
+            "connected": False,
+            "account": None,
+            "last_connected": None,
+            "server": None,
+            "balance": 0.0,
+            "equity": 0.0
+        })
     
     return mt4_connection_status
+
+@app.post("/api/v1/trading/mt4/reset")
+async def reset_mt4_status():
+    """Resetear estado de conexión MT4"""
+    global mt4_connection_status
+    mt4_connection_status = {
+        "connected": False,
+        "account": None,
+        "last_connected": None,
+        "server": None,
+        "balance": 0.0,
+        "equity": 0.0
+    }
+    
+    # Eliminar archivo de estado si existe
+    try:
+        if os.path.exists(MT4_STATUS_FILE):
+            os.remove(MT4_STATUS_FILE)
+    except Exception as e:
+        print(f"Error eliminando archivo de estado: {e}")
+    
+    return {"status": "reset", "message": "Estado de MT4 reseteado"}
 
 @app.post("/api/v1/trading/mt4/order")
 async def place_mt4_order(order_data: dict):

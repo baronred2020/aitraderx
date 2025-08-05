@@ -30,6 +30,7 @@ interface UseAutomatedTradingReturn {
   startStrategy: (id: string) => Promise<any>;
   stopStrategy: (id: string) => Promise<any>;
   deleteStrategy: (id: string) => Promise<any>;
+  clearAllStrategies: () => void;
   downloadEA: () => Promise<void>;
   testConnection: () => Promise<any>;
 }
@@ -44,36 +45,11 @@ export const useAutomatedTrading = (): UseAutomatedTradingReturn => {
     status: 'disconnected'
   });
 
-  // Simular estrategias de ejemplo
+  // Inicializar con estrategias vacías - solo datos reales
   useEffect(() => {
-    setStrategies([
-      {
-        id: '1',
-        name: 'EURUSD Scalping',
-        type: 'scalping',
-        pair: 'EURUSD',
-        status: 'active',
-        totalPnL: 125.50,
-        totalTrades: 45,
-        winningTrades: 32,
-        lastSignal: { type: 'BUY', price: 1.0850, time: new Date().toISOString() },
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: 'GBPUSD Day Trading',
-        type: 'day_trading',
-        pair: 'GBPUSD',
-        status: 'inactive',
-        totalPnL: -45.20,
-        totalTrades: 12,
-        winningTrades: 7,
-        createdAt: '2024-01-10T14:30:00Z',
-        updatedAt: new Date().toISOString()
-      }
-    ]);
-  }, []);
+    // No crear estrategias mock, solo trabajar con datos reales
+    setStrategies([]);
+  }, []); // Solo se ejecuta una vez al montar el componente
 
   const createStrategy = useCallback(async (config: any) => {
     setIsLoading(true);
@@ -172,6 +148,12 @@ export const useAutomatedTrading = (): UseAutomatedTradingReturn => {
     }
   }, []);
 
+  const clearAllStrategies = useCallback(() => {
+    setStrategies([]);
+  }, []);
+
+
+
   const downloadEA = useCallback(async () => {
     try {
       const response = await fetch('/api/v1/trading/mt4/download-ea');
@@ -238,6 +220,7 @@ export const useAutomatedTrading = (): UseAutomatedTradingReturn => {
     startStrategy,
     stopStrategy,
     deleteStrategy,
+    clearAllStrategies,
     downloadEA,
     testConnection
   };

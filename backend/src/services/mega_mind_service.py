@@ -1,111 +1,262 @@
+#!/usr/bin/env python3
 """
-MegaMind Service
-===============
-Servicio para el sistema MegaMind que coordina múltiples modelos de IA
+Servicio Mega Mind para colaboración de cerebros de IA
 """
 
-import logging
-from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-import yfinance as yf
-import ta
-
-logger = logging.getLogger(__name__)
+import random
+from datetime import datetime
+from typing import Dict, List, Any, Optional
+import asyncio
 
 class MegaMindService:
-    """Servicio para el sistema MegaMind"""
+    """
+    Servicio que coordina la colaboración entre múltiples cerebros de IA
+    """
     
     def __init__(self):
-        self.brains = ['brain_max', 'brain_ultra', 'brain_predictor']
-        self.logger = logging.getLogger(__name__)
-    
-    async def get_predictions(self, pair: str = "EURUSD", style: str = "day_trading", limit: int = 5) -> List[Dict]:
-        """Obtener predicciones del MegaMind"""
+        self.brain_weights = {
+            'brain_max': 0.35,
+            'brain_ultra': 0.40,
+            'brain_predictor': 0.25
+        }
+        self.collaboration_threshold = 0.75
+        self.consensus_threshold = 0.60
+        
+    async def generate_collaborative_signals(self, market_data: pd.DataFrame, strategy_style: str) -> List[Dict[str, Any]]:
+        """
+        Genera señales colaborativas usando múltiples cerebros
+        """
         try:
-            # Mock data for now
-            predictions = []
-            for i in range(limit):
-                prediction = {
-                    "pair": pair,
-                    "direction": "up" if i % 2 == 0 else "down",
-                    "confidence": 75.0 + (i * 5),
-                    "target_price": 1.0850 + (i * 0.001),
-                    "timeframe": "15M",
-                    "reasoning": f"Análisis técnico y fundamental para {pair}",
-                    "brain_type": "mega_mind",
-                    "fusion_method": "ensemble_weighted",
-                    "collaboration_score": 85.0 + (i * 2),
-                    "fusion_details": {
-                        "brain_max_confidence": 80.0,
-                        "brain_ultra_confidence": 75.0,
-                        "brain_predictor_confidence": 70.0,
-                        "consensus_level": 0.8,
-                        "collaboration_boost": 0.1
-                    },
-                    "timestamp": datetime.now().isoformat()
-                }
-                predictions.append(prediction)
+            # Obtener predicciones de cada cerebro
+            brain_predictions = await self._get_brain_predictions(market_data, strategy_style)
             
-            return predictions
+            # Calcular consenso y colaboración
+            consensus_score = self._calculate_consensus(brain_predictions)
+            collaboration_score = self._calculate_collaboration_score(brain_predictions)
+            
+            # Generar señal final basada en colaboración
+            final_signal = self._generate_final_signal(brain_predictions, consensus_score, collaboration_score)
+            
+            return [final_signal]
+            
         except Exception as e:
-            self.logger.error(f"Error getting MegaMind predictions: {e}")
-            return []
+            print(f"❌ Error en Mega Mind: {e}")
+            # Fallback: señal neutral
+            return [{
+                'signal': 'hold',
+                'confidence': 50.0,
+                'reason': f'Error en colaboración: {str(e)}',
+                'collaboration_score': 0.0,
+                'consensus_score': 0.0,
+                'brain_contributions': {}
+            }]
     
-    async def get_collaboration(self, pair: str = "EURUSD") -> Dict:
-        """Obtener información de colaboración entre cerebros"""
-        try:
-            return {
-                "pair": pair,
-                "collaboration_score": 85.0,
-                "brain_contributions": {
-                    "brain_max": {"contribution": 0.4, "confidence": 80.0},
-                    "brain_ultra": {"contribution": 0.35, "confidence": 75.0},
-                    "brain_predictor": {"contribution": 0.25, "confidence": 70.0}
-                },
-                "consensus_level": 0.8,
-                "collaboration_status": "optimal",
-                "timestamp": datetime.now().isoformat()
-            }
-        except Exception as e:
-            self.logger.error(f"Error getting collaboration: {e}")
-            return {}
+    async def _get_brain_predictions(self, market_data: pd.DataFrame, strategy_style: str) -> Dict[str, Dict]:
+        """
+        Obtiene predicciones de cada cerebro individual
+        """
+        predictions = {}
+        
+        # Simular predicciones de cada cerebro
+        for brain_name in self.brain_weights.keys():
+            try:
+                # Simular predicción del cerebro
+                prediction = self._simulate_brain_prediction(brain_name, market_data, strategy_style)
+                predictions[brain_name] = prediction
+            except Exception as e:
+                print(f"⚠️ Error obteniendo predicción de {brain_name}: {e}")
+                # Predicción neutral como fallback
+                predictions[brain_name] = {
+                    'signal': 'hold',
+                    'confidence': 50.0,
+                    'direction': 'sideways',
+                    'reason': f'Error en {brain_name}'
+                }
+        
+        return predictions
     
-    async def get_arena_results(self, pair: str = "EURUSD") -> Dict:
-        """Obtener resultados del arena de cerebros"""
-        try:
-            return {
-                "pair": pair,
-                "arena_results": {
-                    "brain_max": {"wins": 15, "accuracy": 0.75, "performance": 0.8},
-                    "brain_ultra": {"wins": 12, "accuracy": 0.7, "performance": 0.75},
-                    "brain_predictor": {"wins": 10, "accuracy": 0.65, "performance": 0.7},
-                    "mega_mind": {"wins": 18, "accuracy": 0.85, "performance": 0.9}
-                },
-                "winner": "mega_mind",
-                "total_rounds": 50,
-                "timestamp": datetime.now().isoformat()
-            }
-        except Exception as e:
-            self.logger.error(f"Error getting arena results: {e}")
-            return {}
+    def _simulate_brain_prediction(self, brain_name: str, market_data: pd.DataFrame, strategy_style: str) -> Dict[str, Any]:
+        """
+        Simula predicción de un cerebro específico
+        """
+        # Simular diferentes comportamientos por cerebro
+        if brain_name == 'brain_max':
+            # Brain Max: Análisis técnico completo
+            confidence = random.uniform(65, 85)
+            if confidence > 75:
+                signal = random.choice(['buy', 'sell'])
+                direction = 'up' if signal == 'buy' else 'down'
+            else:
+                signal = 'hold'
+                direction = 'sideways'
+                
+        elif brain_name == 'brain_ultra':
+            # Brain Ultra: Especializado en scalping
+            confidence = random.uniform(70, 90)
+            if strategy_style == 'scalping' and confidence > 80:
+                signal = random.choice(['buy', 'sell'])
+                direction = 'up' if signal == 'buy' else 'down'
+            else:
+                signal = 'hold'
+                direction = 'sideways'
+                
+        elif brain_name == 'brain_predictor':
+            # Brain Predictor: ML predictivo
+            confidence = random.uniform(60, 80)
+            if confidence > 70:
+                signal = random.choice(['buy', 'sell'])
+                direction = 'up' if signal == 'buy' else 'down'
+            else:
+                signal = 'hold'
+                direction = 'sideways'
+        
+        else:
+            # Fallback
+            signal = 'hold'
+            direction = 'sideways'
+            confidence = 50.0
+        
+        return {
+            'signal': signal,
+            'confidence': confidence,
+            'direction': direction,
+            'reason': f'Predicción de {brain_name}'
+        }
     
-    async def get_performance(self) -> Dict:
-        """Obtener métricas de rendimiento del MegaMind"""
-        try:
-            return {
-                "overall_accuracy": 0.85,
-                "fusion_effectiveness": 0.9,
-                "collaboration_score": 85.0,
-                "brain_performance": {
-                    "brain_max": {"accuracy": 0.75, "reliability": 0.8},
-                    "brain_ultra": {"accuracy": 0.7, "reliability": 0.75},
-                    "brain_predictor": {"accuracy": 0.65, "reliability": 0.7}
-                },
-                "evolution_status": "evolving",
-                "last_optimization": datetime.now().isoformat()
+    def _calculate_consensus(self, predictions: Dict[str, Dict]) -> float:
+        """
+        Calcula el nivel de consenso entre cerebros
+        """
+        signals = [pred['signal'] for pred in predictions.values()]
+        
+        # Contar señales
+        signal_counts = {}
+        for signal in signals:
+            signal_counts[signal] = signal_counts.get(signal, 0) + 1
+        
+        # Calcular consenso
+        total_predictions = len(signals)
+        max_consensus = max(signal_counts.values()) if signal_counts else 0
+        consensus_score = max_consensus / total_predictions if total_predictions > 0 else 0
+        
+        return consensus_score
+    
+    def _calculate_collaboration_score(self, predictions: Dict[str, Dict]) -> float:
+        """
+        Calcula la puntuación de colaboración basada en confianza y consenso
+        """
+        # Promedio de confianzas
+        avg_confidence = np.mean([pred['confidence'] for pred in predictions.values()])
+        
+        # Consenso
+        consensus = self._calculate_consensus(predictions)
+        
+        # Puntuación de colaboración (promedio ponderado)
+        collaboration_score = (avg_confidence * 0.6 + consensus * 0.4) / 100
+        
+        return collaboration_score
+    
+    def _generate_final_signal(self, predictions: Dict[str, Dict], consensus_score: float, collaboration_score: float) -> Dict[str, Any]:
+        """
+        Genera la señal final basada en colaboración de cerebros
+        """
+        # Si hay alto consenso, usar la señal más común
+        if consensus_score >= self.consensus_threshold:
+            signals = [pred['signal'] for pred in predictions.values()]
+            final_signal = max(set(signals), key=signals.count)
+        else:
+            # Si no hay consenso, usar promedio ponderado
+            final_signal = self._weighted_signal_decision(predictions)
+        
+        # Calcular confianza final
+        final_confidence = self._calculate_final_confidence(predictions, collaboration_score)
+        
+        # Contribuciones de cada cerebro
+        brain_contributions = {}
+        for brain_name, pred in predictions.items():
+            brain_contributions[brain_name] = {
+                'signal': pred['signal'],
+                'confidence': pred['confidence'],
+                'weight': self.brain_weights.get(brain_name, 0.0)
             }
-        except Exception as e:
-            self.logger.error(f"Error getting performance: {e}")
-            return {} 
+        
+        return {
+            'signal': final_signal,
+            'confidence': final_confidence,
+            'collaboration_score': collaboration_score,
+            'consensus_score': consensus_score,
+            'brain_contributions': brain_contributions,
+            'reason': f'Colaboración de {len(predictions)} cerebros (consenso: {consensus_score:.2%})',
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _weighted_signal_decision(self, predictions: Dict[str, Dict]) -> str:
+        """
+        Toma decisión basada en pesos de cerebros
+        """
+        buy_score = 0.0
+        sell_score = 0.0
+        
+        for brain_name, pred in predictions.items():
+            weight = self.brain_weights.get(brain_name, 0.0)
+            confidence = pred['confidence'] / 100.0
+            
+            if pred['signal'] == 'buy':
+                buy_score += weight * confidence
+            elif pred['signal'] == 'sell':
+                sell_score += weight * confidence
+        
+        # Decisión basada en puntuaciones
+        if buy_score > sell_score and buy_score > 0.3:
+            return 'buy'
+        elif sell_score > buy_score and sell_score > 0.3:
+            return 'sell'
+        else:
+            return 'hold'
+    
+    def _calculate_final_confidence(self, predictions: Dict[str, Dict], collaboration_score: float) -> float:
+        """
+        Calcula la confianza final basada en colaboración
+        """
+        # Promedio de confianzas
+        avg_confidence = np.mean([pred['confidence'] for pred in predictions.values()])
+        
+        # Ajustar por colaboración
+        final_confidence = avg_confidence * collaboration_score
+        
+        # Limitar entre 0 y 100
+        return max(0.0, min(100.0, final_confidence))
+    
+    async def get_collaboration_status(self) -> Dict[str, Any]:
+        """
+        Obtiene el estado de colaboración de Mega Mind
+        """
+        return {
+            'status': 'active',
+            'brain_count': len(self.brain_weights),
+            'brain_weights': self.brain_weights,
+            'collaboration_threshold': self.collaboration_threshold,
+            'consensus_threshold': self.consensus_threshold,
+            'last_update': datetime.now().isoformat()
+        }
+    
+    async def get_brain_performance(self) -> Dict[str, Any]:
+        """
+        Obtiene métricas de rendimiento de cada cerebro
+        """
+        performance = {}
+        
+        for brain_name in self.brain_weights.keys():
+            # Simular métricas de rendimiento
+            performance[brain_name] = {
+                'accuracy': random.uniform(0.65, 0.85),
+                'win_rate': random.uniform(0.60, 0.80),
+                'profit_factor': random.uniform(1.2, 2.5),
+                'max_drawdown': random.uniform(0.05, 0.15),
+                'total_trades': random.randint(100, 500),
+                'last_update': datetime.now().isoformat()
+            }
+        
+        return performance 

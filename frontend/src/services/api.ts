@@ -595,6 +595,150 @@ class ApiService {
   }
 
   // ===== FIN PREDICTION-SPECIFIC APIs =====
+
+  // ===== PORTFOLIO APIs =====
+
+  // Obtener estadísticas del portfolio
+  async getPortfolioStats(period: string = '1m'): Promise<{
+    total_predictions: number;
+    successful_predictions: number;
+    success_rate: number;
+    total_signals: number;
+    successful_signals: number;
+    signal_success_rate: number;
+    total_pnl: number;
+    total_trades: number;
+    winning_trades: number;
+    losing_trades: number;
+    win_rate: number;
+    avg_win: number;
+    avg_loss: number;
+    max_drawdown: number;
+    sharpe_ratio: number;
+    profit_factor: number;
+    best_pair?: string;
+    best_brain_type?: string;
+    worst_pair?: string;
+    worst_brain_type?: string;
+    best_day?: string;
+    worst_day?: string;
+    daily_pnl: number;
+    weekly_pnl: number;
+    monthly_pnl: number;
+  }> {
+    return this.request(`/portfolio/stats?period=${period}`);
+  }
+
+  // Obtener historial de trading
+  async getPortfolioHistory(params: {
+    limit?: number;
+    period?: string;
+    pair?: string;
+    brain_type?: string;
+  } = {}): Promise<Array<{
+    id: number;
+    pair: string;
+    brain_type: string;
+    type: string;
+    direction: string;
+    entry_price: number;
+    exit_price?: number;
+    pnl: number;
+    pips?: number;
+    confidence: number;
+    status: string;
+    entry_time: string;
+    exit_time?: string;
+    success?: boolean;
+    success_percentage?: number;
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.period) queryParams.append('period', params.period);
+    if (params.pair) queryParams.append('pair', params.pair);
+    if (params.brain_type) queryParams.append('brain_type', params.brain_type);
+    
+    return this.request(`/portfolio/history?${queryParams.toString()}`);
+  }
+
+  // Obtener rendimiento del portfolio
+  async getPortfolioPerformance(period: string = '1m'): Promise<{
+    total_return: number;
+    daily_return: number;
+    weekly_return: number;
+    monthly_return: number;
+    risk_metrics: {
+      sharpe_ratio: number;
+      max_drawdown: number;
+      win_rate: number;
+      profit_factor: number;
+      total_trades: number;
+      winning_trades: number;
+      losing_trades: number;
+      average_win: number;
+      average_loss: number;
+      largest_win: number;
+      largest_loss: number;
+      volatility: number;
+      beta: number;
+      var_95: number;
+    };
+    performance_by_pair: Record<string, {
+      total_trades: number;
+      winning_trades: number;
+      win_rate: number;
+      avg_success: number;
+      total_pnl: number;
+    }>;
+    performance_by_brain: Record<string, {
+      total_trades: number;
+      winning_trades: number;
+      win_rate: number;
+      avg_success: number;
+      total_pnl: number;
+    }>;
+    recent_trades: Array<{
+      id: number;
+      pair: string;
+      brain_type: string;
+      type: string;
+      direction: string;
+      entry_price: number;
+      exit_price?: number;
+      pnl: number;
+      pips?: number;
+      confidence: number;
+      status: string;
+      entry_time: string;
+      exit_time?: string;
+      success?: boolean;
+      success_percentage?: number;
+    }>;
+  }> {
+    return this.request(`/portfolio/performance?period=${period}`);
+  }
+
+  // Obtener métricas de riesgo
+  async getPortfolioRiskMetrics(period: string = '1m'): Promise<{
+    sharpe_ratio: number;
+    max_drawdown: number;
+    win_rate: number;
+    profit_factor: number;
+    total_trades: number;
+    winning_trades: number;
+    losing_trades: number;
+    average_win: number;
+    average_loss: number;
+    largest_win: number;
+    largest_loss: number;
+    volatility: number;
+    beta: number;
+    var_95: number;
+  }> {
+    return this.request(`/portfolio/risk-metrics?period=${period}`);
+  }
+
+  // ===== FIN PORTFOLIO APIs =====
 }
 
 export const apiService = new ApiService(); 

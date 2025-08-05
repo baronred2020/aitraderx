@@ -3,30 +3,48 @@ import React from 'react';
 interface Strategy {
   id: string;
   name: string;
-  type: string;
+  brainType: string;
   pair: string;
-  status: 'active' | 'inactive' | 'paused';
-  totalPnL: number;
+  style: string;
+  status: 'active' | 'paused' | 'stopped';
+  currentPrice: number;
   totalTrades: number;
   winningTrades: number;
-  lastSignal?: any;
+  totalPnL: number;
+  openPositions: number;
+  lastSignal: string;
+  lastSignalTime: string;
   createdAt: string;
-  updatedAt: string;
+  lotSize: number;
+  stopLossPips: number;
+  takeProfitPips: number;
+  minConfidence: number;
+  maxPositions: number;
+  riskPerTrade: number;
 }
 
 interface ActiveStrategiesProps {
   strategies: Strategy[];
   onStart: (id: string) => void;
   onStop: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onDetails?: (strategy: Strategy) => void;
   isLoading: boolean;
 }
 
-const ActiveStrategies: React.FC<ActiveStrategiesProps> = ({ strategies, onStart, onStop, isLoading }) => {
+const ActiveStrategies: React.FC<ActiveStrategiesProps> = ({ 
+  strategies, 
+  onStart, 
+  onStop, 
+  onDelete, 
+  onDetails, 
+  isLoading 
+}) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'text-green-400';
       case 'paused': return 'text-yellow-400';
-      case 'inactive': return 'text-red-400';
+      case 'stopped': return 'text-red-400';
       default: return 'text-gray-400';
     }
   };
@@ -35,26 +53,23 @@ const ActiveStrategies: React.FC<ActiveStrategiesProps> = ({ strategies, onStart
     switch (status) {
       case 'active': return '🟢';
       case 'paused': return '🟡';
-      case 'inactive': return '🔴';
+      case 'stopped': return '🔴';
       default: return '⚪';
     }
   };
 
-  const getBrainIcon = (type: string) => {
-    switch (type) {
+  const getBrainIcon = (brainType: string) => {
+    switch (brainType) {
       case 'Brain_Ultra': return '🧠';
       case 'Brain_Max': return '🧠';
       case 'Brain_Predictor': return '🔮';
       case 'Mega_Mind': return '🤖';
-      case 'scalping': return '⚡';
-      case 'day_trading': return '📈';
-      case 'swing_trading': return '📊';
       default: return '🧠';
     }
   };
 
-  const getStyleIcon = (type: string) => {
-    switch (type) {
+  const getStyleIcon = (style: string) => {
+    switch (style) {
       case 'scalping': return '⚡';
       case 'day_trading': return '📈';
       case 'swing_trading': return '📊';
@@ -85,13 +100,13 @@ const ActiveStrategies: React.FC<ActiveStrategiesProps> = ({ strategies, onStart
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="text-2xl">{getBrainIcon(strategy.type)}</div>
+                <div className="text-2xl">{getBrainIcon(strategy.brainType)}</div>
                 <div>
                   <h4 className="text-lg font-semibold text-white">{strategy.name}</h4>
                   <div className="flex items-center space-x-2 text-sm text-gray-400">
                     <span>{strategy.pair}</span>
                     <span>•</span>
-                    <span>{getStyleIcon(strategy.type)} {strategy.type}</span>
+                    <span>{getStyleIcon(strategy.style)} {strategy.style}</span>
                   </div>
                 </div>
               </div>
@@ -107,7 +122,7 @@ const ActiveStrategies: React.FC<ActiveStrategiesProps> = ({ strategies, onStart
               <div className="bg-gray-700 rounded-lg p-3">
                 <div className="text-sm text-gray-400 mb-1">Tipo</div>
                 <div className="text-lg font-bold text-white">
-                  {strategy.type}
+                  {strategy.brainType}
                 </div>
               </div>
               <div className="bg-gray-700 rounded-lg p-3">
@@ -139,10 +154,10 @@ const ActiveStrategies: React.FC<ActiveStrategiesProps> = ({ strategies, onStart
               <div className="text-sm text-gray-400 mb-1">Última Señal</div>
               <div className="flex items-center justify-between">
                 <span className="text-white font-medium capitalize">
-                  {strategy.lastSignal ? (strategy.lastSignal.type || 'N/A') : 'N/A'}
+                  {strategy.lastSignal || 'N/A'}
                 </span>
                 <span className="text-xs text-gray-400">
-                  {strategy.lastSignal ? (strategy.lastSignal.time || 'N/A') : 'N/A'}
+                  {strategy.lastSignalTime || 'N/A'}
                 </span>
               </div>
             </div>
@@ -167,11 +182,20 @@ const ActiveStrategies: React.FC<ActiveStrategiesProps> = ({ strategies, onStart
                 </button>
               )}
               
-              <button className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+              <button 
+                onClick={() => onDetails && onDetails(strategy)}
+                disabled={isLoading}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+              >
                 📊 Detalles
               </button>
               
-              <button className="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors">
+              <button 
+                onClick={() => onDelete && onDelete(strategy.id)}
+                disabled={isLoading}
+                className="bg-red-600 hover:bg-red-700 disabled:bg-gray-500 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                title="Eliminar estrategia"
+              >
                 🗑️
               </button>
             </div>

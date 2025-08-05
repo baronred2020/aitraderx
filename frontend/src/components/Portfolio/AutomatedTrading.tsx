@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAutomatedTrading } from '../../hooks/useAutomatedTrading';
+import { usePortfolioStrategies } from '../../hooks/usePortfolioStrategies';
 import MT4Connection from './MT4Connection';
 import ActiveStrategies from './ActiveStrategies';
 import StrategyConfig from './StrategyConfig';
@@ -9,9 +9,19 @@ import MT4Installer from './MT4Installer';
 interface AutomatedTradingProps {}
 
 const AutomatedTrading: React.FC = () => {
-  const { strategies, isLoading, error, createStrategy, startStrategy, stopStrategy, deleteStrategy } = useAutomatedTrading();
+  const { 
+    strategies, 
+    isLoading, 
+    error, 
+    createStrategy, 
+    startStrategy, 
+    stopStrategy, 
+    deleteStrategy
+  } = usePortfolioStrategies();
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showInstaller, setShowInstaller] = useState(false);
+  const [selectedStrategy, setSelectedStrategy] = useState<any>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [connectionInfo, setConnectionInfo] = useState({
     connected: false,
     account: '',
@@ -22,6 +32,17 @@ const AutomatedTrading: React.FC = () => {
   const handleInstallationComplete = () => {
     setShowInstaller(false);
     // Aquí podrías actualizar el estado de conexión
+  };
+
+  const handleStrategyDetails = (strategy: any) => {
+    setSelectedStrategy(strategy);
+    setShowDetailsModal(true);
+  };
+
+  const handleStrategyDelete = async (id: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta estrategia? Esta acción no se puede deshacer.')) {
+      await deleteStrategy(id);
+    }
   };
 
   const totalPnL = strategies.reduce((sum: number, s: any) => sum + (s.totalPnL || 0), 0);
@@ -116,6 +137,8 @@ const AutomatedTrading: React.FC = () => {
         onStart={startStrategy}
         onStop={stopStrategy}
         isLoading={isLoading}
+        onDetails={handleStrategyDetails}
+        onDelete={handleStrategyDelete}
       />
 
       {/* Create Strategy Button */}
@@ -135,6 +158,130 @@ const AutomatedTrading: React.FC = () => {
           onCreate={createStrategy}
           isLoading={isLoading}
         />
+      )}
+
+      {/* Strategy Details Modal */}
+      {showDetailsModal && selectedStrategy && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">📊 Detalles de la Estrategia</h3>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="text-gray-400 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Basic Info */}
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-white mb-3">Información Básica</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-400">Nombre:</span>
+                    <div className="text-white font-medium">{selectedStrategy.name}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Par:</span>
+                    <div className="text-white font-medium">{selectedStrategy.pair}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Tipo:</span>
+                    <div className="text-white font-medium">{selectedStrategy.type}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Estado:</span>
+                    <div className={`font-medium ${selectedStrategy.status === 'active' ? 'text-green-400' : 'text-red-400'}`}>
+                      {selectedStrategy.status}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Stats */}
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-white mb-3">Estadísticas de Rendimiento</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-400">P&L Total:</span>
+                    <div className={`font-medium ${selectedStrategy.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      ${selectedStrategy.totalPnL.toFixed(2)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Total Trades:</span>
+                    <div className="text-white font-medium">{selectedStrategy.totalTrades}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Trades Ganadores:</span>
+                    <div className="text-green-400 font-medium">{selectedStrategy.winningTrades}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Win Rate:</span>
+                    <div className="text-white font-medium">
+                      {selectedStrategy.totalTrades > 0 
+                        ? ((selectedStrategy.winningTrades / selectedStrategy.totalTrades) * 100).toFixed(1)
+                        : '0.0'}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Last Signal */}
+              {selectedStrategy.lastSignal && (
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h4 className="text-lg font-medium text-white mb-3">Última Señal</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-gray-400">Tipo:</span>
+                      <div className="text-white font-medium">{selectedStrategy.lastSignal.type}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Precio:</span>
+                      <div className="text-white font-medium">{selectedStrategy.lastSignal.price}</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Fecha:</span>
+                      <div className="text-white font-medium">
+                        {new Date(selectedStrategy.lastSignal.time).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-white mb-3">Información Temporal</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-400">Creada:</span>
+                    <div className="text-white font-medium">
+                      {new Date(selectedStrategy.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Actualizada:</span>
+                    <div className="text-white font-medium">
+                      {new Date(selectedStrategy.updatedAt).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
