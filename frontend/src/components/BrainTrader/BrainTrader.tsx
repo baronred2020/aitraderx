@@ -158,7 +158,7 @@ interface Trend {
 }
 
 export const BrainTrader: React.FC<BrainTraderProps> = () => {
-  const { subscription } = useAuth();
+  const { subscription, user } = useAuth();
   const { checkAccess, checkFeature } = useFeatureAccess();
   
   // Hook para obtener precios actuales de mercado
@@ -249,6 +249,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   // Configuración según suscripción
   const getAvailablePairs = () => {
+    // El admin tiene acceso a todos los pares
+    if (user?.role === 'admin') {
+      return ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'EURGBP', 'GBPJPY', 'EURJPY'];
+    }
+    
     if (!subscription || subscription.status !== 'active') {
       return ['EURUSD']; // Starter
     }
@@ -268,6 +273,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   };
 
   const getAvailableStyles = () => {
+    // El admin tiene acceso a todos los estilos
+    if (user?.role === 'admin') {
+      return ['scalping', 'day_trading', 'swing_trading', 'position_trading'];
+    }
+    
     if (!subscription || subscription.status !== 'active') {
       return ['day_trading']; // Starter
     }
@@ -286,6 +296,11 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   };
 
   const getAvailableBrains = () => {
+    // El admin tiene acceso a todos los cerebros
+    if (user?.role === 'admin') {
+      return ['brain_max', 'brain_ultra', 'brain_predictor', 'mega_mind'];
+    }
+    
     if (!subscription || subscription.status !== 'active') {
       return ['brain_max']; // Starter solo Brain Max
     }
@@ -327,6 +342,22 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
 
   // Funciones según plan de suscripción
   const getAvailableFeatures = () => {
+    // El admin tiene acceso a todas las características
+    if (user?.role === 'admin') {
+      return {
+        brainMax: true,
+        brainUltra: true,
+        brainPredictor: true,
+        megaMind: true,
+        multiTimeframe: true,
+        crossAsset: true,
+        economicCalendar: true,
+        autoTraining: true,
+        customModels: true,
+        apiAccess: true
+      };
+    }
+    
     if (!subscription || subscription.status !== 'active') {
       return {
         brainMax: true,
@@ -425,6 +456,17 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
   };
 
   const getPlanLimitations = () => {
+    // El admin tiene límites ilimitados
+    if (user?.role === 'admin') {
+      return {
+        maxPredictionsPerDay: -1, // Sin límite
+        maxPairs: 5000,
+        maxTimeframes: 15,
+        maxBacktests: 2000,
+        supportLevel: 'dedicated'
+      };
+    }
+    
     if (!subscription || subscription.status !== 'active') {
       return {
         maxPredictionsPerDay: 5,
@@ -2550,14 +2592,17 @@ export const BrainTrader: React.FC<BrainTraderProps> = () => {
       }}>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(to right, var(--accent-text), #06b6d4)' }}>
-            {subscription?.planType === 'institutional' && <Crown className="w-5 h-5 text-white" />}
-            {subscription?.planType === 'premium' && <Crown className="w-5 h-5 text-white" />}
-            {subscription?.planType === 'expert' && <Star className="w-5 h-5 text-white" />}
-            {!subscription?.planType && <Shield className="w-5 h-5 text-white" />}
+            {user?.role === 'admin' && <Crown className="w-5 h-5 text-white" />}
+            {user?.role !== 'admin' && subscription?.planType === 'institutional' && <Crown className="w-5 h-5 text-white" />}
+            {user?.role !== 'admin' && subscription?.planType === 'premium' && <Crown className="w-5 h-5 text-white" />}
+            {user?.role !== 'admin' && subscription?.planType === 'expert' && <Star className="w-5 h-5 text-white" />}
+            {user?.role !== 'admin' && !subscription?.planType && <Shield className="w-5 h-5 text-white" />}
           </div>
           <div>
             <h3 className="text-lg font-semibold" style={{ color: 'var(--primary-text)' }}>Plan Actual</h3>
-            <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>{subscription?.planType?.toUpperCase() || 'STARTER'}</p>
+            <p className="text-sm" style={{ color: 'var(--secondary-text)' }}>
+              {user?.role === 'admin' ? 'ADMIN' : (subscription?.planType?.toUpperCase() || 'STARTER')}
+            </p>
           </div>
         </div>
         

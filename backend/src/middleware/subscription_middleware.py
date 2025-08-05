@@ -11,6 +11,7 @@ import logging
 from datetime import datetime
 
 from services.subscription_service import SubscriptionService
+from services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class SubscriptionMiddleware:
     
     def __init__(self, subscription_service: SubscriptionService):
         self.subscription_service = subscription_service
+        self.user_service = UserService()
         
         # Mapeo de endpoints a características requeridas
         self.endpoint_features = {
@@ -73,6 +75,13 @@ class SubscriptionMiddleware:
         
         if not user_id:
             # Si no hay user_id, permitir acceso (para endpoints públicos)
+            response = await call_next(request)
+            return response
+        
+        # Verificar si el usuario es admin - los admins tienen acceso completo
+        user = self.user_service.get_user_by_id(user_id)
+        if user and user.get('role') == 'admin':
+            logger.info(f"🔓 Admin access granted for user {user_id} to {request.url.path}")
             response = await call_next(request)
             return response
         

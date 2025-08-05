@@ -309,7 +309,7 @@ class ScalpingStrategyService:
     
     async def execute_trade(self, strategy_id: str, signal: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Ejecuta una operación de trading
+        Ejecuta una operación de trading conectando con MT4/MT5
         """
         try:
             if strategy_id not in self.active_strategies:
@@ -324,29 +324,50 @@ class ScalpingStrategyService:
                     'reason': signal['reason']
                 }
             
-            # Ejecutar operación usando el simulador
-            position = self.simulator.execute_trade_24h(
-                signal,
-                signal['price'],
-                datetime.now(),
-                True,
-                'Condiciones favorables'
-            )
+            # Conectar con MT4/MT5 para ejecutar la operación real
+            from src.main import write_mt4_command, read_mt4_response
             
-            if position:
-                strategy['total_trades'] += 1
+            # Preparar comando para MT4/MT5
+            trade_command = {
+                'action': 'OPEN_ORDER',
+                'symbol': strategy['pair'],
+                'type': 'BUY' if signal['signal'] == 'BUY' else 'SELL',
+                'volume': strategy['parameters']['position_size'],
+                'price': signal['price'],
+                'stop_loss': signal.get('stop_loss'),
+                'take_profit': signal.get('take_profit'),
+                'comment': f'AI_Strategy_{strategy_id}',
+                'magic': 12345
+            }
+            
+            # Enviar comando a MT4/MT5
+            if write_mt4_command('execute_trade', trade_command):
+                # Esperar respuesta de MT4/MT5
+                import time
+                time.sleep(1)
+                response = read_mt4_response()
                 
-                return {
-                    'success': True,
-                    'action': 'EXECUTED',
-                    'position': position,
-                    'message': f'Operación ejecutada: {signal["signal"]} {strategy["pair"]}'
-                }
+                if response and response.get('status') == 'success':
+                    strategy['total_trades'] += 1
+                    
+                    return {
+                        'success': True,
+                        'action': 'EXECUTED',
+                        'position': response.get('position'),
+                        'message': f'Operación ejecutada en MT4/MT5: {signal["signal"]} {strategy["pair"]}',
+                        'ticket': response.get('ticket')
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'action': 'REJECTED',
+                        'reason': response.get('message', 'Error en MT4/MT5')
+                    }
             else:
                 return {
-                    'success': True,
-                    'action': 'REJECTED',
-                    'reason': 'Operación rechazada por condiciones de mercado'
+                    'success': False,
+                    'action': 'ERROR',
+                    'reason': 'No se pudo conectar con MT4/MT5'
                 }
                 
         except Exception as e:
@@ -358,7 +379,7 @@ class ScalpingStrategyService:
     
     async def get_strategy_status(self, strategy_id: str) -> Dict[str, Any]:
         """
-        Obtiene el estado actual de una estrategia
+        Obtiene el estado actual de una estrategia desde MT4/MT5
         """
         try:
             if strategy_id not in self.active_strategies:
@@ -366,7 +387,43 @@ class ScalpingStrategyService:
             
             strategy = self.active_strategies[strategy_id]
             
-            # Calcular estadísticas
+            # Obtener datos reales de MT4/MT5
+            from src.main import write_mt4_command, read_mt4_response
+            
+            # Solicitar estado de posiciones para esta estrategia
+            status_command = {
+                'action': 'GET_POSITIONS',
+                'symbol': strategy['pair'],
+                'magic': 12345
+            }
+            
+            if write_mt4_command('get_status', status_command):
+                import time
+                time.sleep(0.5)
+                response = read_mt4_response()
+                
+                if response and response.get('status') == 'success':
+                    positions = response.get('positions', [])
+                    strategy_positions = [p for p in positions if p.get('comment', '').startswith(f'AI_Strategy_{strategy_id}')]
+                    
+                    # Calcular estadísticas reales
+                    win_rate = 0
+                    if strategy['total_trades'] > 0:
+                        win_rate = (strategy['winning_trades'] / strategy['total_trades']) * 100
+                    
+                    return {
+                        'success': True,
+                        'strategy': {
+                            **strategy,
+                            'win_rate': win_rate,
+                            'open_positions': len(strategy_positions),
+                            'closed_positions': strategy['total_trades'] - len(strategy_positions),
+                            'current_balance': response.get('balance', 0),
+                            'current_equity': response.get('equity', 0)
+                        }
+                    }
+            
+            # Fallback si no se puede conectar con MT4/MT5
             win_rate = 0
             if strategy['total_trades'] > 0:
                 win_rate = (strategy['winning_trades'] / strategy['total_trades']) * 100
@@ -376,8 +433,8 @@ class ScalpingStrategyService:
                 'strategy': {
                     **strategy,
                     'win_rate': win_rate,
-                    'open_positions': len(self.simulator.positions),
-                    'closed_positions': len(self.simulator.closed_trades)
+                    'open_positions': 0,
+                    'closed_positions': strategy['total_trades']
                 }
             }
             
@@ -389,22 +446,48 @@ class ScalpingStrategyService:
     
     async def get_all_strategies(self) -> Dict[str, Any]:
         """
-        Obtiene todas las estrategias activas
+        Obtiene todas las estrategias activas con datos reales de MT4/MT5
         """
         try:
             strategies = []
             
+            # Obtener datos reales de MT4/MT5
+            from src.main import write_mt4_command, read_mt4_response
+            
+            # Solicitar todas las posiciones de MT4/MT5
+            status_command = {
+                'action': 'GET_ALL_POSITIONS',
+                'magic': 12345
+            }
+            
+            mt4_positions = []
+            if write_mt4_command('get_all_positions', status_command):
+                import time
+                time.sleep(0.5)
+                response = read_mt4_response()
+                
+                if response and response.get('status') == 'success':
+                    mt4_positions = response.get('positions', [])
+            
             for strategy_id, strategy in self.active_strategies.items():
-                # Calcular estadísticas
+                # Filtrar posiciones de esta estrategia específica
+                strategy_positions = [p for p in mt4_positions if p.get('comment', '').startswith(f'AI_Strategy_{strategy_id}')]
+                
+                # Calcular estadísticas reales
                 win_rate = 0
                 if strategy['total_trades'] > 0:
                     win_rate = (strategy['winning_trades'] / strategy['total_trades']) * 100
                 
+                # Calcular P&L real de posiciones abiertas
+                real_pnl = sum(p.get('profit', 0) for p in strategy_positions)
+                
                 strategies.append({
                     **strategy,
                     'win_rate': win_rate,
-                    'open_positions': len(self.simulator.positions),
-                    'closed_positions': len(self.simulator.closed_trades)
+                    'open_positions': len(strategy_positions),
+                    'closed_positions': strategy['total_trades'] - len(strategy_positions),
+                    'total_pnl': strategy.get('total_pnl', 0) + real_pnl,
+                    'current_price': strategy_positions[0].get('price_current', 0) if strategy_positions else 0
                 })
             
             return {

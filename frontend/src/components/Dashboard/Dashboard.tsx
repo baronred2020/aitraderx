@@ -25,6 +25,7 @@ import {
   Database,
   Server
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   LineChart, 
   Line, 
@@ -143,6 +144,7 @@ const systemActivity = [
 ];
 
 export const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [selectedTimeframe, setSelectedTimeframe] = useState('1H');
   const [systemStatus, setSystemStatus] = useState('operational');
 

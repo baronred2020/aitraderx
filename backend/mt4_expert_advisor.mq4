@@ -193,6 +193,21 @@ void ProcessCommand(string commandJson)
         Print("Procesando comando PLACE_ORDER");
         HandlePlaceOrder(commandJson);
     }
+    else if(commandType == "execute_trade")
+    {
+        Print("Procesando comando EXECUTE_TRADE");
+        HandleExecuteTrade(commandJson);
+    }
+    else if(commandType == "get_status")
+    {
+        Print("Procesando comando GET_STATUS");
+        HandleGetStatus(commandJson);
+    }
+    else if(commandType == "get_all_positions")
+    {
+        Print("Procesando comando GET_ALL_POSITIONS");
+        HandleGetAllPositions(commandJson);
+    }
     else
     {
         Print("Comando desconocido: ", commandType);
@@ -287,6 +302,195 @@ void HandlePlaceOrder(string commandJson)
         response += "\"message\":\"Error al colocar orden\"";
         Print("Error al colocar orden - Error: ", GetLastError());
     }
+    response += "}";
+    
+    WriteResponse(response);
+}
+
+//+------------------------------------------------------------------+
+//| Manejar comando de ejecución de trade para estrategias IA      |
+//+------------------------------------------------------------------+
+void HandleExecuteTrade(string commandJson)
+{
+    // Extraer datos del trade
+    string symbol = "";
+    int cmd = OP_BUY;
+    double volume = 0.1;
+    double price = 0;
+    double sl = 0;
+    double tp = 0;
+    string comment = "AI_Strategy";
+    
+    // Parsear datos del comando
+    if(StringFind(commandJson, "\"symbol\":\"") >= 0)
+    {
+        int startIndex = StringFind(commandJson, "\"symbol\":\"") + 10;
+        int endIndex = StringFind(commandJson, "\"", startIndex);
+        if(endIndex >= 0)
+        {
+            symbol = StringSubstr(commandJson, startIndex, endIndex - startIndex);
+        }
+    }
+    
+    if(StringFind(commandJson, "\"type\":\"SELL\"") >= 0)
+    {
+        cmd = OP_SELL;
+    }
+    
+    // Extraer volumen
+    if(StringFind(commandJson, "\"volume\":") >= 0)
+    {
+        int startIndex = StringFind(commandJson, "\"volume\":") + 9;
+        int endIndex = StringFind(commandJson, ",", startIndex);
+        if(endIndex >= 0)
+        {
+            volume = StringToDouble(StringSubstr(commandJson, startIndex, endIndex - startIndex));
+        }
+    }
+    
+    // Extraer comentario
+    if(StringFind(commandJson, "\"comment\":\"") >= 0)
+    {
+        int startIndex = StringFind(commandJson, "\"comment\":\"") + 11;
+        int endIndex = StringFind(commandJson, "\"", startIndex);
+        if(endIndex >= 0)
+        {
+            comment = StringSubstr(commandJson, startIndex, endIndex - startIndex);
+        }
+    }
+    
+    // Usar símbolo actual si no se especifica
+    if(symbol == "")
+        symbol = Symbol();
+    
+    // Usar precio de mercado actual
+    if(cmd == OP_BUY)
+        price = Ask;
+    else
+        price = Bid;
+    
+    // Colocar orden para estrategia IA
+    int ticket = OrderSend(symbol, cmd, volume, price, 3, sl, tp, comment, magicNumber, 0, clrGreen);
+    
+    string response = "{";
+    if(ticket > 0)
+    {
+        response += "\"status\":\"success\",";
+        response += "\"ticket\":" + ticket + ",";
+        response += "\"position\":{";
+        response += "\"ticket\":" + ticket + ",";
+        response += "\"symbol\":\"" + symbol + "\",";
+        response += "\"type\":\"" + (cmd == OP_BUY ? "BUY" : "SELL") + "\",";
+        response += "\"volume\":" + DoubleToString(volume, 2) + ",";
+        response += "\"price\":" + DoubleToString(price, Digits) + ",";
+        response += "\"comment\":\"" + comment + "\"";
+        response += "},";
+        response += "\"message\":\"Trade ejecutado exitosamente para estrategia IA\"";
+        Print("Trade ejecutado para estrategia IA - Ticket: ", ticket);
+    }
+    else
+    {
+        response += "\"status\":\"error\",";
+        response += "\"error\":" + GetLastError() + ",";
+        response += "\"message\":\"Error al ejecutar trade para estrategia IA\"";
+        Print("Error al ejecutar trade para estrategia IA - Error: ", GetLastError());
+    }
+    response += "}";
+    
+    WriteResponse(response);
+}
+
+//+------------------------------------------------------------------+
+//| Manejar comando de obtener estado                              |
+//+------------------------------------------------------------------+
+void HandleGetStatus(string commandJson)
+{
+    string symbol = "";
+    
+    // Extraer símbolo si se especifica
+    if(StringFind(commandJson, "\"symbol\":\"") >= 0)
+    {
+        int startIndex = StringFind(commandJson, "\"symbol\":\"") + 10;
+        int endIndex = StringFind(commandJson, "\"", startIndex);
+        if(endIndex >= 0)
+        {
+            symbol = StringSubstr(commandJson, startIndex, endIndex - startIndex);
+        }
+    }
+    
+    // Obtener posiciones del símbolo
+    string positions = "[";
+    int total = OrdersTotal();
+    bool first = true;
+    
+    for(int i = 0; i < total; i++)
+    {
+        if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+        {
+            if(symbol == "" || OrderSymbol() == symbol)
+            {
+                if(!first) positions += ",";
+                positions += "{";
+                positions += "\"ticket\":" + OrderTicket() + ",";
+                positions += "\"symbol\":\"" + OrderSymbol() + "\",";
+                positions += "\"type\":\"" + (OrderType() == OP_BUY ? "BUY" : "SELL") + "\",";
+                positions += "\"volume\":" + DoubleToString(OrderLots(), 2) + ",";
+                positions += "\"price_open\":" + DoubleToString(OrderOpenPrice(), Digits) + ",";
+                positions += "\"price_current\":" + DoubleToString(OrderClosePrice(), Digits) + ",";
+                positions += "\"profit\":" + DoubleToString(OrderProfit(), 2) + ",";
+                positions += "\"comment\":\"" + OrderComment() + "\"";
+                positions += "}";
+                first = false;
+            }
+        }
+    }
+    positions += "]";
+    
+    string response = "{";
+    response += "\"status\":\"success\",";
+    response += "\"positions\":" + positions + ",";
+    response += "\"balance\":" + DoubleToString(AccountBalance(), 2) + ",";
+    response += "\"equity\":" + DoubleToString(AccountEquity(), 2);
+    response += "}";
+    
+    WriteResponse(response);
+}
+
+//+------------------------------------------------------------------+
+//| Manejar comando de obtener todas las posiciones               |
+//+------------------------------------------------------------------+
+void HandleGetAllPositions(string commandJson)
+{
+    // Obtener todas las posiciones
+    string positions = "[";
+    int total = OrdersTotal();
+    bool first = true;
+    
+    for(int i = 0; i < total; i++)
+    {
+        if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+        {
+            if(!first) positions += ",";
+            positions += "{";
+            positions += "\"ticket\":" + OrderTicket() + ",";
+            positions += "\"symbol\":\"" + OrderSymbol() + "\",";
+            positions += "\"type\":\"" + (OrderType() == OP_BUY ? "BUY" : "SELL") + "\",";
+            positions += "\"volume\":" + DoubleToString(OrderLots(), 2) + ",";
+            positions += "\"price_open\":" + DoubleToString(OrderOpenPrice(), Digits) + ",";
+            positions += "\"price_current\":" + DoubleToString(OrderClosePrice(), Digits) + ",";
+            positions += "\"profit\":" + DoubleToString(OrderProfit(), 2) + ",";
+            positions += "\"comment\":\"" + OrderComment() + "\"";
+            positions += "}";
+            first = false;
+        }
+    }
+    positions += "]";
+    
+    string response = "{";
+    response += "\"status\":\"success\",";
+    response += "\"positions\":" + positions + ",";
+    response += "\"balance\":" + DoubleToString(AccountBalance(), 2) + ",";
+    response += "\"equity\":" + DoubleToString(AccountEquity(), 2);
     response += "}";
     
     WriteResponse(response);

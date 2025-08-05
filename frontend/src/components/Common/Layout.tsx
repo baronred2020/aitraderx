@@ -18,7 +18,8 @@ import {
   User,
   Activity,
   Settings,
-  LogOut
+  LogOut,
+  Shield
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -82,6 +83,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
     { id: 'help', name: 'Ayuda', icon: HelpCircle, badge: null },
   ];
 
+  // Agregar Status Admin solo para usuarios admin
+  const adminNavigationItems = user?.role === 'admin' ? [
+    ...navigationItems,
+    { id: 'status-admin', name: 'Status Admin', icon: Shield, badge: 'ADMIN' }
+  ] : navigationItems;
+
   const quickStats = [
     { label: 'Balance Total', value: '$125,430', change: '+2.3%', positive: true },
     { label: 'P&L Diario', value: '+$1,234', change: '+0.98%', positive: true },
@@ -91,6 +98,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
 
   const handleTabClick = (tabId: string) => {
     console.log(`🔍 Layout: handleTabClick llamado con tabId: ${tabId}`);
+    
+    // Permitir acceso directo a Status Admin para usuarios admin
+    if (tabId === 'status-admin' && user?.role === 'admin') {
+      console.log(`✅ Layout: Navegando a ${tabId} (admin access)`);
+      onTabChange(tabId);
+      setSidebarOpen(false);
+      return;
+    }
     
     // Verificar si el usuario tiene acceso a esta sección
     const hasAccess = canAccess(tabId);
@@ -119,7 +134,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
         'help': { requiredPlan: 'starter', feature: 'help_support' },
         'monitoring_agents': { requiredPlan: 'trader', feature: 'monitoring_agents' },
         'monitoring_alerts': { requiredPlan: 'trader', feature: 'monitoring_alerts' },
-        'monitoring_config': { requiredPlan: 'expert', feature: 'monitoring_config' }
+        'monitoring_config': { requiredPlan: 'expert', feature: 'monitoring_config' },
+        'status-admin': { requiredPlan: 'admin', feature: 'admin_status' }
       };
       
       const config = featureConfig[tabId as keyof typeof featureConfig];
@@ -308,7 +324,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               {isLoading ? (
                 // Mostrar loading mientras se carga la suscripción
                 <div className="space-y-2">
-                  {navigationItems.map((item) => (
+                  {adminNavigationItems.map((item) => (
                     <div
                       key={item.id}
                       className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800/30 animate-pulse"
@@ -322,7 +338,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                 </div>
               ) : (
                 // Mostrar menú normal cuando la suscripción está cargada
-                navigationItems.map((item) => {
+                adminNavigationItems.map((item) => {
                   const hasAccess = canAccess(item.id);
                   return (
                     <button

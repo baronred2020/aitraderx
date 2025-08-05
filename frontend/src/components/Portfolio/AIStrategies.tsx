@@ -22,7 +22,6 @@ const AIStrategies: React.FC<AIStrategiesProps> = ({ onStrategySelect }) => {
   const [availableTypes, setAvailableTypes] = useState<any[]>([]);
   const [selectedType, setSelectedType] = useState('');
   const [config, setConfig] = useState({
-    initial_balance: 10000,
     parameters: {},
     filters: {}
   });
@@ -48,7 +47,7 @@ const AIStrategies: React.FC<AIStrategiesProps> = ({ onStrategySelect }) => {
     if (result.success) {
       setShowCreateModal(false);
       setSelectedType('');
-      setConfig({ initial_balance: 10000, parameters: {}, filters: {} });
+      setConfig({ parameters: {}, filters: {} });
     } else {
       window.alert(`Error: ${result.message}`);
     }
@@ -167,8 +166,8 @@ const AIStrategies: React.FC<AIStrategiesProps> = ({ onStrategySelect }) => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-white">Estrategias de Inteligencia Artificial</h2>
-          <p className="text-gray-300">Gestiona tus estrategias de trading automático con IA</p>
+                     <h2 className="text-2xl font-bold text-white">Estrategias de Inteligencia Artificial</h2>
+           <p className="text-gray-300">Estrategias predefinidas de scalping que se conectan con MT4/MT5 para trading real</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -370,19 +369,19 @@ const AIStrategies: React.FC<AIStrategiesProps> = ({ onStrategySelect }) => {
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border border-gray-600 w-96 shadow-lg rounded-md bg-gray-800">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-white mb-4">Implementar Nueva Estrategia</h3>
+              <h3 className="text-lg font-medium text-white mb-4">Implementar Estrategia IA</h3>
               
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Tipo de Estrategia
+                    Estrategia IA Disponible
                   </label>
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white"
                   >
-                    <option value="">Selecciona un tipo</option>
+                    <option value="">Selecciona una estrategia</option>
                     {availableTypes.map((type) => (
                       <option key={type} value={type}>
                         {getStrategyIcon(type)} {type.replace('_', ' ').toUpperCase()} - {getStrategyCategory(type)}
@@ -391,18 +390,15 @@ const AIStrategies: React.FC<AIStrategiesProps> = ({ onStrategySelect }) => {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Balance Inicial
-                  </label>
-                  <input
-                    type="number"
-                    value={config.initial_balance}
-                    onChange={(e) => setConfig({...config, initial_balance: Number(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white"
-                    placeholder="10000"
-                  />
-                </div>
+                                 <div className="bg-green-900 bg-opacity-30 border border-green-500 rounded-lg p-3">
+                   <div className="flex items-start space-x-2">
+                     <span className="text-green-400 text-lg">🔗</span>
+                     <div className="text-sm text-green-200">
+                       <p className="font-medium mb-1">Conexión MT4/MT5</p>
+                       <p>Esta estrategia se conectará con tu plataforma MT4/MT5 para ejecutar trades reales en tu cuenta demo o real.</p>
+                     </div>
+                   </div>
+                 </div>
               </div>
               
               <div className="flex space-x-3 mt-6">
@@ -410,7 +406,7 @@ const AIStrategies: React.FC<AIStrategiesProps> = ({ onStrategySelect }) => {
                   onClick={handleCreateStrategy}
                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium"
                 >
-                  Implementar
+                  Crear Estrategia
                 </button>
                 <button
                   onClick={() => setShowCreateModal(false)}

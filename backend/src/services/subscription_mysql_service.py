@@ -172,6 +172,15 @@ class SubscriptionMySQLService:
     ) -> Tuple[bool, str]:
         """Verifica si un usuario tiene permisos para una característica"""
         try:
+            # Verificar si el usuario es admin - los admins tienen acceso completo
+            from services.user_service import UserService
+            user_service = UserService()
+            user = user_service.get_user_by_id(user_id)
+            
+            if user and user.get('role') == 'admin':
+                logger.info(f"🔓 Admin access granted for user {user_id} to feature {feature}")
+                return True, "Admin access granted"
+            
             subscription = self.get_user_subscription(user_id)
             if not subscription:
                 return False, "Usuario sin suscripción activa"
@@ -283,35 +292,59 @@ class SubscriptionMySQLService:
         metric: str, 
         value: int = 1
     ):
-        """Actualiza métricas de uso del usuario"""
+        """Actualiza las métricas de uso del usuario"""
         try:
-            usage = self._get_today_usage(user_id)
-            if not usage:
-                # Crear métricas si no existen
-                subscription = self.get_user_subscription(user_id)
-                if subscription:
-                    usage = self._create_usage_metrics(user_id, subscription.subscription_id)
+            # Verificar si el usuario es admin - los admins no tienen límites de uso
+            from services.user_service import UserService
+            user_service = UserService()
+            user = user_service.get_user_by_id(user_id)
             
-            if usage:
-                with self.get_db_session() as session:
-                    if metric == "api_requests":
-                        usage.api_requests_today += value
-                    elif metric == "predictions":
-                        usage.predictions_made_today += value
-                    elif metric == "backtests":
-                        usage.backtests_run_today += value
-                    elif metric == "alerts":
-                        usage.alerts_created += value
-                    elif metric == "rl_episodes":
-                        usage.rl_episodes_trained += value
-                    elif metric == "custom_models":
-                        usage.custom_models_created += value
-                    elif metric == "trades":
-                        usage.trades_executed += value
-                    
-                    usage.updated_at = datetime.utcnow()
-                    session.commit()
-                    
+            if user and user.get('role') == 'admin':
+                logger.info(f"🔓 Admin usage metrics bypass for user {user_id} - metric: {metric}")
+                return
+            
+            # Obtener suscripción del usuario
+            subscription = self.get_user_subscription(user_id)
+            if not subscription:
+                logger.warning(f"Usuario {user_id} sin suscripción activa")
+                return
+            
+            # Obtener métricas de uso de hoy
+            usage = self._get_today_usage(user_id)
+            
+            if not usage:
+                # Crear métricas de uso si no existen
+                usage = self._create_usage_metrics(user_id, subscription.subscription_id)
+                if not usage:
+                    logger.error(f"No se pudieron crear métricas de uso para {user_id}")
+                    return
+            
+            # Actualizar métrica específica
+            with self.get_db_session() as session:
+                if metric == "api_requests":
+                    usage.api_requests_today += value
+                elif metric == "predictions":
+                    usage.predictions_made_today += value
+                elif metric == "backtests":
+                    usage.backtests_run_today += value
+                elif metric == "alerts":
+                    usage.alerts_created += value
+                elif metric == "signals":
+                    usage.signals_generated += value
+                elif metric == "rl_episodes":
+                    usage.rl_episodes_trained += value
+                elif metric == "custom_models":
+                    usage.custom_models_created += value
+                else:
+                    # Métrica general
+                    usage.api_requests_today += value
+                
+                # Actualizar timestamp
+                usage.last_updated = datetime.utcnow()
+                
+                session.commit()
+                logger.debug(f"Métricas actualizadas para {user_id}: {metric} = +{value}")
+                
         except Exception as e:
             logger.error(f"Error actualizando métricas para {user_id}: {e}")
     

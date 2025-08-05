@@ -1,0 +1,2 @@
+test_connection
+{"action": "TEST_CONNECTION", "timestamp": "2025-08-05T12:25:55.920409", "message": "Prueba de conexi\u00f3n desde Python"}

@@ -4,7 +4,7 @@ API Routes para Autenticación
 Endpoints para login, registro y gestión de usuarios
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from typing import Optional
 from datetime import datetime, timedelta
@@ -77,6 +77,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def hash_password(password: str) -> str:
     """Hashea la contraseña"""
     return hashlib.sha256(password.encode()).hexdigest()
+
+def extract_token_from_header(request: Request) -> str:
+    """Extrae el token JWT del header Authorization"""
+    authorization = request.headers.get("Authorization")
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Token de autorización requerido")
+    
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Formato de token inválido")
+    
+    return authorization.replace("Bearer ", "")
 
 # ============================================================================
 # ENDPOINTS DE AUTENTICACIÓN
@@ -255,19 +266,27 @@ async def logout():
     return {"message": "Logout exitoso"}
 
 @auth_router.get("/me")
-async def get_current_user(token: str):
+async def get_current_user(request: Request):
     """Obtiene información del usuario actual"""
     try:
+        token = extract_token_from_header(request)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Token inválido")
         
-        # Aquí buscarías el usuario en la base de datos
-        # Por ahora, devolver datos simulados
+        # Obtener usuario de la base de datos
+        user = user_service.get_user_by_username(username)
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
         return {
-            "username": username,
-            "role": "user" if username != "admin" else "admin"
+            "username": user.get('username', ''),
+            "role": user.get('role', 'user'),
+            "email": user.get('email', ''),
+            "firstName": user.get('first_name', ''),
+            "lastName": user.get('last_name', ''),
+            "isActive": user.get('is_active', True)
         }
         
     except jwt.ExpiredSignatureError:
@@ -276,4 +295,73 @@ async def get_current_user(token: str):
         raise HTTPException(status_code=401, detail="Token inválido")
     except Exception as e:
         logger.error(f"Error obteniendo usuario: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor") 
+
+@auth_router.get("/admin/status")
+async def get_admin_status(request: Request):
+    """Obtiene el estado del usuario admin y sus permisos"""
+    try:
+        token = extract_token_from_header(request)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
+        
+        # Obtener usuario de la base de datos
+        user = user_service.get_user_by_username(username)
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        # Verificar si es admin
+        is_admin = user.get('role') == 'admin'
+        
+        # Para el admin, no mostrar suscripción ya que es el dueño del sistema
+        subscription_response = None
+        if not is_admin:
+            # Solo obtener suscripción para usuarios no-admin
+            user_id = user.get('user_id', '')
+            subscription = subscription_service.get_user_subscription(user_id)
+            
+            if subscription:
+                plan = subscription_service.get_plan_by_id(subscription.plan_id)
+                plan_type = plan.plan_type if plan else "starter"
+                
+                subscription_response = {
+                    "id": subscription.subscription_id,
+                    "planType": plan_type,
+                    "status": subscription.status,
+                    "startDate": subscription.start_date,
+                    "endDate": subscription.end_date,
+                    "isTrial": subscription.is_trial if hasattr(subscription, 'is_trial') else False
+                }
+        
+        return {
+            "user": {
+                "id": user.get('user_id', ''),
+                "user_id": user.get('user_id', ''),
+                "username": user.get('username', ''),
+                "email": user.get('email', ''),
+                "firstName": user.get('first_name', ''),
+                "lastName": user.get('last_name', ''),
+                "role": user.get('role', 'user'),
+                "isActive": user.get('is_active', True),
+                "isAdmin": is_admin
+            },
+            "subscription": subscription_response,
+            "adminPermissions": {
+                "hasFullAccess": is_admin,
+                "bypassSubscriptionLimits": is_admin,
+                "bypassUsageLimits": is_admin,
+                "accessAllFeatures": is_admin,
+                "accessAllSections": is_admin
+            },
+            "message": "Estado del usuario obtenido exitosamente"
+        }
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    except Exception as e:
+        logger.error(f"Error obteniendo estado del usuario: {e}")
         raise HTTPException(status_code=500, detail="Error interno del servidor") 

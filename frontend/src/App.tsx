@@ -16,6 +16,7 @@ import { BrainTrader } from './components/BrainTrader/BrainTrader';
 import { MegaMind } from './components/MegaMind';
 import Subscriptions from './components/Subscriptions';
 import { RLDashboard } from './components/RL/RLDashboard';
+import StatusAdmin from './components/Admin/StatusAdmin';
 
 // Importar el componente Portfolio real
 import Portfolio from './components/Portfolio/Portfolio';
@@ -256,6 +257,8 @@ function AppContent() {
         return <BrainTrader />;
       case 'mega-mind':
         return <MegaMind />;
+      case 'status-admin':
+        return <StatusAdmin />;
       default:
         return <Dashboard />;
     }
